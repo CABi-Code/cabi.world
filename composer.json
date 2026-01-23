@@ -1,0 +1,22 @@
+{
+    "name": "cabi/world",
+    "description": "Minecraft modpacks catalog",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "react/http": "^1.11",
+        "react/event-loop": "^1.6",
+        "intervention/image": "^2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
+}
