@@ -1,4 +1,6 @@
 <?php 
+use App\Core\Role;
+
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Получаем цвета аватара пользователя
 $headerAvatarStyle = '';
@@ -6,6 +8,9 @@ if (isset($user) && $user && empty($user['avatar'])) {
     $colors = explode(',', $user['avatar_bg_value'] ?? '#3b82f6,#8b5cf6');
     $headerAvatarStyle = 'background:linear-gradient(135deg,' . $colors[0] . ',' . $colors[1] ?? $colors[0] . ')';
 }
+
+// Проверяем, может ли пользователь видеть панель управления
+$canAccessAdmin = isset($user) && $user && Role::isModerator($user['role'] ?? null);
 ?>
 <header class="header">
     <div class="header-inner">
@@ -74,7 +79,10 @@ if (isset($user) && $user && empty($user['avatar'])) {
                                 <?= mb_strtoupper(mb_substr($user['username'], 0, 1)) ?>
                             <?php endif; ?>
                         </div>
-                        <span><?= e($user['username']) ?></span>
+                        <span>
+                            <?= e($user['username']) ?>
+                            <?= Role::badge($user['role'] ?? 'user') ?>
+                        </span>
                         <svg width="14" height="14"><use href="#icon-chevron-down"/></svg>
                     </button>
                     <div class="user-dropdown">
@@ -84,6 +92,12 @@ if (isset($user) && $user && empty($user['avatar'])) {
                         <a href="/settings" class="dropdown-item">
                             <svg width="16" height="16"><use href="#icon-settings"/></svg>Настройки
                         </a>
+                        <?php if ($canAccessAdmin): ?>
+                            <div class="dropdown-divider"></div>
+                            <a href="/admin" class="dropdown-item">
+                                <svg width="16" height="16"><use href="#icon-shield"/></svg>Панель управления
+                            </a>
+                        <?php endif; ?>
                         <div class="dropdown-divider"></div>
                         <a href="/logout" class="dropdown-item danger">
                             <svg width="16" height="16"><use href="#icon-logout"/></svg>Выйти
@@ -102,4 +116,7 @@ if (isset($user) && $user && empty($user['avatar'])) {
     <a href="/" class="nav-link <?= $path === '/' ? 'active' : '' ?>">Главная</a>
     <a href="/modrinth" class="nav-link <?= $path === '/modrinth' ? 'active' : '' ?>">Modrinth</a>
     <a href="/curseforge" class="nav-link <?= $path === '/curseforge' ? 'active' : '' ?>">CurseForge</a>
+    <?php if ($canAccessAdmin): ?>
+        <a href="/admin" class="nav-link <?= str_starts_with($path, '/admin') ? 'active' : '' ?>">Панель</a>
+    <?php endif; ?>
 </nav>

@@ -295,6 +295,82 @@ class ApplicationRepository
         return $this->db->execute('UPDATE modpack_applications SET status = ?, updated_at = NOW() WHERE id = ?', [$status, $id]) > 0;
     }
 
+    /**
+     * Установить статус заявки (для модераторов)
+     */
+    public function setStatusByModerator(int $id, string $status): bool
+    {
+        if (!in_array($status, ['pending', 'accepted', 'rejected'])) return false;
+        return $this->db->execute('UPDATE modpack_applications SET status = ?, updated_at = NOW() WHERE id = ?', [$status, $id]) > 0;
+    }
+
+    /**
+     * Получить все заявки на рассмотрении (для панели управления)
+     */
+    public function findPending(int $limit = 50, int $offset = 0): array
+    {
+        return $this->db->fetchAll(
+            'SELECT ' . DbFields::APP_FULL . '
+             FROM modpack_applications a 
+             JOIN modpacks m ON a.modpack_id = m.id 
+             JOIN users u ON a.user_id = u.id
+             WHERE a.status = "pending"
+             ORDER BY a.created_at ASC
+             LIMIT ? OFFSET ?',
+            [$limit, $offset]
+        );
+    }
+
+    /**
+     * Подсчёт заявок на рассмотрении
+     */
+    public function countPending(): int
+    {
+        $result = $this->db->fetchOne("SELECT COUNT(*) as cnt FROM modpack_applications WHERE status = 'pending'");
+        return (int) ($result['cnt'] ?? 0);
+    }
+
+    /**
+     * Получить все заявки с фильтрацией (для панели управления)
+     */
+    public function findAllForAdmin(int $limit = 50, int $offset = 0, ?string $status = null): array
+    {
+        $sql = 'SELECT ' . DbFields::APP_FULL . '
+                FROM modpack_applications a 
+                JOIN modpacks m ON a.modpack_id = m.id 
+                JOIN users u ON a.user_id = u.id';
+        
+        $params = [];
+        
+        if ($status) {
+            $sql .= ' WHERE a.status = ?';
+            $params[] = $status;
+        }
+        
+        $sql .= ' ORDER BY a.created_at DESC LIMIT ? OFFSET ?';
+        $params[] = $limit;
+        $params[] = $offset;
+        
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    /**
+     * Подсчёт всех заявок с фильтрацией
+     */
+    public function countAllForAdmin(?string $status = null): int
+    {
+        $sql = 'SELECT COUNT(*) as cnt FROM modpack_applications';
+        $params = [];
+        
+        if ($status) {
+            $sql .= ' WHERE status = ?';
+            $params[] = $status;
+        }
+        
+        $result = $this->db->fetchOne($sql, $params);
+        return (int) ($result['cnt'] ?? 0);
+    }
+
     public function addImage(int $applicationId, string $path, int $sortOrder = 0): int
     {
         $this->db->execute('INSERT INTO application_images (application_id, image_path, sort_order) VALUES (?, ?, ?)', [$applicationId, $path, $sortOrder]);

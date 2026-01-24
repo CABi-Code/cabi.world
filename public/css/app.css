@@ -12,6 +12,7 @@
 @import 'sections/profile.css';
 @import 'sections/feed.css';
 @import 'sections/settings.css';
+@import 'sections/admin.css';
 @import 'components/modals.css';
 @import 'sections/auth.css';
 @import 'layout.css';
