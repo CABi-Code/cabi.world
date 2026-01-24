@@ -1,0 +1,14 @@
+/* === Layout === */
+.container{max-width:1200px;margin:0 auto;padding:0 1rem}
+.container-sm{max-width:600px;margin:0 auto;padding:0 1rem}
+.page-content{padding:1.5rem 0 3rem}
+
+
+/* === Footer === */
+.footer{padding:1.5rem 0;background:var(--surface);border-top:1px solid var(--border)}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;max-width:1200px;margin:0 auto;padding:0 1rem}
+.footer-stats{display:flex;gap:2rem}
+.footer-stat{text-align:center}
+.footer-stat-value{font-size:1.125rem;font-weight:700;color:var(--text)}
+.footer-stat-label{font-size:0.6875rem;color:var(--text-muted)}
+.footer-copy{font-size:0.8125rem;color:var(--text-muted)}

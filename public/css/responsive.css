@@ -1,0 +1,34 @@
+/* === Responsive === */
+@media(max-width:768px){
+    /* Show mobile nav toggle, hide desktop nav */
+    .nav{display:none}
+    .mobile-nav-toggle{display:flex}
+    
+    .header-right .user-btn>span,.header-right .user-btn>svg:last-child{display:none}
+    .modpack-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+    
+    /* Popular section carousel on mobile */
+    .popular-grid{display:none}
+    .popular-carousel-wrapper{display:block}
+    .popular-carousel{display:flex}
+    .popular-carousel .popular-card{flex:0 0 160px}
+    
+    .profile-header{flex-direction:column;align-items:center;text-align:center;padding-top:70px}
+    .profile-avatar-wrap{margin-top:-40px}
+    .feed-header{flex-direction:column;align-items:flex-start}
+    .footer-inner{flex-direction:column;text-align:center}
+    .toolbar{flex-direction:column;align-items:stretch}
+    .toolbar-left,.toolbar-right{justify-content:center}
+    
+    /* List view mobile fixes */
+    [data-view="list"] .mp-card-body{flex-wrap:nowrap}
+    [data-view="list"] .mp-card-info{max-width:calc(100% - 100px)}
+    [data-view="list"] .mp-card-stats{flex-shrink:0;gap:0.5rem}
+}
+
+@media(min-width:769px){
+    .mobile-nav-toggle{display:none}
+    .mobile-nav{display:none!important}
+    .popular-carousel-wrapper{display:none}
+    .popular-grid{display:grid}
+}

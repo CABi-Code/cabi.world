@@ -10,6 +10,14 @@ if (isset($user) && $user && empty($user['avatar'])) {
 <header class="header">
     <div class="header-inner">
         <div class="header-left">
+            <!-- Mobile Nav Toggle -->
+            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Меню">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
             <a href="/" class="logo">cabi.world</a>
             <nav class="nav">
                 <a href="/" class="nav-link <?= $path === '/' ? 'active' : '' ?>">Главная</a>
@@ -88,3 +96,10 @@ if (isset($user) && $user && empty($user['avatar'])) {
         </div>
     </div>
 </header>
+
+<!-- Mobile Navigation -->
+<nav class="mobile-nav" id="mobileNav">
+    <a href="/" class="nav-link <?= $path === '/' ? 'active' : '' ?>">Главная</a>
+    <a href="/modrinth" class="nav-link <?= $path === '/modrinth' ? 'active' : '' ?>">Modrinth</a>
+    <a href="/curseforge" class="nav-link <?= $path === '/curseforge' ? 'active' : '' ?>">CurseForge</a>
+</nav>

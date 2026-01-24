@@ -76,22 +76,31 @@ class ModpackRepository
     }
 
     /**
-     * Модпаки с активными заявками (только актуальные)
+     * Модпаки с активными заявками (только одобренные, не скрытые)
+     * Проверяем реальное количество активных заявок, а не кэшированное значение
      */
     public function getPopularWithApplications(string $platform, int $limit = 10): array
     {
         return $this->db->fetchAll(
-            'SELECT ' . DbFields::MODPACK_BASE . ' 
-             FROM modpacks 
-             WHERE platform = ? AND accepted_count > 0 
-             ORDER BY accepted_count DESC 
+            'SELECT m.id, m.platform, m.external_id, m.slug, m.name, m.description, 
+                    m.icon_url, m.author, m.downloads, m.follows, m.external_url, m.cached_at,
+                    COUNT(a.id) as active_app_count
+             FROM modpacks m
+             INNER JOIN modpack_applications a ON m.id = a.modpack_id
+             WHERE m.platform = ? 
+               AND a.status = "accepted" 
+               AND a.is_hidden = 0
+             GROUP BY m.id
+             HAVING active_app_count > 0
+             ORDER BY active_app_count DESC 
              LIMIT ?',
             [$platform, $limit]
         );
     }
 
     /**
-     * Получить количество заявок для списка модпаков
+     * Получить количество активных заявок для списка модпаков
+     * (только одобренные и не скрытые)
      */
     public function getApplicationCounts(array $slugs, string $platform): array
     {
@@ -101,13 +110,18 @@ class ModpackRepository
         $params = array_merge([$platform], $slugs);
         
         $rows = $this->db->fetchAll(
-            "SELECT slug, accepted_count FROM modpacks WHERE platform = ? AND slug IN ({$placeholders})",
+            "SELECT m.slug, COUNT(a.id) as app_count 
+             FROM modpacks m
+             LEFT JOIN modpack_applications a ON m.id = a.modpack_id 
+                AND a.status = 'accepted' AND a.is_hidden = 0
+             WHERE m.platform = ? AND m.slug IN ({$placeholders})
+             GROUP BY m.id, m.slug",
             $params
         );
         
         $counts = [];
         foreach ($rows as $row) {
-            $counts[$row['slug']] = (int) $row['accepted_count'];
+            $counts[$row['slug']] = (int) $row['app_count'];
         }
         return $counts;
     }
@@ -120,5 +134,19 @@ class ModpackRepository
     public function decrementAcceptedCount(int $id): void
     {
         $this->db->execute('UPDATE modpacks SET accepted_count = GREATEST(0, accepted_count - 1) WHERE id = ?', [$id]);
+    }
+
+    /**
+     * Пересчитать accepted_count для модпака на основе реальных данных
+     */
+    public function recalculateAcceptedCount(int $id): void
+    {
+        $this->db->execute(
+            'UPDATE modpacks m SET accepted_count = (
+                SELECT COUNT(*) FROM modpack_applications a 
+                WHERE a.modpack_id = m.id AND a.status = "accepted" AND a.is_hidden = 0
+            ) WHERE m.id = ?',
+            [$id]
+        );
     }
 }

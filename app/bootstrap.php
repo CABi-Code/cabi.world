@@ -106,3 +106,22 @@ function url(string $path = ''): string {
     global $config;
     return rtrim($config['url'], '/') . '/' . ltrim($path, '/');
 }
+
+/**
+ * Форматирует число в сокращённый вид (1к, 10к, 1М и т.д.)
+ */
+function formatNumber(int $num): string {
+    if ($num < 1000) {
+        return (string) $num;
+    }
+    if ($num < 10000) {
+        return number_format($num / 1000, 1, '.', '') . 'к';
+    }
+    if ($num < 1000000) {
+        return (int) ($num / 1000) . 'к';
+    }
+    if ($num < 10000000) {
+        return number_format($num / 1000000, 1, '.', '') . 'М';
+    }
+    return (int) ($num / 1000000) . 'М';
+}

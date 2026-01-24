@@ -65,6 +65,7 @@ if (!$apiKey) {
             <div class="popular-title">🔥 С активными заявками</div>
         </div>
     </div>
+    <!-- Desktop Grid -->
     <div class="popular-grid">
         <?php foreach ($popularModpacks as $mp): ?>
             <a href="/modpack/curseforge/<?= e($mp['slug']) ?>" class="popular-card">
@@ -75,10 +76,28 @@ if (!$apiKey) {
                 </div>
                 <div class="popular-card-info">
                     <div class="popular-card-name"><?= e($mp['name']) ?></div>
-                    <div class="popular-card-count"><?= $mp['accepted_count'] ?> заявок</div>
+                    <div class="popular-card-count"><?= $mp['active_app_count'] ?> заявок</div>
                 </div>
             </a>
         <?php endforeach; ?>
+    </div>
+    <!-- Mobile Carousel -->
+    <div class="popular-carousel-wrapper">
+        <div class="popular-carousel">
+            <?php foreach ($popularModpacks as $mp): ?>
+                <a href="/modpack/curseforge/<?= e($mp['slug']) ?>" class="popular-card">
+                    <div class="popular-card-icon">
+                        <?php if ($mp['icon_url']): ?>
+                            <img src="<?= e($mp['icon_url']) ?>" alt="">
+                        <?php endif; ?>
+                    </div>
+                    <div class="popular-card-info">
+                        <div class="popular-card-name"><?= e($mp['name']) ?></div>
+                        <div class="popular-card-count"><?= $mp['active_app_count'] ?> заявок</div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
     </div>
 </div>
 <?php endif; ?>
@@ -128,7 +147,7 @@ if (!$apiKey) {
                             <div class="mp-card-author"><?= e($mp['authors'][0]['name'] ?? 'Unknown') ?></div>
                         </div>
                         <div class="mp-card-stats">
-                            <span><svg width="12" height="12"><use href="#icon-download"/></svg><?= number_format($mp['downloadCount']) ?></span>
+                            <span><svg width="12" height="12"><use href="#icon-download"/></svg><?= formatNumber($mp['downloadCount']) ?></span>
                             <?php if ($count > 0): ?>
                                 <span class="mp-card-badge"><?= $count ?></span>
                             <?php endif; ?>

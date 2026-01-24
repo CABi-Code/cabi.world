@@ -1,0 +1,22 @@
+/* === Modals === */
+.modal{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
+.modal-content{position:relative;background:var(--surface);border-radius:10px;padding:1.25rem;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-content h3{font-size:1rem;margin-bottom:1rem}
+.modal-lg{max-width:600px}
+.modal-sm{max-width:360px}
+.modal-actions{display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border)}
+
+/* Image Editor */
+.img-editor{background:var(--bg);border-radius:6px;padding:0.75rem;margin-bottom:1rem}
+.img-preview{position:relative;background:#111;border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:200px;margin-bottom:0.75rem}
+.img-preview img{max-width:100%;max-height:300px}
+.img-controls{display:flex;align-items:center;gap:0.75rem}
+.zoom-range{flex:1;display:flex;align-items:center;gap:0.5rem}
+.zoom-range input{flex:1;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px}
+.zoom-range input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--primary);border-radius:50%;cursor:pointer}
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center}
+.lightbox-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:2rem;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lightbox-img{max-width:90%;max-height:90%;object-fit:contain}

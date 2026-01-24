@@ -19,6 +19,6 @@
     </main>
     
     <?php require TEMPLATES_PATH . '/components/icons.php'; ?>
-    <script src="/js/app.js"></script>
+    <script type="module" src="/js/app.js"></script>
 </body>
 </html>

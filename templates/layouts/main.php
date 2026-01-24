@@ -19,6 +19,6 @@
     <?php require TEMPLATES_PATH . '/components/footer.php'; ?>
     <?php require TEMPLATES_PATH . '/components/icons.php'; ?>
     
-    <script src="/js/app.js"></script>
+    <script type="module" src="/js/app.js"></script>
 </body>
 </html>
