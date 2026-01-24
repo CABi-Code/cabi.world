@@ -15,7 +15,7 @@ if ($result['success']) {
 	$authManager->setTokenCookies($result['tokens']);
 	$userRepo = new UserRepository();
 	$newUser = $userRepo->findById($result['user_id']);
-	json(['success' => true, 'redirect' => '/profile/@' . $newUser['login']]);
+	json(['success' => true, 'redirect' => '/@' . $newUser['login']]);
 }
 json($result, 400);
 

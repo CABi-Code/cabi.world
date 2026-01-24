@@ -3,7 +3,7 @@
 	<?php $images = $appRepo->getImages($app['id']); ?>
 	<div class="feed-card">
 		<div class="feed-header">
-			<a href="/profile/@<?= e($app['login']) ?>" class="feed-user">
+			<a href="/@<?= e($app['login']) ?>" class="feed-user">
 				<div class="feed-avatar" style="<?= getAvatarStyle($app) ?>">
 					<?php if (!empty($app['avatar'])): ?>
 						<img src="<?= e($app['avatar']) ?>" alt="">

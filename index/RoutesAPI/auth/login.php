@@ -12,7 +12,7 @@ $result = $authManager->login(
 );
 if ($result['success']) {
 	$authManager->setTokenCookies($result['tokens']);
-	json(['success' => true, 'redirect' => '/profile/@' . $result['user']['login']]);
+	json(['success' => true, 'redirect' => '/@' . $result['user']['login']]);
 }
 json($result, 401);
 

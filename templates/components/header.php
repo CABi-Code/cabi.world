@@ -86,7 +86,7 @@ $canAccessAdmin = isset($user) && $user && Role::isModerator($user['role'] ?? nu
                         <svg width="14" height="14"><use href="#icon-chevron-down"/></svg>
                     </button>
                     <div class="user-dropdown">
-                        <a href="/profile/@<?= e($user['login']) ?>" class="dropdown-item">
+                        <a href="/@<?= e($user['login']) ?>" class="dropdown-item">
                             <svg width="16" height="16"><use href="#icon-user"/></svg>Профиль
                         </a>
                         <a href="/settings" class="dropdown-item">

@@ -2,8 +2,8 @@
 
 use App\Repository\UserRepository;
 
-// Profile routes
-if (preg_match('#^/profile/@([a-zA-Z0-9_-]+)$#', $uri, $matches)) {
+// Profile routes - теперь без /profile, просто /@username
+if (preg_match('#^/@([a-zA-Z0-9_-]+)$#', $uri, $matches)) {
     $profileLogin = $matches[1];
     $userRepo = new UserRepository();
     $profileUser = $userRepo->findByLogin($profileLogin);

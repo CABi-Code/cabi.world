@@ -80,7 +80,7 @@ use App\Core\Role;
                                     <tr data-app-id="<?= $app['id'] ?>">
                                         <td class="admin-td-id">#<?= $app['id'] ?></td>
                                         <td>
-                                            <a href="/profile/@<?= e($app['login']) ?>" class="admin-user-link">
+                                            <a href="/@<?= e($app['login']) ?>" class="admin-user-link">
                                                 <div class="admin-avatar">
                                                     <?php if ($app['avatar']): ?>
                                                         <img src="<?= e($app['avatar']) ?>" alt="">
@@ -254,7 +254,7 @@ async function viewAppDetails(id) {
             content.innerHTML = `
                 <div class="app-detail">
                     <div class="app-detail-header">
-                        <a href="/profile/@${app.login}" class="feed-user">
+                        <a href="/@${app.login}" class="feed-user">
                             <div class="feed-avatar" ${app.avatar ? '' : `style="background:linear-gradient(135deg,${(app.avatar_bg_value || '#3b82f6,#8b5cf6').split(',')[0]},${(app.avatar_bg_value || '#3b82f6,#8b5cf6').split(',')[1] || '#8b5cf6'})"`}>
                                 ${app.avatar ? `<img src="${app.avatar}" alt="">` : app.username.charAt(0).toUpperCase()}
                             </div>

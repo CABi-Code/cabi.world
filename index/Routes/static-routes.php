@@ -15,7 +15,7 @@ if (isset($routes[$uri])) {
     }
     
     if (isset($route['guest']) && $route['guest'] && $user) {
-        redirect('/profile/@' . $user['login']);
+        redirect('/@' . $user['login']);
     }
     
     if (isset($route['auth']) && $route['auth'] && !$user) {
