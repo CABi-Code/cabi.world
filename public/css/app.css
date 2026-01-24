@@ -14,6 +14,7 @@
 @import 'sections/settings.css';
 @import 'sections/admin.css';
 @import 'components/modals.css';
+@import 'components/image-editor.css';
 @import 'sections/auth.css';
 @import 'layout.css';
 @import 'sections/hero.css';

@@ -1,0 +1,266 @@
+/* === Image Editor Modal === */
+.img-editor-modal .modal-content {
+    max-width: 750px;
+    width: 95%;
+}
+
+.img-editor-container {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.img-editor-main {
+    flex: 1;
+    min-width: 280px;
+}
+
+.img-editor-preview-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 140px;
+    padding: 1rem;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.img-editor-preview-panel h4 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Canvas Area */
+.img-editor-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+    border-radius: 8px;
+    min-height: 200px;
+    padding: 10px;
+}
+
+/* Image Wrapper - contains image and overlay */
+.img-editor-image-wrapper {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+}
+
+.img-editor-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Crop Overlay - must match image size exactly */
+.crop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.crop-darkener {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.65);
+    transition: all 0.05s ease-out;
+}
+
+.crop-area {
+    position: absolute;
+    border: 2px dashed rgba(255, 255, 255, 0.85);
+    box-sizing: border-box;
+    pointer-events: auto;
+    cursor: move;
+    transition: border-color 0.2s;
+}
+
+.crop-area:hover {
+    border-color: var(--primary);
+}
+
+/* Grid lines inside crop area */
+.crop-area::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 33.333% 33.333%;
+    pointer-events: none;
+}
+
+/* Circle mask for avatar */
+.crop-area.avatar-mode .crop-circle {
+    position: absolute;
+    inset: 0;
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    box-shadow: 
+        0 0 0 9999px rgba(0, 0, 0, 0.55),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+}
+
+/* Hide grid for avatar mode */
+.crop-area.avatar-mode::after {
+    display: none;
+}
+
+/* Resize handles */
+.crop-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    pointer-events: auto;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: transform 0.15s, background 0.15s;
+}
+
+.crop-handle:hover {
+    transform: scale(1.2);
+    background: var(--primary);
+}
+
+.crop-handle.tl { top: -7px; left: -7px; cursor: nw-resize; }
+.crop-handle.tr { top: -7px; right: -7px; cursor: ne-resize; }
+.crop-handle.bl { bottom: -7px; left: -7px; cursor: sw-resize; }
+.crop-handle.br { bottom: -7px; right: -7px; cursor: se-resize; }
+
+/* Preview Section */
+.preview-item {
+    text-align: center;
+}
+
+.preview-label {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.preview-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.preview-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-avatar-small {
+    width: 44px;
+    height: 44px;
+    border-width: 2px;
+}
+
+/* Banner previews */
+.preview-banner {
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.preview-banner-desktop {
+    width: 180px;
+    height: 45px;
+}
+
+.preview-banner-mobile {
+    width: 100px;
+    height: 50px;
+}
+
+.preview-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Controls */
+.img-editor-controls {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.img-editor-tip {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.img-editor-tip svg {
+    opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .img-editor-modal .modal-content {
+        padding: 1rem;
+    }
+    
+    .img-editor-container {
+        flex-direction: column;
+    }
+    
+    .img-editor-preview-panel {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+    
+    .img-editor-preview-panel h4 {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .preview-banner-desktop {
+        width: 140px;
+        height: 35px;
+    }
+    
+    .preview-banner-mobile {
+        width: 80px;
+        height: 40px;
+    }
+    
+    .preview-avatar {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .preview-avatar-small {
+        width: 36px;
+        height: 36px;
+    }
+}

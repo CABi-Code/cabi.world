@@ -33,7 +33,16 @@ $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
 
 <?php include_once 'profile-section.php'; ?>
 
-<?php include_once 'img-editor-modal.php'; ?>
+<?php if ($isOwner): ?>
+    <!-- Edit Application Modal -->
+    <?php 
+    $application = [];
+    $modalId = 'editAppModal';
+    require TEMPLATES_PATH . '/components/edit-application-modal.php'; 
+    ?>
+
+    <?php include_once 'js-script.php'; ?>
+<?php endif; ?>
 
 <div id="lightbox" class="lightbox" style="display:none;">
     <button class="lightbox-close" data-close>&times;</button>

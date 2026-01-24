@@ -6,7 +6,7 @@ import { initPasswordToggle } from './password-toggle.js';
 import { initViewMode } from './view-mode.js';
 import { initFeedSort } from './feed-sort.js';
 import { initNotifications } from './notifications.js';
-import { initImageUpload } from './image-upload.js';
+import { initAdvancedImageUpload } from './image-editor/index.js';
 import { initModals } from './modals.js';
 import { initLightbox } from './lightbox.js';
 import { initLoginForm } from './forms/login.js';
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initViewMode();
     initFeedSort();
     initNotifications(csrf);
-    initImageUpload(csrf);
+    initAdvancedImageUpload(csrf);
     initModals();
     initLightbox();
 
