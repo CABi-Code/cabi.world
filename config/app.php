@@ -28,7 +28,7 @@ return [
     'uploads' => [
         'avatars' => [
             'path' => '/uploads/avatars/',
-            'max_size' => 5 * 1024 * 1024, // 5MB
+            'max_size' => 10 * 1024 * 1024, // 5MB
             'sizes' => [
                 'original' => null,
                 'large' => 256,

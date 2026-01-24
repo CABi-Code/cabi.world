@@ -19,52 +19,122 @@ class ApplicationRepository
     }
 
     /**
-     * Валидация даты актуальности (не больше 1 месяца вперёд)
+     * Валидация даты актуальности (обязательное поле, не больше 1 месяца вперёд)
+     * 
+     * @param string|null $date Дата в формате Y-m-d
+     * @return array ['valid' => bool, 'date' => string|null, 'error' => string|null]
      */
-    private function validateRelevantUntil(?string $date): ?string
+    public function validateRelevantUntil(?string $date): array
     {
-        if (!$date) return null;
+        // Дата обязательна
+        if (empty($date)) {
+            return [
+                'valid' => false,
+                'date' => null,
+                'error' => 'Дата актуальности обязательна'
+            ];
+        }
         
+        // Проверка формата даты (Y-m-d)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return [
+                'valid' => false,
+                'date' => null,
+                'error' => 'Неверный формат даты. Используйте формат ГГГГ-ММ-ДД'
+            ];
+        }
+        
+        // Парсинг даты
         $timestamp = strtotime($date);
-        if (!$timestamp) return null;
-        
-        $maxDate = strtotime('+' . self::MAX_RELEVANCE_DAYS . ' days');
-        $minDate = strtotime('today');
-        
-        // Не позже чем через месяц и не раньше чем сегодня
-        if ($timestamp > $maxDate) {
-            return date('Y-m-d', $maxDate);
-        }
-        if ($timestamp < $minDate) {
-            return date('Y-m-d', $minDate);
+        if ($timestamp === false) {
+            return [
+                'valid' => false,
+                'date' => null,
+                'error' => 'Некорректная дата'
+            ];
         }
         
-        return date('Y-m-d', $timestamp);
+        // Проверка что дата валидна (не 2024-02-31 и т.п.)
+        $parsedDate = date('Y-m-d', $timestamp);
+        if ($parsedDate !== $date) {
+            return [
+                'valid' => false,
+                'date' => null,
+                'error' => 'Некорректная дата'
+            ];
+        }
+        
+        $maxTimestamp = strtotime('+' . self::MAX_RELEVANCE_DAYS . ' days');
+        $minTimestamp = strtotime('today');
+        
+        // Дата не может быть в прошлом
+        if ($timestamp < $minTimestamp) {
+            return [
+                'valid' => false,
+                'date' => null,
+                'error' => 'Дата не может быть в прошлом'
+            ];
+        }
+        
+        // Дата не может быть больше чем через месяц
+        if ($timestamp > $maxTimestamp) {
+            return [
+                'valid' => false,
+                'date' => null,
+                'error' => 'Дата не может быть больше чем через ' . self::MAX_RELEVANCE_DAYS . ' дней'
+            ];
+        }
+        
+        return [
+            'valid' => true,
+            'date' => $parsedDate,
+            'error' => null
+        ];
     }
 
+    /**
+     * Создание заявки
+     * 
+     * @throws \InvalidArgumentException если дата невалидна
+     */
     public function create(int $modpackId, int $userId, string $message, ?string $discord, ?string $telegram, ?string $vk, ?string $relevantUntil = null): int
     {
         $message = mb_substr($message, 0, self::MAX_MESSAGE_LENGTH);
-        $relevantUntil = $this->validateRelevantUntil($relevantUntil);
+        
+        // Валидация даты
+        $dateValidation = $this->validateRelevantUntil($relevantUntil);
+        if (!$dateValidation['valid']) {
+            throw new \InvalidArgumentException($dateValidation['error']);
+        }
         
         $this->db->execute(
             'INSERT INTO modpack_applications (modpack_id, user_id, message, char_count, relevant_until, contact_discord, contact_telegram, contact_vk, status) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, "pending")',
-            [$modpackId, $userId, $message, mb_strlen($message), $relevantUntil, $discord, $telegram, $vk]
+            [$modpackId, $userId, $message, mb_strlen($message), $dateValidation['date'], $discord, $telegram, $vk]
         );
         return $this->db->lastInsertId();
     }
 
+    /**
+     * Обновление заявки
+     * 
+     * @throws \InvalidArgumentException если дата невалидна
+     */
     public function update(int $id, int $userId, string $message, ?string $discord, ?string $telegram, ?string $vk, ?string $relevantUntil = null): bool
     {
         $message = mb_substr($message, 0, self::MAX_MESSAGE_LENGTH);
-        $relevantUntil = $this->validateRelevantUntil($relevantUntil);
+        
+        // Валидация даты
+        $dateValidation = $this->validateRelevantUntil($relevantUntil);
+        if (!$dateValidation['valid']) {
+            throw new \InvalidArgumentException($dateValidation['error']);
+        }
         
         return $this->db->execute(
             'UPDATE modpack_applications 
              SET message = ?, char_count = ?, relevant_until = ?, contact_discord = ?, contact_telegram = ?, contact_vk = ?, status = "pending", updated_at = NOW() 
              WHERE id = ? AND user_id = ?',
-            [$message, mb_strlen($message), $relevantUntil, $discord, $telegram, $vk, $id, $userId]
+            [$message, mb_strlen($message), $dateValidation['date'], $discord, $telegram, $vk, $id, $userId]
         ) > 0;
     }
 

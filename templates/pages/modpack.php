@@ -141,8 +141,8 @@ $defaultRelevantDate = date('Y-m-d', strtotime('+14 days'));
                     <textarea name="message" class="form-input" rows="3" required placeholder="Расскажите о себе, опыте игры..." maxlength="2000"></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Актуально до <span style="font-weight:400;color:var(--text-muted);">(макс. 1 месяц)</span></label>
-                    <input type="date" name="relevant_until" class="form-input" value="<?= $defaultRelevantDate ?>" min="<?= date('Y-m-d') ?>" max="<?= $maxRelevantDate ?>">
+                    <label class="form-label">Актуально до <span style="font-weight:400;color:var(--text-muted);">(обязательно, макс. 1 месяц)</span></label>
+                    <input type="date" name="relevant_until" class="form-input" value="<?= $defaultRelevantDate ?>" min="<?= date('Y-m-d') ?>" max="<?= $maxRelevantDate ?>" required>
                     <div class="form-hint">Влияет на сортировку в поиске. После этой даты заявка уйдёт вниз списка.</div>
                 </div>
                 <div class="form-row">
@@ -215,33 +215,11 @@ $defaultRelevantDate = date('Y-m-d', strtotime('+14 days'));
 </div>
 
 <?php if ($user && $userApplication): ?>
-<div id="editMyAppModal" class="modal" style="display:none;">
-    <div class="modal-overlay" data-close></div>
-    <div class="modal-content">
-        <h3>Редактировать заявку</h3>
-        <div class="alert alert-warning" style="font-size:0.8125rem;">После редактирования заявка снова будет на рассмотрении</div>
-        <form id="editMyAppForm">
-            <input type="hidden" name="id" value="<?= $userApplication['id'] ?>">
-            <div class="form-group">
-                <label class="form-label">Сообщение</label>
-                <textarea name="message" class="form-input" rows="3" required maxlength="2000"><?= e($userApplication['message']) ?></textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Актуально до</label>
-                <input type="date" name="relevant_until" class="form-input" value="<?= $userApplication['relevant_until'] ?? $defaultRelevantDate ?>" min="<?= date('Y-m-d') ?>" max="<?= $maxRelevantDate ?>">
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Discord</label><input type="text" name="discord" class="form-input" value="<?= e($userApplication['contact_discord'] ?? '') ?>"></div>
-                <div class="form-group"><label class="form-label">Telegram</label><input type="text" name="telegram" class="form-input" value="<?= e($userApplication['contact_telegram'] ?? '') ?>"></div>
-                <div class="form-group"><label class="form-label">VK</label><input type="text" name="vk" class="form-input" value="<?= e($userApplication['contact_vk'] ?? '') ?>"></div>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary btn-sm" data-close>Отмена</button>
-                <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
+<?php 
+$application = $userApplication;
+$modalId = 'editMyAppModal';
+require TEMPLATES_PATH . '/components/edit-application-modal.php'; 
+?>
 
 <script>
 const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -259,9 +237,6 @@ document.querySelectorAll('[data-modal]').forEach(btn => {
     btn.addEventListener('click', () => {
         document.getElementById(btn.dataset.modal).style.display = 'flex';
     });
-});
-document.querySelectorAll('.modal [data-close]').forEach(el => {
-    el.addEventListener('click', () => el.closest('.modal').style.display = 'none');
 });
 </script>
 <?php endif; ?>

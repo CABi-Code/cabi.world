@@ -18,11 +18,13 @@ class ImageService
         $cfg = $this->config['uploads']['avatars'];
         
         if ($file['error'] !== UPLOAD_ERR_OK || $file['size'] > $cfg['max_size']) {
+			echo $file['error'];
             return null;
         }
 
         $ext = $this->getExtension($file['tmp_name']);
         if (!in_array($ext, ['jpg', 'png', 'gif', 'webp'])) {
+			echo "NO 'jpg', 'png', 'gif', 'webp'";
             return null;
         }
 

@@ -130,6 +130,14 @@ $avatarStyle = $profileUser['avatar']
                     
                     <p class="app-message"><?= nl2br(e($app['message'])) ?></p>
                     
+                    <?php if (!empty($app['relevant_until'])): ?>
+                        <?php $isExpired = strtotime($app['relevant_until']) < time(); ?>
+                        <p style="font-size:0.8125rem;color:<?= $isExpired ? 'var(--danger)' : 'var(--text-muted)' ?>;margin:0.5rem 0;">
+                            <svg width="12" height="12" style="vertical-align:-2px;"><use href="#icon-clock"/></svg>
+                            <?= $isExpired ? 'Истёк:' : 'Актуально до:' ?> <?= date('d.m.Y', strtotime($app['relevant_until'])) ?>
+                        </p>
+                    <?php endif; ?>
+                    
                     <?php if (!empty($images)): ?>
                         <div style="display:flex;gap:0.5rem;margin:0.5rem 0;flex-wrap:wrap;">
                             <?php foreach ($images as $img): ?>
@@ -150,7 +158,7 @@ $avatarStyle = $profileUser['avatar']
                                     <svg width="14" height="14"><use href="#icon-<?= $isHidden ? 'eye' : 'eye-off' ?>"/></svg>
                                 </button>
                                 <button class="btn btn-ghost btn-icon btn-sm" title="Редактировать"
-                                        data-modal="editAppModal" data-app='<?= e(json_encode($app)) ?>'>
+                                        onclick='openEditAppModal["editAppModal"](<?= e(json_encode($app)) ?>)'>
                                     <svg width="14" height="14"><use href="#icon-edit"/></svg>
                                 </button>
                                 <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--danger)" title="Удалить"
@@ -196,39 +204,12 @@ $avatarStyle = $profileUser['avatar']
     </div>
 </div>
 
-<!-- Edit Application Modal -->
-<div id="editAppModal" class="modal" style="display:none;">
-    <div class="modal-overlay" data-close></div>
-    <div class="modal-content">
-        <h3>Редактировать заявку</h3>
-        <div class="alert alert-warning" style="font-size:0.8125rem;">После редактирования заявка снова будет на рассмотрении</div>
-        <form id="editAppForm">
-            <input type="hidden" name="id" id="editAppId">
-            <div class="form-group">
-                <label class="form-label">Сообщение</label>
-                <textarea name="message" id="editAppMessage" class="form-input" rows="3" required></textarea>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Discord</label>
-                    <input type="text" name="discord" id="editAppDiscord" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Telegram</label>
-                    <input type="text" name="telegram" id="editAppTelegram" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">VK</label>
-                    <input type="text" name="vk" id="editAppVk" class="form-input">
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary btn-sm" data-close>Отмена</button>
-                <button type="submit" class="btn btn-primary btn-sm">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Edit Application Modal - единый компонент -->
+<?php 
+$application = []; // Пустой массив - данные будут заполняться через JS
+$modalId = 'editAppModal';
+require TEMPLATES_PATH . '/components/edit-application-modal.php'; 
+?>
 
 <script>
 const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -312,22 +293,9 @@ async function deleteApp(id) {
     location.reload();
 }
 
-// Edit modal
-document.querySelectorAll('[data-modal="editAppModal"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const app = JSON.parse(btn.dataset.app);
-        document.getElementById('editAppId').value = app.id;
-        document.getElementById('editAppMessage').value = app.message || '';
-        document.getElementById('editAppDiscord').value = app.contact_discord || '';
-        document.getElementById('editAppTelegram').value = app.contact_telegram || '';
-        document.getElementById('editAppVk').value = app.contact_vk || '';
-        document.getElementById('editAppModal').style.display = 'flex';
-    });
-});
-
-// Modal close
-document.querySelectorAll('.modal [data-close]').forEach(el => {
-    el.addEventListener('click', () => el.closest('.modal').style.display = 'none');
+// Image editor modal close
+document.querySelectorAll('#imgEditorModal [data-close]').forEach(el => {
+    el.addEventListener('click', () => document.getElementById('imgEditorModal').style.display = 'none');
 });
 </script>
 <?php endif; ?>
