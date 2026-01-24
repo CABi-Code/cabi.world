@@ -1,5 +1,7 @@
 // theme.js
 export function initTheme() {
+	
+    // Тёмная тема по умолчанию, если пользователь ничего не выбирал
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     

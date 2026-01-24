@@ -1,6 +1,6 @@
 // forms/modpack-apply.js
 
-import { handleForm, showErrors, showAlert } from './handleForm.js';
+import { handleForm } from './handleForm.js';
 
 export function initModpackApply(csrf) {
     handleForm('profileForm', '/api/user/update', {}, csrf);

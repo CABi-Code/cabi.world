@@ -1,21 +1,21 @@
 /* === Variables & Themes === */
 /* Тёмная тема по умолчанию */
 :root {
-    --primary: #60a5fa;
-    --primary-hover: #3b82f6;
-    --primary-light: rgba(96,165,250,0.15);
-    --success: #34d399;
-    --danger: #f87171;
-    --warning: #fbbf24;
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface-hover: #334155;
-    --border: #334155;
-    --text: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
-    --gradient: linear-gradient(135deg, #1e40af, #6d28d9);
+    --primary: #818cf8;
+    --primary-hover: #6366f1;
+    --primary-light: rgba(129,140,248,0.15);
+    --success: #4ade80;
+    --danger: #fb7185;
+    --warning: #facc15;
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --surface-hover: #171717;
+    --border: #262626;
+    --text: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+    --gradient: linear-gradient(135deg, #312e81, #581c87);
 }
 
 [data-theme="light"] {

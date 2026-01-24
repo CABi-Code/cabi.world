@@ -1,6 +1,6 @@
 // forms/login.js
 
-import { handleForm, showErrors, showAlert } from './handleForm.js';
+import { handleForm } from './handleForm.js';
 
 export function initLoginForm(csrf) {
     handleForm('loginForm', '/api/auth/login', {

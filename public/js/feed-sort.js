@@ -1,5 +1,7 @@
 // feed-sort.js
 
+import { initLightbox } from './lightbox.js';
+
 export function initFeedSort() {
     const feedSortSelect = document.getElementById('feedSortSelect');
     const feedContainer = document.getElementById('feedContainer');
@@ -22,7 +24,7 @@ export function initFeedSort() {
                 
                 if (data.success && data.html) {
                     feedContainer.innerHTML = data.html;
-                    initLightbox();
+                    initLightbox(); // Переинициализация lightbox для новых элементов
                 }
             } catch (err) {
                 console.error('Feed load error:', err);

@@ -1,6 +1,6 @@
 // forms/register.js
 
-import { handleForm, showErrors, showAlert } from './handleForm.js';
+import { handleForm } from './handleForm.js';
 
 export function initRegisterForm(csrf) {
     handleForm('registerForm', '/api/auth/register', {
