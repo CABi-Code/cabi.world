@@ -9,7 +9,7 @@ set -euo pipefail
 # ===============================================
 
 REMOTE_NAME="origin"
-BRANCH="main"                # поменяй на master, если у тебя старая ветка
+BRANCH="master"
 COMMIT_MSG="${1:-Update $(date '+%Y-%m-%d %H:%M:%S')}"
 
 # ===============================================
