@@ -9,12 +9,9 @@
         </div>
     </div>
 <?php else: ?>
-    <div class="toolbar">
-		<?php include_once 'toolbar.php'; ?>	
-	</div>
     
     <div class="feed" id="feedContainer">
-		<?php include_once __DIR__ . '/../../feed/feed-list.php'; ?>
+		<?php include_once 'feed-list.php'; ?>
     </div>
     
     <?php if ($totalPages > 1): ?>
