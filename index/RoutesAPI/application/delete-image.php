@@ -1,7 +1,6 @@
 <?php
 
 use App\Repository\ApplicationRepository;
-use App\Service\ImageService;
 
 if (!$user) json(['error' => 'Unauthorized'], 401);
 
@@ -17,10 +16,6 @@ $appRepo = new ApplicationRepository();
 $deleted = $appRepo->deleteImage($imageId, $user['id']);
 
 if ($deleted) {
-    // Опционально: удалить файл с диска
-    // $imgService = new ImageService();
-    // $imgService->deleteFile($imagePath);
-    
     json(['success' => true]);
 } else {
     json(['error' => 'Изображение не найдено или нет доступа'], 404);

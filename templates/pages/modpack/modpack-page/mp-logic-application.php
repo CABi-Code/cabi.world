@@ -4,15 +4,15 @@
     </p>
 <?php elseif ($userApplication): ?>
     <?php
-    // Получаем изображения заявки
+    // Получаем изображения и эффективные контакты для заявки пользователя
     $userAppImages = $appRepo->getImages($userApplication['id']);
     
-    // Эффективные контакты (если NULL - берём из профиля пользователя)
+    // Эффективные контакты (если NULL в заявке - берём из профиля текущего пользователя)
     $effectiveDiscord = $userApplication['contact_discord'] ?? $user['discord'] ?? '';
     $effectiveTelegram = $userApplication['contact_telegram'] ?? $user['telegram'] ?? '';
     $effectiveVk = $userApplication['contact_vk'] ?? $user['vk'] ?? '';
     
-    // Для передачи в JS добавляем эффективные контакты
+    // Для передачи в JS
     $userAppForJs = $userApplication;
     $userAppForJs['effective_discord'] = $effectiveDiscord;
     $userAppForJs['effective_telegram'] = $effectiveTelegram;
@@ -30,14 +30,8 @@
                     default=>$userApplication['status'] 
                 } ?>
             </span>
-            <p style="margin:0.5rem 0;line-height:1.5;"><?= nl2br(e($userApplication['message'])) ?></p>
             
-            <?php if ($userApplication['relevant_until']): ?>
-                <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:0.5rem;">
-                    <svg width="12" height="12" style="vertical-align:-2px;"><use href="#icon-clock"/></svg>
-                    Актуально до: <?= date('d.m.Y', strtotime($userApplication['relevant_until'])) ?>
-                </p>
-            <?php endif; ?>
+            <p style="margin:0.5rem 0;line-height:1.5;"><?= nl2br(e($userApplication['message'])) ?></p>
             
             <?php if (!empty($userAppImages)): ?>
                 <div style="display:flex;gap:0.5rem;margin:0.75rem 0;flex-wrap:wrap;">
@@ -49,8 +43,15 @@
                 </div>
             <?php endif; ?>
             
+            <?php if ($userApplication['relevant_until']): ?>
+                <p style="font-size:0.8125rem;color:var(--text-muted);margin:0.5rem 0;">
+                    <svg width="12" height="12" style="vertical-align:-2px;"><use href="#icon-clock"/></svg>
+                    Актуально до: <?= date('d.m.Y', strtotime($userApplication['relevant_until'])) ?>
+                </p>
+            <?php endif; ?>
+            
             <?php if ($effectiveDiscord || $effectiveTelegram || $effectiveVk): ?>
-                <div class="app-contacts" style="margin:0.75rem 0;">
+                <div class="app-contacts" style="display:flex;flex-wrap:wrap;gap:0.375rem;margin:0.75rem 0;">
                     <?php if ($effectiveDiscord): ?>
                         <span class="contact-btn discord" style="font-size:0.75rem;">
                             <svg width="12" height="12"><use href="#icon-discord"/></svg>

@@ -1,7 +1,8 @@
+<?php use App\Repository\ApplicationRepository; ?>
 <div class="form-group">
     <label class="form-label">
         Актуально до 
-        <span style="font-weight:400;color:var(--text-muted);">(обязательно, макс. 1 месяц)</span>
+        <span style="font-weight:400;color:var(--text-muted);">(обязательно, макс. <?= ApplicationRepository::MAX_RELEVANCE_DAYS ?> дней)</span>
     </label>
     <input 
         type="date" 

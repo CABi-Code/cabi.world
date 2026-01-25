@@ -14,7 +14,7 @@
 	</div>
     
     <div class="feed" id="feedContainer">
-		<?php include_once 'feed-container.php'; ?>
+		<?php include_once __DIR__ . '/../../feed/feed-list.php'; ?>
     </div>
     
     <?php if ($totalPages > 1): ?>

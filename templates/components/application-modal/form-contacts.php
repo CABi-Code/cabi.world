@@ -73,6 +73,7 @@
                     class="form-input app-field-discord" 
                     value="<?= e($useDefaultContacts ? $userDiscord : ($appDiscord ?? $userDiscord)) ?>"
                     placeholder="username"
+                    maxlength="100"
                 >
             </div>
             <div class="form-group" style="margin-bottom:0;">
@@ -83,6 +84,7 @@
                     class="form-input app-field-telegram" 
                     value="<?= e($useDefaultContacts ? $userTelegram : ($appTelegram ?? $userTelegram)) ?>"
                     placeholder="@username"
+                    maxlength="100"
                 >
             </div>
             <div class="form-group" style="margin-bottom:0;">
@@ -93,6 +95,7 @@
                     class="form-input app-field-vk" 
                     value="<?= e($useDefaultContacts ? $userVk : ($appVk ?? $userVk)) ?>"
                     placeholder="id или username"
+                    maxlength="100"
                 >
             </div>
         </div>

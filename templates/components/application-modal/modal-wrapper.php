@@ -1,3 +1,4 @@
+<?php use App\Repository\ApplicationRepository; ?>
 <div id="<?= e($modalId) ?>" class="modal" style="display:none;">
     <div class="modal-overlay" data-close></div>
     <div class="modal-content modal-lg">
@@ -22,11 +23,11 @@
             
             <?php include __DIR__ . '/form-message.php'; ?>
             
-            <?php include __DIR__ . '/form-relevant-date.php'; ?>
-            
             <?php include __DIR__ . '/form-contacts.php'; ?>
             
             <?php include __DIR__ . '/form-images.php'; ?>
+            
+            <?php include __DIR__ . '/form-relevant-date.php'; ?>
             
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary btn-sm" data-close>Отмена</button>

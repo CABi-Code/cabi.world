@@ -11,9 +11,11 @@
 		
 	</div>
 	
-	<?php if (!empty($applications)): ?>
 	<div style="background:var(--surface);border-radius:8px;padding:1.25rem;border:1px solid var(--border);">
-		<h2 style="font-size:1rem;margin-bottom:0.75rem;">Заявки (<?= $applicationCount ?>)</h2>
+		<?php include_once 'mp-applications-list.php'; ?>
+	</div>
+	
+	<?php if (!empty($applications)): ?>
 		<div class="app-list">
 			<?php foreach ($applications as $app): ?>
 				<?php 
@@ -28,15 +30,14 @@
 					
 					<p style="line-height:1.6;margin-bottom:0.5rem;"><?= nl2br(e($app['message'])) ?></p>
 					
-					<?php include_once 'mp_ac-relevant-until.php'; ?>					
-					
 					<?php include_once 'mp_ac-images.php'; ?>					
+					
+					<?php include_once 'mp_ac-relevant-until.php'; ?>					
 					
 					<?php include_once 'mp_ac-feed-contacts.php'; ?>					
 					
 				</div>
 			<?php endforeach; ?>
 		</div>
-	</div>
 	<?php endif; ?>
 </div>

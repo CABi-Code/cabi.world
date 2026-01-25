@@ -1,6 +1,5 @@
 /* === Application Modal Styles === */
 
-/* Contacts Mode Selector */
 .contacts-mode-selector {
     display: flex;
     gap: 1rem;
@@ -29,7 +28,6 @@
     color: var(--text);
 }
 
-/* Info Tooltip */
 .info-tooltip {
     display: inline-flex;
     align-items: center;
@@ -41,9 +39,7 @@
     position: relative;
 }
 
-.info-tooltip:hover {
-    color: var(--primary);
-}
+.info-tooltip:hover { color: var(--primary); }
 
 .info-tooltip::after {
     content: attr(title);
@@ -74,7 +70,6 @@
     visibility: visible;
 }
 
-/* Current Contacts Preview */
 .current-contacts {
     padding: 0.75rem;
     background: var(--bg);
@@ -88,7 +83,6 @@
     gap: 0.375rem;
 }
 
-/* Images Upload Area */
 .images-upload-area {
     display: flex;
     flex-wrap: wrap;
@@ -134,9 +128,7 @@
     transition: all 0.2s;
 }
 
-.image-preview-remove:hover {
-    background: var(--danger);
-}
+.image-preview-remove:hover { background: var(--danger); }
 
 .image-upload-btn {
     display: flex;
@@ -161,42 +153,21 @@
     background: var(--primary-light);
 }
 
-.image-upload-btn svg {
-    opacity: 0.7;
+.image-upload-btn svg { opacity: 0.7; }
+
+.char-counter { font-variant-numeric: tabular-nums; }
+
+.modal-lg { max-width: 560px; }
+
+.application-form .form-group { margin-bottom: 1rem; }
+.application-form .form-row { margin-top: 0.5rem; }
+
+.section-count {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 0.875em;
 }
 
-/* Character Counter */
-.char-counter {
-    font-variant-numeric: tabular-nums;
-}
-
-/* Alert Info Style */
-.alert-info {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-}
-
-.alert-info svg {
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-
-/* Modal Large Size */
-.modal-lg {
-    max-width: 560px;
-}
-
-/* Application Form Specific */
-.application-form .form-group {
-    margin-bottom: 1rem;
-}
-
-.application-form .form-row {
-    margin-top: 0.5rem;
-}
-
-/* Responsive */
 @media (max-width: 480px) {
     .contacts-mode-selector {
         flex-direction: column;

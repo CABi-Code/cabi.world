@@ -7,6 +7,7 @@
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
     const isEdit = <?= $isEdit ? 'true' : 'false' ?>;
     const maxImages = 2;
+    const maxMessageLength = <?= \App\Repository\ApplicationRepository::MAX_MESSAGE_LENGTH ?>;
     
     // Профильные контакты
     const profileContacts = {
@@ -15,10 +16,9 @@
         vk: '<?= e($userVk) ?>'
     };
     
-    // Хранилище выбранных файлов (новые)
-    let selectedFiles = [];
-    // Хранилище существующих изображений (уже загруженные)
-    let existingImages = [];
+    // Хранилище файлов
+    let selectedFiles = [];    // Новые файлы
+    let existingImages = [];   // Существующие изображения из БД
     
     // === Закрытие модального окна ===
     modal.querySelectorAll('[data-close]').forEach(el => {
@@ -31,9 +31,15 @@
     // === Счётчик символов ===
     const messageField = form.querySelector('.app-field-message');
     const charCounter = form.querySelector('.char-counter');
+    const maxCharsSpan = form.querySelector('.max-chars');
+    
+    if (maxCharsSpan) maxCharsSpan.textContent = maxMessageLength;
+    
     if (messageField && charCounter) {
         const updateCounter = () => {
-            charCounter.textContent = messageField.value.length;
+            const len = messageField.value.length;
+            charCounter.textContent = len;
+            charCounter.style.color = len > maxMessageLength ? 'var(--danger)' : '';
         };
         messageField.addEventListener('input', updateCounter);
         updateCounter();
@@ -50,7 +56,6 @@
             if (defaultInfo) defaultInfo.style.display = isDefault ? '' : 'none';
             if (customFields) customFields.style.display = isDefault ? 'none' : '';
             
-            // При переключении на "На выбор" - заполняем поля из профиля
             if (!isDefault) {
                 const discordField = form.querySelector('.app-field-discord');
                 const telegramField = form.querySelector('.app-field-telegram');
@@ -80,19 +85,16 @@
         const files = Array.from(e.target.files);
         
         files.forEach(file => {
-            // Проверка лимита (учитываем существующие + новые)
             if (getTotalImagesCount() >= maxImages) {
                 alert('Максимум ' + maxImages + ' изображения');
                 return;
             }
             
-            // Проверка типа
             if (!file.type.startsWith('image/')) {
                 alert('Файл ' + file.name + ' не является изображением');
                 return;
             }
             
-            // Проверка размера (5 МБ)
             if (file.size > 5 * 1024 * 1024) {
                 alert('Файл ' + file.name + ' слишком большой (максимум 5 МБ)');
                 return;
@@ -106,7 +108,6 @@
         imageInput.value = '';
     }
     
-    // Превью для НОВЫХ файлов
     function addNewImagePreview(file, index) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -124,7 +125,6 @@
                 const idx = parseInt(div.dataset.index);
                 selectedFiles = selectedFiles.filter((_, i) => i !== idx);
                 div.remove();
-                // Обновляем индексы оставшихся новых изображений
                 previewContainer.querySelectorAll('.image-preview-item.new-image').forEach((item, i) => {
                     item.dataset.index = i;
                 });
@@ -136,7 +136,6 @@
         reader.readAsDataURL(file);
     }
     
-    // Превью для СУЩЕСТВУЮЩИХ изображений (из БД)
     function addExistingImagePreview(imageData) {
         const div = document.createElement('div');
         div.className = 'image-preview-item existing-image';
@@ -151,7 +150,6 @@
         div.querySelector('.image-preview-remove').addEventListener('click', async function() {
             const imageId = imageData.id;
             
-            // Удаляем с сервера
             try {
                 const res = await fetch('/api/application/delete-image', {
                     method: 'POST',
@@ -200,30 +198,33 @@
         btn.disabled = true;
         btn.textContent = '...';
         
-        // Собираем данные формы
         const formData = new FormData(form);
         
-        // Определяем режим контактов
         const contactsMode = form.querySelector('.contacts-mode-radio:checked')?.value || 'default';
         formData.set('contacts_mode', contactsMode);
         
-        // Если режим "default" - не отправляем поля контактов
         if (contactsMode === 'default') {
             formData.delete('discord');
             formData.delete('telegram');
             formData.delete('vk');
         }
         
-        // Удаляем старые файлы и добавляем только НОВЫЕ выбранные
         formData.delete('images[]');
-        selectedFiles.forEach((file, i) => {
+        selectedFiles.forEach((file) => {
             formData.append('images[]', file);
         });
         
-        // Валидация на клиенте
+        // Клиентская валидация
         const message = formData.get('message')?.trim();
         if (!message) {
             showFormError('message', 'Введите сообщение');
+            btn.disabled = false;
+            btn.textContent = originalText;
+            return;
+        }
+        
+        if (message.length > maxMessageLength) {
+            showFormError('message', 'Сообщение слишком длинное (максимум ' + maxMessageLength + ' символов)');
             btn.disabled = false;
             btn.textContent = originalText;
             return;
@@ -237,7 +238,6 @@
             return;
         }
         
-        // Проверка контактов при режиме "custom"
         if (contactsMode === 'custom') {
             const discord = formData.get('discord')?.trim();
             const telegram = formData.get('telegram')?.trim();
@@ -311,13 +311,11 @@
         resetForm();
         
         if (appData) {
-            // Режим редактирования - заполняем поля
             form.querySelector('.app-field-id').value = appData.id || '';
             form.querySelector('.app-field-message').value = appData.message || '';
             form.querySelector('.app-field-relevant').value = appData.relevant_until || '<?= $defaultRelevantDate ?>';
             
-            // Определяем режим контактов
-            // Если contact_discord/telegram/vk равны null - значит режим "по умолчанию"
+            // Определяем режим контактов: если все contact_* равны null - режим "по умолчанию"
             const hasCustomContacts = appData.contact_discord !== null || 
                                       appData.contact_telegram !== null || 
                                       appData.contact_vk !== null;
@@ -341,14 +339,11 @@
             // Загружаем существующие изображения
             if (appData.images && Array.isArray(appData.images)) {
                 existingImages = appData.images;
-                appData.images.forEach(img => {
-                    addExistingImagePreview(img);
-                });
+                appData.images.forEach(img => addExistingImagePreview(img));
                 updateUploadButtonVisibility();
             }
         }
         
-        // Обновляем счётчик символов
         if (messageField && charCounter) {
             charCounter.textContent = messageField.value.length;
         }

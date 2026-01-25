@@ -1,3 +1,3 @@
 
-<?php include_once 'home/index.php'; ?>
+<?php include_once 'feed/index.php'; ?>
 
