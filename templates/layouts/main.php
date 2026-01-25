@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
     <title><?= e($title ?? 'cabi.world') ?></title>
     <link rel="stylesheet" href="/css/app.css">
+	<link rel="stylesheet" href="/css/components/application-cards.css">
 </head>
 <body>
     <?php require TEMPLATES_PATH . '/components/header.php'; ?>

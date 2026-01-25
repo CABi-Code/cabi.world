@@ -23,7 +23,19 @@ if (isset($routes[$uri])) {
     }
     
     $pageName = $route['page'];
-    $pageFile = TEMPLATES_PATH . '/pages/' . $pageName . '.php';
+    
+    // Маппинг страниц к реальным файлам (без промежуточных редиректов)
+    $pageMap = [
+        'home' => 'feed/index.php',
+        'modrinth' => 'modpacks/index-modrinth.php',
+        'curseforge' => 'modpacks/index-curseforge.php',
+        'settings' => 'settings/index.php',
+        'login' => 'auth/login.php',
+        'register' => 'auth/register.php',
+        'forgot-password' => 'auth/forgot-password.php',
+    ];
+    
+    $pageFile = TEMPLATES_PATH . '/pages/' . ($pageMap[$pageName] ?? $pageName . '.php');
     
     if (file_exists($pageFile)) {
         $title = match($pageName) {
@@ -48,5 +60,3 @@ if (isset($routes[$uri])) {
         exit;
     }
 }
-
-?>

@@ -12,7 +12,7 @@ if (preg_match('#^/modpack/(modrinth|curseforge)/([a-zA-Z0-9_-]+)$#', $uri, $mat
     
     $title = ($modpack['name'] ?? $slug) . ' — cabi.world';
     ob_start();
-    require TEMPLATES_PATH . '/pages/modpack.php';
+    require TEMPLATES_PATH . '/pages/modpack/index.php';
     $content = ob_get_clean();
     require TEMPLATES_PATH . '/layouts/main.php';
     exit;

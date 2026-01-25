@@ -33,7 +33,7 @@ if (preg_match('#^/@([a-zA-Z0-9_-]+)$#', $uri, $matches)) {
     $isOwner = $user && $user['id'] === $profileUser['id'];
     $title = $profileUser['username'] . ' — cabi.world';
     ob_start();
-    require TEMPLATES_PATH . '/pages/profile.php';
+	require TEMPLATES_PATH . '/pages/profile/index.php';
     $content = ob_get_clean();
     require TEMPLATES_PATH . '/layouts/main.php';
     exit;

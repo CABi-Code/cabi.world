@@ -1,9 +1,76 @@
 /* === Auth === */
 .auth-page{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:2rem 1rem}
-.auth-card{background:var(--surface);border-radius:10px;padding:1.5rem;box-shadow:var(--shadow);border:1px solid var(--border);width:100%;max-width:380px}
-.auth-header{text-align:center;margin-bottom:1.5rem}
-.auth-title{font-size:1.125rem;font-weight:600;margin-bottom:0.25rem}
+.auth-card{background:var(--surface);border-radius:10px;padding:1.25rem 1.25rem 1.5rem;box-shadow:var(--shadow);border:1px solid var(--border);width:100%;max-width:360px}
+.auth-header{text-align:center;margin-bottom:1.25rem}
+.auth-title{font-size:1.125rem;font-weight:600;margin-bottom:0}
 .auth-subtitle{font-size:0.875rem;color:var(--text-secondary)}
 .auth-footer{margin-top:1.25rem;text-align:center;font-size:0.875rem;color:var(--text-secondary)}
 .auth-divider{display:flex;align-items:center;gap:1rem;margin:1.25rem 0;color:var(--text-muted);font-size:0.8125rem}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Компактные дополнения */
+.auth-form.compact .form-group {
+    margin-bottom: 0.9rem;     /* уменьшили отступы между полями */
+}
+
+.form-label {
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
+    font-weight: 500;
+}
+
+.form-input {
+    height: 38px;              /* уменьшили высоту инпутов */
+    font-size: 0.94rem;
+    padding: 0 0.75rem;
+}
+
+/* Блок с @ для логина */
+.input-group {
+    position: relative;
+}
+
+.input-addon-wrapper {
+    display: flex;             /* используем flex для стыковки без наложения */
+    position: relative;
+}
+
+.input-addon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    background: var(--surface);  /* под цвет заднего фона (как у auth-card) */
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 10px 0 0 10px;  /* закругление слева, как у карда */
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 1.05rem;
+}
+
+.login-input {
+    flex: 1;                   /* занимает остальное пространство */
+    padding-left: 0.75rem !important;  /* стандартный padding слева */
+    border-left: none !important;      /* убираем левый бордер для ровной стыковки */
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: 10px !important;  /* закругление справа для единого вида */
+    border-bottom-right-radius: 10px !important;
+}
+
+/* Мелкие улучшения */
+.form-hint.small {
+    font-size: 0.73rem;
+    margin-top: 0.3rem;
+    opacity: 0.7;
+}
+
+.btn-md {
+    height: 42px;
+    font-size: 0.97rem;
+}
+
+.auth-form.compact .form-group:last-of-type {
+    margin-bottom: 1.1rem;
+}

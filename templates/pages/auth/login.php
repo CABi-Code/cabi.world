@@ -6,13 +6,13 @@
 <form id="loginForm" class="auth-form" novalidate>
     <div class="form-group">
         <label class="form-label" for="login">Логин или Email</label>
-        <input type="text" id="login" name="login" class="form-input" autocomplete="username" required>
+        <input type="text" id="login" name="login" class="form-input" inputmode="email" autocomplete="username" required>
     </div>
     
     <div class="form-group">
         <label class="form-label" for="password">Пароль</label>
         <div class="password-toggle">
-            <input type="password" id="password" name="password" class="form-input" autocomplete="current-password" required>
+            <input type="password" id="password" name="password" class="form-input" inputmode="verbatim" autocomplete="current-password" required>
             <button type="button" class="password-toggle-btn" data-toggle="password">
                 <svg width="18" height="18"><use href="#icon-eye"/></svg>
             </button>
