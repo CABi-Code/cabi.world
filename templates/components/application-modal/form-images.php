@@ -6,7 +6,7 @@
     
     <div class="images-upload-area">
         <div class="images-preview" id="<?= e($modalId) ?>ImagesPreview">
-            <!-- Превью изображений будут добавляться сюда через JS -->
+            <!-- Превью изображений добавляются через JS -->
         </div>
         
         <label class="image-upload-btn" id="<?= e($modalId) ?>ImageUploadBtn">

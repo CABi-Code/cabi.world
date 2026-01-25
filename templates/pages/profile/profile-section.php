@@ -12,13 +12,18 @@
                 if ($isHidden) $cardClass .= ' hidden-app';
                 
                 // Эффективные контакты (с учётом fallback на профиль)
-                $effectiveDiscord = $app['effective_discord'] ?? $app['contact_discord'] ?? $profileUser['discord'] ?? '';
-                $effectiveTelegram = $app['effective_telegram'] ?? $app['contact_telegram'] ?? $profileUser['telegram'] ?? '';
-                $effectiveVk = $app['effective_vk'] ?? $app['contact_vk'] ?? $profileUser['vk'] ?? '';
+                // effective_* уже приходит из репозитория с COALESCE
+                $effectiveDiscord = $app['effective_discord'] ?? '';
+                $effectiveTelegram = $app['effective_telegram'] ?? '';
+                $effectiveVk = $app['effective_vk'] ?? '';
+                
+                // Для передачи в JS
+                $appForJs = $app;
+                $appForJs['images'] = $images;
                 ?>
                 <div class="<?= $cardClass ?>">
                     <div class="app-header">
-                        <?php if ($app['icon_url']): ?>
+                        <?php if (!empty($app['icon_url'])): ?>
                             <img src="<?= e($app['icon_url']) ?>" alt="" class="app-icon">
                         <?php endif; ?>
                         <div style="flex:1;">
@@ -52,12 +57,35 @@
                     <?php endif; ?>
                     
                     <?php if (!empty($images)): ?>
-                        <div style="display:flex;gap:0.5rem;margin:0.5rem 0;flex-wrap:wrap;">
+                        <div style="display:flex;gap:0.5rem;margin:0.75rem 0;flex-wrap:wrap;">
                             <?php foreach ($images as $img): ?>
                                 <a href="<?= e($img['image_path']) ?>" data-lightbox>
                                     <img src="<?= e($img['image_path']) ?>" alt="" style="width:60px;height:60px;border-radius:4px;object-fit:cover;">
                                 </a>
                             <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($effectiveDiscord || $effectiveTelegram || $effectiveVk): ?>
+                        <div class="app-contacts" style="display:flex;flex-wrap:wrap;gap:0.375rem;margin:0.75rem 0;">
+                            <?php if ($effectiveDiscord): ?>
+                                <span class="contact-btn discord" style="font-size:0.75rem;">
+                                    <svg width="12" height="12"><use href="#icon-discord"/></svg>
+                                    <?= e($effectiveDiscord) ?>
+                                </span>
+                            <?php endif; ?>
+                            <?php if ($effectiveTelegram): ?>
+                                <a href="https://t.me/<?= e(ltrim($effectiveTelegram, '@')) ?>" target="_blank" class="contact-btn telegram" style="font-size:0.75rem;">
+                                    <svg width="12" height="12"><use href="#icon-telegram"/></svg>
+                                    <?= e($effectiveTelegram) ?>
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($effectiveVk): ?>
+                                <a href="https://vk.com/<?= e($effectiveVk) ?>" target="_blank" class="contact-btn vk" style="font-size:0.75rem;">
+                                    <svg width="12" height="12"><use href="#icon-vk"/></svg>
+                                    <?= e($effectiveVk) ?>
+                                </a>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                     
@@ -71,7 +99,7 @@
                                     <svg width="14" height="14"><use href="#icon-<?= $isHidden ? 'eye' : 'eye-off' ?>"/></svg>
                                 </button>
                                 <button class="btn btn-ghost btn-icon btn-sm" title="Редактировать"
-                                        onclick='openApplicationModal["editAppModal"](<?= e(json_encode($app)) ?>)'>
+                                        onclick='openApplicationModal["editAppModal"](<?= e(json_encode($appForJs)) ?>)'>
                                     <svg width="14" height="14"><use href="#icon-edit"/></svg>
                                 </button>
                                 <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--danger)" title="Удалить"

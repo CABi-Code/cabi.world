@@ -3,6 +3,22 @@
         <a href="/login">Войдите</a> или <a href="/register">зарегистрируйтесь</a>, чтобы оставить заявку.
     </p>
 <?php elseif ($userApplication): ?>
+    <?php
+    // Получаем изображения заявки
+    $userAppImages = $appRepo->getImages($userApplication['id']);
+    
+    // Эффективные контакты (если NULL - берём из профиля пользователя)
+    $effectiveDiscord = $userApplication['contact_discord'] ?? $user['discord'] ?? '';
+    $effectiveTelegram = $userApplication['contact_telegram'] ?? $user['telegram'] ?? '';
+    $effectiveVk = $userApplication['contact_vk'] ?? $user['vk'] ?? '';
+    
+    // Для передачи в JS добавляем эффективные контакты
+    $userAppForJs = $userApplication;
+    $userAppForJs['effective_discord'] = $effectiveDiscord;
+    $userAppForJs['effective_telegram'] = $effectiveTelegram;
+    $userAppForJs['effective_vk'] = $effectiveVk;
+    $userAppForJs['images'] = $userAppImages;
+    ?>
     <div style="background:var(--primary-light);border-radius:6px;padding:1rem;border:1px solid rgba(59,130,246,0.2);">
         <h4 style="font-size:0.875rem;margin-bottom:0.5rem;color:var(--text-secondary);">Ваша заявка</h4>
         <div class="app-card <?= $userApplication['status'] === 'pending' ? 'pending' : '' ?>" style="background:var(--surface);">
@@ -15,13 +31,49 @@
                 } ?>
             </span>
             <p style="margin:0.5rem 0;line-height:1.5;"><?= nl2br(e($userApplication['message'])) ?></p>
+            
             <?php if ($userApplication['relevant_until']): ?>
                 <p style="font-size:0.8125rem;color:var(--text-muted);margin-bottom:0.5rem;">
+                    <svg width="12" height="12" style="vertical-align:-2px;"><use href="#icon-clock"/></svg>
                     Актуально до: <?= date('d.m.Y', strtotime($userApplication['relevant_until'])) ?>
                 </p>
             <?php endif; ?>
+            
+            <?php if (!empty($userAppImages)): ?>
+                <div style="display:flex;gap:0.5rem;margin:0.75rem 0;flex-wrap:wrap;">
+                    <?php foreach ($userAppImages as $img): ?>
+                        <a href="<?= e($img['image_path']) ?>" data-lightbox class="app-image-thumb">
+                            <img src="<?= e($img['image_path']) ?>" alt="" style="width:60px;height:60px;border-radius:4px;object-fit:cover;">
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($effectiveDiscord || $effectiveTelegram || $effectiveVk): ?>
+                <div class="app-contacts" style="margin:0.75rem 0;">
+                    <?php if ($effectiveDiscord): ?>
+                        <span class="contact-btn discord" style="font-size:0.75rem;">
+                            <svg width="12" height="12"><use href="#icon-discord"/></svg>
+                            <?= e($effectiveDiscord) ?>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($effectiveTelegram): ?>
+                        <a href="https://t.me/<?= e(ltrim($effectiveTelegram, '@')) ?>" target="_blank" class="contact-btn telegram" style="font-size:0.75rem;">
+                            <svg width="12" height="12"><use href="#icon-telegram"/></svg>
+                            <?= e($effectiveTelegram) ?>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($effectiveVk): ?>
+                        <a href="https://vk.com/<?= e($effectiveVk) ?>" target="_blank" class="contact-btn vk" style="font-size:0.75rem;">
+                            <svg width="12" height="12"><use href="#icon-vk"/></svg>
+                            <?= e($effectiveVk) ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+            
             <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-                <button class="btn btn-secondary btn-sm" onclick="openApplicationModal['editMyAppModal'](<?= e(json_encode($userApplication)) ?>)">
+                <button class="btn btn-secondary btn-sm" onclick="openApplicationModal['editMyAppModal'](<?= e(json_encode($userAppForJs)) ?>)">
                     <svg width="12" height="12"><use href="#icon-edit"/></svg>Редактировать
                 </button>
                 <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteMyApp(<?= $userApplication['id'] ?>)">

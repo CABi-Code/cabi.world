@@ -15,8 +15,10 @@
         vk: '<?= e($userVk) ?>'
     };
     
-    // Хранилище выбранных файлов
+    // Хранилище выбранных файлов (новые)
     let selectedFiles = [];
+    // Хранилище существующих изображений (уже загруженные)
+    let existingImages = [];
     
     // === Закрытие модального окна ===
     modal.querySelectorAll('[data-close]').forEach(el => {
@@ -70,12 +72,16 @@
         imageInput.addEventListener('change', handleImageSelect);
     }
     
+    function getTotalImagesCount() {
+        return existingImages.length + selectedFiles.length;
+    }
+    
     function handleImageSelect(e) {
         const files = Array.from(e.target.files);
         
         files.forEach(file => {
-            // Проверка лимита
-            if (selectedFiles.length >= maxImages) {
+            // Проверка лимита (учитываем существующие + новые)
+            if (getTotalImagesCount() >= maxImages) {
                 alert('Максимум ' + maxImages + ' изображения');
                 return;
             }
@@ -93,18 +99,19 @@
             }
             
             selectedFiles.push(file);
-            addImagePreview(file, selectedFiles.length - 1);
+            addNewImagePreview(file, selectedFiles.length - 1);
         });
         
         updateUploadButtonVisibility();
         imageInput.value = '';
     }
     
-    function addImagePreview(file, index) {
+    // Превью для НОВЫХ файлов
+    function addNewImagePreview(file, index) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const div = document.createElement('div');
-            div.className = 'image-preview-item';
+            div.className = 'image-preview-item new-image';
             div.dataset.index = index;
             div.innerHTML = `
                 <img src="${e.target.result}" alt="">
@@ -117,8 +124,8 @@
                 const idx = parseInt(div.dataset.index);
                 selectedFiles = selectedFiles.filter((_, i) => i !== idx);
                 div.remove();
-                // Обновляем индексы оставшихся
-                previewContainer.querySelectorAll('.image-preview-item').forEach((item, i) => {
+                // Обновляем индексы оставшихся новых изображений
+                previewContainer.querySelectorAll('.image-preview-item.new-image').forEach((item, i) => {
                     item.dataset.index = i;
                 });
                 updateUploadButtonVisibility();
@@ -129,9 +136,50 @@
         reader.readAsDataURL(file);
     }
     
+    // Превью для СУЩЕСТВУЮЩИХ изображений (из БД)
+    function addExistingImagePreview(imageData) {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item existing-image';
+        div.dataset.imageId = imageData.id;
+        div.innerHTML = `
+            <img src="${imageData.image_path}" alt="">
+            <button type="button" class="image-preview-remove" title="Удалить">
+                <svg width="14" height="14"><use href="#icon-x"/></svg>
+            </button>
+        `;
+        
+        div.querySelector('.image-preview-remove').addEventListener('click', async function() {
+            const imageId = imageData.id;
+            
+            // Удаляем с сервера
+            try {
+                const res = await fetch('/api/application/delete-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrf
+                    },
+                    body: JSON.stringify({ image_id: imageId })
+                });
+                
+                if (res.ok) {
+                    existingImages = existingImages.filter(img => img.id !== imageId);
+                    div.remove();
+                    updateUploadButtonVisibility();
+                } else {
+                    alert('Не удалось удалить изображение');
+                }
+            } catch (err) {
+                alert('Ошибка сети');
+            }
+        });
+        
+        previewContainer.appendChild(div);
+    }
+    
     function updateUploadButtonVisibility() {
         if (uploadBtn) {
-            uploadBtn.style.display = selectedFiles.length >= maxImages ? 'none' : '';
+            uploadBtn.style.display = getTotalImagesCount() >= maxImages ? 'none' : '';
         }
     }
     
@@ -166,7 +214,7 @@
             formData.delete('vk');
         }
         
-        // Удаляем старые файлы и добавляем выбранные
+        // Удаляем старые файлы и добавляем только НОВЫЕ выбранные
         formData.delete('images[]');
         selectedFiles.forEach((file, i) => {
             formData.append('images[]', file);
@@ -250,6 +298,7 @@
     
     function resetForm() {
         selectedFiles = [];
+        existingImages = [];
         if (previewContainer) previewContainer.innerHTML = '';
         updateUploadButtonVisibility();
         form.querySelectorAll('.form-input').forEach(input => input.classList.remove('error'));
@@ -268,9 +317,10 @@
             form.querySelector('.app-field-relevant').value = appData.relevant_until || '<?= $defaultRelevantDate ?>';
             
             // Определяем режим контактов
-            const hasCustomContacts = (appData.contact_discord !== profileContacts.discord) ||
-                                      (appData.contact_telegram !== profileContacts.telegram) ||
-                                      (appData.contact_vk !== profileContacts.vk);
+            // Если contact_discord/telegram/vk равны null - значит режим "по умолчанию"
+            const hasCustomContacts = appData.contact_discord !== null || 
+                                      appData.contact_telegram !== null || 
+                                      appData.contact_vk !== null;
             
             const modeRadio = form.querySelector(`.contacts-mode-radio[value="${hasCustomContacts ? 'custom' : 'default'}"]`);
             if (modeRadio) {
@@ -279,9 +329,22 @@
             }
             
             if (hasCustomContacts) {
-                form.querySelector('.app-field-discord').value = appData.contact_discord || '';
-                form.querySelector('.app-field-telegram').value = appData.contact_telegram || '';
-                form.querySelector('.app-field-vk').value = appData.contact_vk || '';
+                const discordField = form.querySelector('.app-field-discord');
+                const telegramField = form.querySelector('.app-field-telegram');
+                const vkField = form.querySelector('.app-field-vk');
+                
+                if (discordField) discordField.value = appData.contact_discord || '';
+                if (telegramField) telegramField.value = appData.contact_telegram || '';
+                if (vkField) vkField.value = appData.contact_vk || '';
+            }
+            
+            // Загружаем существующие изображения
+            if (appData.images && Array.isArray(appData.images)) {
+                existingImages = appData.images;
+                appData.images.forEach(img => {
+                    addExistingImagePreview(img);
+                });
+                updateUploadButtonVisibility();
             }
         }
         
