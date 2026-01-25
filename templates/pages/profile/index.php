@@ -34,11 +34,12 @@ $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
 <?php include_once 'profile-section.php'; ?>
 
 <?php if ($isOwner): ?>
-    <!-- Edit Application Modal -->
+    <!-- Универсальное модальное окно для редактирования заявок -->
     <?php 
-    $application = [];
+    $application = null; // Будет заполняться через JS
     $modalId = 'editAppModal';
-    require TEMPLATES_PATH . '/components/edit-application-modal.php'; 
+    $mode = 'edit';
+    require TEMPLATES_PATH . '/components/application-modal.php'; 
     ?>
 
     <?php include_once 'js-script.php'; ?>

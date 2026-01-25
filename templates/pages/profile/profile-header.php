@@ -37,13 +37,13 @@
                     </span>
                 <?php endif; ?>
                 <?php if ($profileUser['telegram']): ?>
-                    <a href="https://t.me/<?= e(ltrim($profileUser['telegram'], '@')) ?>" class="contact-btn telegram" target="_blank">
+                    <a href="https://t.me/<?= e(ltrim($profileUser['telegram'], '@')) ?>" class="contact-btn telegram" target="_blank" title="Перейти в Телеграм">
                         <svg width="14" height="14"><use href="#icon-telegram"/></svg>
                         <?= e($profileUser['telegram']) ?>
                     </a>
                 <?php endif; ?>
                 <?php if ($profileUser['vk']): ?>
-                    <a href="https://vk.com/<?= e($profileUser['vk']) ?>" class="contact-btn vk" target="_blank">
+                    <a href="https://vk.com/<?= e($profileUser['vk']) ?>" class="contact-btn vk" target="_blank" title="Перейти в ВК">
                         <svg width="14" height="14"><use href="#icon-vk"/></svg>
                         <?= e($profileUser['vk']) ?>
                     </a>
@@ -61,7 +61,7 @@
                     <svg width="16" height="16"><use href="#icon-shield"/></svg>
                 </a>
             <?php endif; ?>
-            <a href="/settings" class="btn btn-secondary btn-sm">
+            <a href="/settings" class="btn btn-secondary btn-sm" title="Редактировать профиль">
                 <svg width="14" height="14"><use href="#icon-edit"/></svg>
                 Редактировать
             </a>

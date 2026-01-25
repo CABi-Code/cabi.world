@@ -10,6 +10,11 @@
                 $cardClass = 'app-card';
                 if ($isPending) $cardClass .= ' pending';
                 if ($isHidden) $cardClass .= ' hidden-app';
+                
+                // Эффективные контакты (с учётом fallback на профиль)
+                $effectiveDiscord = $app['effective_discord'] ?? $app['contact_discord'] ?? $profileUser['discord'] ?? '';
+                $effectiveTelegram = $app['effective_telegram'] ?? $app['contact_telegram'] ?? $profileUser['telegram'] ?? '';
+                $effectiveVk = $app['effective_vk'] ?? $app['contact_vk'] ?? $profileUser['vk'] ?? '';
                 ?>
                 <div class="<?= $cardClass ?>">
                     <div class="app-header">
@@ -66,7 +71,7 @@
                                     <svg width="14" height="14"><use href="#icon-<?= $isHidden ? 'eye' : 'eye-off' ?>"/></svg>
                                 </button>
                                 <button class="btn btn-ghost btn-icon btn-sm" title="Редактировать"
-                                        onclick='openEditAppModal["editAppModal"](<?= e(json_encode($app)) ?>)'>
+                                        onclick='openApplicationModal["editAppModal"](<?= e(json_encode($app)) ?>)'>
                                     <svg width="14" height="14"><use href="#icon-edit"/></svg>
                                 </button>
                                 <button class="btn btn-ghost btn-icon btn-sm" style="color:var(--danger)" title="Удалить"
