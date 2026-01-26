@@ -12,6 +12,8 @@
     <?php include_once 'settings-card/contacts.php'; ?>
     
     <?php include_once 'settings-card/password.php'; ?>
+	
+	<?php include_once 'settings-card/privacy.php'; ?>
 
 </div>
 

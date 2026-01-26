@@ -41,6 +41,8 @@ include_once '../index/Routes/modpack-page.php';
 
 include_once '../index/Routes/static-routes.php';
 
+include_once '../index/Routes/chat-routes.php';
+
 // 404
 http_response_code(404);
 $title = 'Страница не найдена';

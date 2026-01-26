@@ -7,6 +7,8 @@
     <title><?= e($title ?? 'cabi.world') ?></title>
     <link rel="stylesheet" href="/css/app.css">
 	<link rel="stylesheet" href="/css/components/application-cards.css">
+	<link rel="stylesheet" href="/css/sections/community.css">
+	<link rel="stylesheet" href="/css/sections/chat.css">
 </head>
 <body>
     <?php require TEMPLATES_PATH . '/components/header.php'; ?>

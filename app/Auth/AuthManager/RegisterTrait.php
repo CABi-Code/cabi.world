@@ -8,7 +8,7 @@ trait RegisterTrait {
 	{
 		$errors = [];
 		
-		$content_reserved = file_get_contents(__DIR__ . '/AuthManager/login-reserved.txt');
+		$content_reserved = file_get_contents(__DIR__ . '/../login-reserved.txt');
 		$reserved = explode(', ', $content_reserved);
 		
 		$reserved = array_merge($reserved, ['admin', 'root', 'system', 'moderator', 'support', 'test']);

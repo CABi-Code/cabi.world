@@ -1,5 +1,8 @@
 <?php
 
+include_once 'community.php';
+include_once 'chat.php';
+
 switch ($apiRoute) {
 	case '/auth/login': include_once 'auth/login.php'; break;
 
