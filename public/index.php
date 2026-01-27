@@ -4,47 +4,37 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 
-use App\Middleware\AuthMiddleware;
-use App\Middleware\AdminMiddleware;
-use App\Auth\AuthManager;
-use App\Repository\UserRepository;
-use App\Repository\ModpackRepository;
-use App\Repository\ApplicationRepository;
+use App\Http\Router;
 use App\Repository\NotificationRepository;
-use App\Service\ImageService;
-use App\Core\Database;
-use App\Core\Role;
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = rtrim($uri, '/') ?: '/';
-$method = $_SERVER['REQUEST_METHOD'];
+// Инициализируем Request для получения пользователя
+$request = new \App\Http\Request();
 
-$auth = new AuthMiddleware();
-$user = $auth->getUser();
+// Получаем пользователя через middleware (для совместимости со старым кодом)
+$authMiddleware = new \App\Http\Middleware\AuthMiddleware();
+$user = null;
+try {
+    $user = $authMiddleware->getUser($request);
+    if ($user) {
+        $request->setUser($user);
+    }
+} catch (\Exception $e) {
+    // Игнорируем ошибки аутентификации
+}
 
-// Счётчик уведомлений для хедера
+// Глобальная переменная $user для совместимости со старыми шаблонами
+global $user;
+
+// Счётчик уведомлений для хедера (глобальная переменная для совместимости)
 $unreadNotifications = 0;
 if ($user) {
     $notifRepo = new NotificationRepository();
     $unreadNotifications = $notifRepo->countUnread($user['id']);
 }
 
-include_once '../index/RoutesAPI/RoutesAPI.php';
+// Загружаем маршруты
+require_once ROOT_PATH . '/routes/web.php';
+require_once ROOT_PATH . '/routes/api.php';
 
-include_once '../index/Routes/.PageRoutes.php';
-
-include_once '../index/Routes/admin-panel-route.php';
-
-include_once '../index/Routes/profile-routes.php';
-
-include_once '../index/Routes/modpack-page.php';
-
-include_once '../index/Routes/static-routes.php';
-
-include_once '../index/Routes/chat-routes.php';
-
-// 404
-http_response_code(404);
-$title = 'Страница не найдена';
-$content = '<div class="alert alert-error">Страница не найдена</div>';
-require TEMPLATES_PATH . '/layouts/main.php';
+// Диспетчеризация маршрутов
+Router::dispatch();
