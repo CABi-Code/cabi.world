@@ -245,26 +245,114 @@ const canSendMessages = <?= $canSendMessages ? 'true' : 'false' ?>;
 const canSendFiles = <?= $canSendFiles ? 'true' : 'false' ?>;
 const messageTimeout = <?= $settings['message_timeout'] ?? 0 ?>;
 
+let isLoadingOlder = false;           // Флаг, чтобы не запрашивать несколько раз подряд
+let hasMoreOlder = true;              // Есть ли ещё старые сообщения (false, когда сервер вернул 0)
+const scrollThreshold = 300;          // Пикселей от верха, при которых подгружаем
+const messagesContainer = document.getElementById('chatMessagesContainer'); // ← ваш внешний контейнер с overflow-y: auto
+
 let lastMessageId = 0;
 let selectedImages = [];
 let pollingInterval = null;
 
-// Загрузка сообщений
-async function loadMessages(beforeId = null) {
-    const url = `/api/chat/messages?chat_id=${chatId}` + (beforeId ? `&before_id=${beforeId}` : '');
-    const res = await fetch(url);
-    const data = await res.json();
+
+
+// Вычисляем примерное количество сообщений, которое помещается + запас
+function calculateDesiredLimit() {
+    const container = document.getElementById('chatMessagesContainer');
+    if (!container) return 60; // fallback
+
+    const containerHeight = container.clientHeight;
     
-    if (data.messages) {
-        renderMessages(data.messages, beforeId !== null);
-        if (data.messages.length > 0) {
-            lastMessageId = Math.max(...data.messages.map(m => m.id));
+    // Средняя высота одного сообщения (замерьте реальную на вашем дизайне)
+    // Обычно 60–120 px в зависимости от текста, аватарки, картинок
+    const avgMessageHeight = 90; // ← подберите под ваш дизайн (протестируйте)
+    
+    // Запас в пикселях (чтобы подгружалось чуть раньше, чем пользователь дошел до конца)
+    const bufferPx = 400; // ~4–5 сообщений сверху
+    
+    const visibleCount = Math.ceil((containerHeight + bufferPx) / avgMessageHeight);
+    
+    // Ограничиваем разумными значениями
+    const minLimit = 10;
+    const maxLimit = 120;
+    
+    return Math.min(Math.max(visibleCount, minLimit), maxLimit);
+}
+
+// Текущий лимит (начальное значение)
+let currentLimit = calculateDesiredLimit();
+
+
+
+// Загрузка сообщений
+async function loadMessages(beforeId = null, isInitial = false) {
+    if (isLoadingOlder && !isInitial) return; // Защита от параллельных запросов
+   // if (!hasMoreOlder && !isInitial) return;
+
+    if (!isInitial) isLoadingOlder = true;
+
+    const url = `/api/chat/messages?chat_id=${chatId}` +
+				`&limit=${currentLimit}` +
+                (beforeId ? `&before_id=${beforeId}` : '');
+
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Ошибка загрузки');
+
+        const data = await res.json();
+
+        if (data.messages && data.messages.length > 0) {
+            // Сохраняем позицию перед добавлением старых
+            const prevScrollHeight = messagesContainer.scrollHeight;
+            const prevScrollTop = messagesContainer.scrollTop;
+			
+			if (beforeId) {
+				data.messages.reverse();  // переворачиваем, чтобы старые были первыми
+			}
+			
+			if (data.messages && data.messages.length > 0) {
+				renderMessages(data.messages, !!beforeId); // prepend = true если beforeId
+				if (data.messages.length < currentLimit) {
+					hasMoreOlder = false;
+					console.log('Больше старых сообщений нет (пришло меньше лимита)');
+				}
+			} else {
+				hasMoreOlder = false;
+				console.log('Сервер вернул 0 сообщений → hasMoreOlder = false');
+			}
+
+            if (beforeId) {
+                // После prepend восстанавливаем позицию
+                const newScrollHeight = messagesContainer.scrollHeight;
+                messagesContainer.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+            } else {
+                scrollToBottom();
+            }
+
+            // Обновляем lastMessageId только для новых (не для старых)
+            if (!beforeId) {
+                lastMessageId = Math.max(...data.messages.map(m => m.id));
+            }
+
+            // Если вернулось меньше лимита — больше нет старых
+            if (data.messages.length < 50) { // предполагаем лимит 50 на бэкенде
+                hasMoreOlder = false;
+            }
+        } else {
+            hasMoreOlder = false;
         }
+    } catch (err) {
+        console.error('Ошибка загрузки сообщений:', err);
+    } finally {
+        if (!isInitial) isLoadingOlder = false;
+		isLoadingOlder = false;
+		console.log('Загрузка старых завершена, isLoadingOlder = false');
     }
 }
 
 // Рендер сообщений
 function renderMessages(messages, prepend = false) {
+	
     const container = document.getElementById('chatMessages');
     
     if (!prepend) {
@@ -404,19 +492,30 @@ document.getElementById('chatMessageForm')?.addEventListener('submit', async fun
 // Подгрузка новых сообщений
 async function loadNewMessages() {
     if (lastMessageId === 0) return;
-    
+
     const res = await fetch(`/api/chat/messages/new?chat_id=${chatId}&after_id=${lastMessageId}`);
     const data = await res.json();
-    
+
     if (data.messages && data.messages.length > 0) {
-        const container = document.getElementById('chatMessages');
+        const wasAtBottom = isAtBottom(); // Проверяем до добавления
+
         data.messages.forEach(msg => {
             const html = createMessageHtml(msg);
-            container.insertAdjacentHTML('beforeend', html);
+            document.getElementById('chatMessages').insertAdjacentHTML('beforeend', html);
         });
+
         lastMessageId = Math.max(...data.messages.map(m => m.id));
-        scrollToBottom();
+
+        if (wasAtBottom) {
+            scrollToBottom();
+        }
     }
+}
+
+// Вспомогательная функция — пользователь внизу?
+function isAtBottom() {
+    const threshold = 100; // пикселей
+    return messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
 }
 
 // Лайк
@@ -629,7 +728,66 @@ document.querySelectorAll('.modal [data-close]').forEach(el => {
 });
 
 // Инициализация
-loadMessages();
+currentLimit = calculateDesiredLimit();
+loadMessages(null, true);
+
+
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const newLimit = calculateDesiredLimit();
+        if (newLimit !== currentLimit) {
+            currentLimit = newLimit;
+            console.log(`Лимит сообщений изменён на ${currentLimit}`);
+            // Опционально: можно сразу подгрузить больше, если пользователь наверху
+            if (messagesContainer.scrollTop < 500) {
+                const oldest = document.querySelector('#chatMessages .chat-message:first-child');
+                if (oldest) {
+                    const oldestId = parseInt(oldest.dataset.messageId);
+                    loadMessages(oldestId);
+                }
+            }
+        }
+    }, 300); // debounce 300 мс
+});
+
+
+// Бесконечная прокрутка вверх
+messagesContainer.addEventListener('scroll', () => {
+	
+	console.log('scrollTop:', messagesContainer.scrollTop);
+		
+	if (isLoadingOlder) {
+	//	console.log('→ заблокировано: isLoadingOlder = true');
+	//	return;
+	}
+	if (!hasMoreOlder) {
+		//console.log('→ заблокировано: hasMoreOlder = false');
+		//return;
+	}
+    
+    if (messagesContainer.scrollTop <= 200) {
+        console.log('→ Пора подгружать старые');
+        console.log('Близко к верху → пытаемся подгрузить старые сообщения');
+
+        const oldestMessage = document.querySelector('#chatMessages .chat-message:first-child');
+        if (!oldestMessage) {
+            console.log('Нет сообщений в DOM — ничего не подгружаем');
+            return;
+        }
+
+        const oldestId = parseInt(oldestMessage.dataset.messageId);
+        console.log('Самое старое ID:', oldestId);
+
+        if (oldestId && !isNaN(oldestId)) {
+            loadMessages(oldestId);
+        } else {
+            console.warn('Не удалось получить oldestId');
+        }
+    }
+});
+
 
 // Polling для новых сообщений
 pollingInterval = setInterval(loadNewMessages, 3000);

@@ -1,3 +1,14 @@
+
+<?php
+
+use App\Core\Security; 
+
+$security = new Security();
+$currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$security->check($currentPath);
+
+?>
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -12,7 +23,7 @@
 </head>
 <body>
     <?php require TEMPLATES_PATH . '/components/header.php'; ?>
-    
+	
     <main class="page-content">
         <div class="container">
             <?= $content ?? '' ?>

@@ -1,3 +1,6 @@
+
+<?php use App\Core\Role; ?>
+
 <?php if ($showModpack && !empty($app['modpack_name'])): ?>
     <div class="app-header">
         <?php if (!empty($app['icon_url'])): ?>
@@ -5,7 +8,7 @@
         <?php endif; ?>
         <div style="flex:1;">
             <a href="/modpack/<?= e($app['platform'] ?? '') ?>/<?= e($app['slug'] ?? '') ?>" class="app-modpack">
-                <?= e($app['modpack_name']) ?>
+                <?= e($app['modpack_name']) ?> 
             </a>
         </div>
     </div>
@@ -31,7 +34,10 @@
                     <?= mb_strtoupper(mb_substr($app['username'], 0, 1)) ?>
                 </div>
             <?php endif; ?>
-            <span class="app-user-name"><?= e($app['username']) ?></span>
+            <span class="app-user-name">
+				<?= e($app['username']) ?>
+				<?= Role::badge($app['role'] ?? 'user') ?>
+			</span>
         </a>
     </div>
 <?php endif; ?>

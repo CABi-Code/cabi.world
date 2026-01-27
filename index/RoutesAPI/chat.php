@@ -129,15 +129,6 @@ if ($apiRoute === '/chat/send' && $method === 'POST') {
         }
     }
     
-    // Валидация сообщения
-    if (empty($message) && empty($_FILES['images'])) {
-        json(['error' => 'Введите сообщение или прикрепите изображение'], 400);
-    }
-    
-    if (mb_strlen($message) > ChatMessageRepository::MAX_MESSAGE_LENGTH) {
-        json(['error' => 'Сообщение слишком длинное'], 400);
-    }
-    
     // Проверка изображений
     $hasImages = !empty($_FILES['images']) && is_array($_FILES['images']['name']);
     
@@ -152,6 +143,46 @@ if ($apiRoute === '/chat/send' && $method === 'POST') {
             json(['error' => 'Загрузка файлов отключена'], 403);
         }
     }
+	
+	if (!empty($_FILES['images'])) {
+        $imageService = new ImageService();
+        $files = $_FILES['images'];
+        $count = min(count($files['name']), ChatMessageRepository::MAX_IMAGES);
+        
+        for ($i = 0; $i < $count; $i++) {
+            if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+				json(['error' => 'Bad Request (file #'.$i.')'], 400);
+				continue;
+			}
+            
+            // Проверка размера
+            if ($files['size'][$i] > 5 * 1024 * 1024) {
+				$sizeMB = $files['size'][$i]/1024/1024 ;
+				json(['error' => 'Payload Too Large (file #'.$i.' - '. round($sizeMB,2) .'MB) (MAX 5MB)'], 413);
+				continue;
+			}
+            
+            // Проверка типа
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $files['tmp_name'][$i]);
+            finfo_close($finfo);
+            
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!in_array($mimeType, $allowedTypes)) {
+				json(['error' => 'Unsupported Media Type (file #'.$i.') ('.implode(', ',$allowedTypes).')'], 413);
+				continue;
+			}
+        }
+	}
+	
+    // Валидация сообщения
+    if (empty($message) && empty($_FILES['images'])) {
+        json(['error' => 'Введите сообщение или прикрепите изображение'], 400);
+    }
+    
+    if (mb_strlen($message) > ChatMessageRepository::MAX_MESSAGE_LENGTH) {
+        json(['error' => 'Сообщение слишком длинное'], 400);
+    }
     
     // Создаём сообщение
     $messageId = $messageRepo->create($chatId, $user['id'], $message ?: null);
@@ -162,21 +193,8 @@ if ($apiRoute === '/chat/send' && $method === 'POST') {
         $files = $_FILES['images'];
         $count = min(count($files['name']), ChatMessageRepository::MAX_IMAGES);
         
-        for ($i = 0; $i < $count; $i++) {
-            if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
-            
-            // Проверка размера
-            if ($files['size'][$i] > 5 * 1024 * 1024) continue;
-            
-            // Проверка типа
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $files['tmp_name'][$i]);
-            finfo_close($finfo);
-            
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!in_array($mimeType, $allowedTypes)) continue;
-            
-            $path = $imageService->uploadFile($files['tmp_name'][$i], 'chat');
+        for ($i = 0; $i < $count; $i++) {            
+            $path = $imageService->uploadFile($files['tmp_name'][$i], 'chats/' . $chatId );
             if ($path) {
                 $messageRepo->addImage($messageId, $path, $i);
             }

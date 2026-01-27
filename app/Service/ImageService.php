@@ -78,6 +78,79 @@ class ImageService
         return $paths;
     }
 
+	/**
+	 * Загружает файл изображения в указанный контекст (например, 'chat')
+	 * Возвращает относительный путь к файлу (или null при ошибке)
+	 *
+	 * @param string $tmpPath Временный путь загруженного файла ($_FILES['tmp_name'])
+	 * @param string $context Контекст загрузки ('chat', 'post', 'profile' и т.д.)
+	 * @return string|null Относительный путь, например: /uploads/chat/2025/01/abc123.webp
+	 */
+	public function uploadFile(string $tmpPath, string $context = 'file'): ?string
+	{
+		$cfg = $this->config['uploads']['images'] ?? $this->config['uploads']['default'] ?? [
+			'max_size' => 5 * 1024 * 1024,      // 5 МБ по умолчанию
+			'allowed_ext' => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+			'quality' => 85,
+			'path_prefix' => '/uploads/',
+			'storage_dir' => UPLOADS_PATH . '/' . $context,
+		];
+
+		// 1. Проверка ошибок загрузки и размера
+		if (!file_exists($tmpPath) || !is_uploaded_file($tmpPath)) {
+			json(['error' => 'Bad Request'], 400);
+			return null;
+		}
+
+		$fileSize = filesize($tmpPath);
+		if ($fileSize > $cfg['max_size']) {
+			json(['error' => 'Payload Too Large'], 413);
+			return null;
+		}
+
+		// 2. Проверка расширения (на всякий случай, хотя mime уже проверен)
+		$ext = $this->getExtension($tmpPath);
+		if (!in_array($ext, $cfg['allowed_ext'])) {
+			json(['error' => 'Unsupported Media Type'], 415);
+			return null;
+		}
+
+		// 3. Определяем поддиректорию по контексту и дате (для лучшей организации)
+		$datePath = date('Y/m/d');
+		$baseDir = $cfg['storage_dir'] . '/' . $datePath;
+
+		if (!is_dir($baseDir)) {
+			mkdir($baseDir, 0755, true);
+		}
+
+		// 4. Генерируем уникальное имя
+		$filename = bin2hex(random_bytes(10)) . '.webp'; // 20 символов hex + .webp
+
+		$fullPath = $baseDir . '/' . $filename;
+		$relativePath = $cfg['path_prefix'] . $context . '/' . $datePath . '/' . $filename;
+
+		// 5. Загружаем и конвертируем в webp
+		$img = $this->loadImage($tmpPath);
+		if (!$img) {
+			json(['error' => 'Internal Server Error'], 500);
+			return null;
+		}
+
+		// Опционально: можно добавить ресайз, если нужно (например, max 1920×1080)
+		// $img = $this->resizeIfNeeded($img, 1920, 1080);
+
+		// Сохраняем в webp
+		$success = imagewebp($img, $fullPath, $cfg['quality'] ?? 85);
+
+		imagedestroy($img);
+
+		if (!$success) {
+			return null;
+		}
+
+		return $relativePath;
+	}
+
     public function uploadBanner(array $file, int $userId, ?array $crop = null): ?string
     {
         $cfg = $this->config['uploads']['banners'];

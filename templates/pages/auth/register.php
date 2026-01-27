@@ -6,27 +6,45 @@
 <form id="registerForm" class="auth-form compact" novalidate>
 
     <div class="form-group">
-        <label class="form-label" for="email">Email</label>
-        <input type="email" id="email" name="email" class="form-input" required>
+        <label class="form-label" for="username">Имя</label>
+        <input 
+            type="text"
+            id="username"
+            name="username"
+            class="form-input"
+            placeholder="Каби Кабович"
+            maxlength="50"
+            autocomplete="name"
+            required
+        >
     </div>
 
     <div class="form-group">
-        <label class="form-label" for="username">Имя</label>
-        <input type="text" id="username" name="username" class="form-input" maxlength="50" required>
+        <label class="form-label" for="email">Почта</label>
+        <input 
+            type="email"
+            id="email"
+            name="email"
+            class="form-input"
+            placeholder="mail@gmail.com"
+            autocomplete="email"
+            required
+        >
     </div>
 
     <div class="form-group input-group">
-        <label class="form-label" for="login">Логин</label>
+        <label class="form-label" for="login">Юзернейм</label>
         <div class="input-addon-wrapper">
             <span class="input-addon">@</span>
             <input 
-                type="text" 
-                id="login" 
-                name="login" 
-                class="form-input login-input" 
+                type="text"
+                id="login"
+                name="login"
+                class="form-input login-input"
                 pattern="[a-zA-Z0-9_-]+"
 				maxlength="16"
-                title="Только латинские буквы, цифры, - и _" 
+				placeholder="cabi"
+				autocomplete="on"
                 required
             >
         </div>
@@ -36,7 +54,14 @@
     <div class="form-group">
         <label class="form-label" for="password">Пароль</label>
         <div class="password-toggle">
-            <input type="password" id="password" name="password" class="form-input" required minlength="8">
+            <input 
+				type="password"
+				id="password"
+				name="password"
+				class="form-input"
+				autocomplete="new-password" 
+				minlength="8"
+				required>
             <button type="button" class="password-toggle-btn" data-toggle="password">
                 <svg width="18" height="18"><use href="#icon-eye"/></svg>
             </button>
@@ -46,7 +71,14 @@
     <div class="form-group">
         <label class="form-label" for="password_confirm">Подтверждение</label>
         <div class="password-toggle">
-            <input type="password" id="password_confirm" name="password_confirm" class="form-input" required>
+            <input 
+				type="password"
+				id="password_confirm"
+				name="password_confirm"
+				class="form-input"
+				autocomplete="new-password" 
+				minlength="8"
+				required>
             <button type="button" class="password-toggle-btn" data-toggle="password">
                 <svg width="18" height="18"><use href="#icon-eye"/></svg>
             </button>

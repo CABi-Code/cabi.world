@@ -5,7 +5,7 @@
 set -euo pipefail
 
 REMOTE_NAME="origin"
-BRANCH="master"
+BRANCH="main"
 COMMIT_MSG="${1:-Update $(date '+%Y-%m-%d %H:%M:%S')}"
 
 echo "→ Добавляем все изменения..."

@@ -11,7 +11,8 @@ trait RegisterTrait {
 		$content_reserved = file_get_contents(__DIR__ . '/../login-reserved.txt');
 		$reserved = explode(', ', $content_reserved);
 		
-		$reserved = array_merge($reserved, ['admin', 'root', 'system', 'moderator', 'support', 'test']);
+		$forbidden_keywords = ['cabi', 'admin', 'root', 'system', 'moderator', 'support', 'test'];
+		$login = strtolower($login);
 		
 		if (strlen($login) < 4 || strlen($login) > 16) {
 			$errors['login'] = 'Логин должен быть от 4 до 16 символов';
@@ -19,7 +20,7 @@ trait RegisterTrait {
 			$errors['login'] = 'Логин: только буквы, цифры, - и _';
 		} elseif ($this->userRepo->loginExists($login)) {
 			$errors['login'] = 'Логин уже занят';
-		} elseif (in_array(strtolower($login), $reserved)) {
+		} elseif (in_array(strtolower($login), $reserved) || array_filter($forbidden_keywords, fn($s) => str_contains(strtolower($login), $s))) {
 			$errors['login'] = 'Этот логин зарезервирован';
 		}
 		
@@ -36,6 +37,8 @@ trait RegisterTrait {
 		
 		if (mb_strlen($username) < 2 || mb_strlen($username) > 30) {
 			$errors['username'] = 'Имя от 2 до 50 символов';
+		} elseif (!preg_match('/^[\p{L}\p{N}\s]+$/u', $username)) {
+			$errors['username'] = 'Имя содержит недопустимые спецсимволы';
 		}
 		
 		if (!empty($errors)) {

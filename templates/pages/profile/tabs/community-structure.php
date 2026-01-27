@@ -7,11 +7,11 @@
  * @var int $community['id']
  */
 
-function renderStructureItem(array $item, bool $isOwner, int $communityId, int $depth = 0): void {
+function renderStructureItem(array $item, bool $isOwner, int $communityId, int $depth = 1): void {
     $type = $item['type'];
     $data = $item['data'];
     $children = $item['children'] ?? [];
-    $paddingLeft = $depth * 1.5;
+    $paddingLeft = 1;
     
     if ($type === 'folder'): ?>
         <div class="community-folder" data-folder-id="<?= $data['id'] ?>" style="padding-left: <?= $paddingLeft ?>rem;">

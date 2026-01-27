@@ -1,3 +1,13 @@
+<?php
+
+use App\Core\Security; 
+
+$security = new Security();
+$currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$security->check($currentPath);
+
+?>
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>

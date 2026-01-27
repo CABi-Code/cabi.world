@@ -9,6 +9,8 @@ $adminUser = $adminMiddleware->requireModerator();
 
 $adminRoute = substr($apiRoute, 7); // Remove '/admin/'
 
+
+
 switch (true) {
 	// Установка статуса заявки
 	case $adminRoute === 'application/status' && $method === 'POST':

@@ -215,6 +215,8 @@ function showCreateModal(communityId, parentId = null) {
     currentCommunityId = communityId;
     currentParentId = parentId;
     document.getElementById('communityCreateModal').style.display = 'flex';
+	lockBodyScroll();
+	setTimeout(() => document.getElementById('communityCreateModal').classList.add('show'), 10);
 }
 
 // Создать сообщество если его нет
@@ -236,6 +238,10 @@ document.getElementById('communityCreateBtn')?.addEventListener('click', async f
 
 // Выбрать тип создаваемого элемента
 function createCommunityItem(type) {
+	if (document.body.classList.contains('creating')) return;
+	document.body.classList.add('creating');
+	setTimeout(() => document.body.classList.remove('creating'), 1500);
+
     currentItemType = type;
     document.getElementById('communityCreateModal').style.display = 'none';
     
@@ -248,7 +254,10 @@ function createCommunityItem(type) {
     document.getElementById('descriptionGroup').style.display = type === 'chat' ? 'block' : 'none';
     
     document.getElementById('communityNameModal').style.display = 'flex';
-    document.getElementById('nameFormInput').focus();
+	lockBodyScroll();
+	document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+	setTimeout(() => document.getElementById('communityNameModal').classList.add('show'), 10);
+    document.getElementById('nameFormInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // Отправка формы создания
@@ -284,6 +293,8 @@ function openCommunitySettings(communityId) {
     document.getElementById('settingsCommunityId').value = communityId;
     // TODO: Загрузить текущие настройки
     document.getElementById('communitySettingsModal').style.display = 'flex';
+	lockBodyScroll();
+	setTimeout(() => document.getElementById('communitySettingsModal').classList.add('show'), 10);
 }
 
 // Удалить сообщество
@@ -344,10 +355,51 @@ async function toggleSubscription(communityId, subscribe) {
     }
 }
 
+function showodal(el) {
+    el.addEventListener('click', function() {
+        const modal = this.closest('.modal');
+        modal.classList.remove('show');
+        setTimeout(() => {
+			unlockBodyScroll();
+            modal.style.display = 'none';
+        }, 150);
+    });
+}
+
 // Закрытие модалок
 document.querySelectorAll('.modal [data-close]').forEach(el => {
-    el.addEventListener('click', function() {
-        this.closest('.modal').style.display = 'none';
-    });
+    showodal(el);
 });
+
+// Закрытие по клику на фон
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+    showodal(el);
+});
+
+
+// Вычисляем ширину скроллбара один раз (чтобы компенсировать прыжок)
+function getScrollbarWidth() {
+  const outer = document.createElement('div');
+  outer.style.visibility = 'hidden';
+  outer.style.overflow = 'scroll';
+  document.body.appendChild(outer);
+  const innerWidth = outer.clientWidth;
+  document.body.removeChild(outer);
+  return outer.offsetWidth - innerWidth + 'px';
+}
+
+// Устанавливаем переменную при загрузке страницы
+document.documentElement.style.setProperty('--scrollbar-width', getScrollbarWidth());
+
+// Функции блокировки / разблокировки скролла
+function lockBodyScroll() {
+  document.body.classList.add('no-scroll');
+  document.documentElement.classList.add('no-scroll');
+}
+
+function unlockBodyScroll() {
+  document.body.classList.remove('no-scroll');
+  document.documentElement.classList.remove('no-scroll');
+}
+
 </script>

@@ -1,0 +1,18 @@
+{
+	
+    "GET": [
+        "/",
+        "/login",
+        "/api/notifications",
+        "/api/user/profile",
+        "/settings",
+        "/modrinth",
+        "/curseforge",
+        "^/@[\\w\\d_]+$",
+        "/admin"
+    ],
+    "POST": [
+        "/api/user/banner/delete",
+        "/api/user/update"
+    ]
+}

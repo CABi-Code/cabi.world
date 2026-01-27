@@ -20,7 +20,7 @@ switch ($apiRoute) {
 
 	case '/user/banner/delete': include_once 'user/banner/delete.php'; break;
 
-	case '/feed': include_once 'feed/feed.php'; break;
+	//case '/feed': include_once 'feed/feed.php'; break;
 	
 	case '/modpack/apply': include_once 'modpack/apply.php'; break;
 
@@ -30,7 +30,7 @@ switch ($apiRoute) {
 
 	case '/application/toggle-hidden': include_once 'application/toggle-hidden.php'; break;
 
-	case '/notifications': include_once 'notifications/notifications.php'; break;
+	case '/notifications': include_once 'notifications/notifications.php'; break; //GET
 
 	case '/notifications/read': include_once 'notifications/read.php'; break;
 

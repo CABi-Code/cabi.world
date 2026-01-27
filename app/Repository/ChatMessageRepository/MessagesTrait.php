@@ -52,7 +52,7 @@ trait MessagesTrait {
                 JOIN users u ON m.user_id = u.id
                 WHERE m.chat_id = ? AND m.id > ?
                 ORDER BY m.id ASC
-                LIMIT 100';
+                LIMIT 10';
         
         $messages = $this->db->fetchAll($sql, [$chatId, $afterId]);
         
