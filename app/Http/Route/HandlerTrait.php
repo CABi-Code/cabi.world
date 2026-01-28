@@ -6,12 +6,11 @@ namespace App\Http\Route;
 
 use App\Http\Request;
 use App\Http\Response;
+use ReflectionMethod;
+use ReflectionNamedType;
 
 trait HandlerTrait
 {
-    /**
-     * Вызывает обработчик маршрута
-     */
     public function call(Request $request, array $params = []): void
     {
         if (is_array($this->handler)) {
@@ -29,7 +28,10 @@ trait HandlerTrait
     {
         [$class, $method] = $this->handler;
         $controller = new $class();
-        $result = $controller->$method($request, ...array_values($params));
+        
+        // Приводим параметры к нужным типам через рефлексию
+        $castedParams = $this->castParams($class, $method, $params);
+        $result = $controller->$method($request, ...$castedParams);
         
         $this->handleResult($result);
     }
@@ -43,6 +45,46 @@ trait HandlerTrait
         );
         
         $this->handleResult($result);
+    }
+
+    /**
+     * Приводит параметры к типам, указанным в сигнатуре метода
+     */
+    private function castParams(string $class, string $method, array $params): array
+    {
+        $reflection = new ReflectionMethod($class, $method);
+        $methodParams = $reflection->getParameters();
+        
+        // Пропускаем первый параметр (Request)
+        $methodParams = array_slice($methodParams, 1);
+        $paramValues = array_values($params);
+        $result = [];
+        
+        foreach ($methodParams as $index => $param) {
+            $value = $paramValues[$index] ?? null;
+            
+            if ($value === null && $param->isDefaultValueAvailable()) {
+                $result[] = $param->getDefaultValue();
+                continue;
+            }
+            
+            $type = $param->getType();
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin() === false) {
+                $typeName = $type->getName();
+                $result[] = match($typeName) {
+                    'int' => (int)$value,
+                    'float' => (float)$value,
+                    'bool' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+                    'string' => (string)$value,
+                    'array' => (array)$value,
+                    default => $value
+                };
+            } else {
+                $result[] = $value;
+            }
+        }
+        
+        return $result;
     }
 
     private function handleResult($result): void

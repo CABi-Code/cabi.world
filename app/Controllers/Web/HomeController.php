@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers\Web;
 
+use App\Controllers\BaseController;
 use App\Http\Request;
-use App\Http\Response;
 
-class HomeController
+class HomeController extends BaseController
 {
     public function index(Request $request): void
     {
-        $title = 'Найди компанию — cabi.world';
-        ob_start();
-        require TEMPLATES_PATH . '/pages/feed/index.php';
-        $content = ob_get_clean();
-        require TEMPLATES_PATH . '/layouts/main.php';
+        $user = $request->user();
+        
+        $this->render('pages/feed/index', [
+            'title' => 'Найди компанию — cabi.world',
+            'user' => $user,
+        ]);
     }
 }

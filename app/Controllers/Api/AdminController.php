@@ -20,6 +20,28 @@ class AdminController
         $this->notifRepo = new NotificationRepository();
     }
 
+    /**
+     * Получить детали заявки
+     */
+    public function getApplication(Request $request, int $id): void
+    {
+        $application = $this->appRepo->findById($id);
+        
+        if (!$application) {
+            Response::error('Application not found', 404);
+            return;
+        }
+        
+        // Получаем изображения
+        $images = $this->appRepo->getImages($id);
+        $application['images'] = $images;
+        
+        Response::json([
+            'success' => true,
+            'application' => $application
+        ]);
+    }
+
     public function setApplicationStatus(Request $request): void
     {
         $appId = (int)($request->get('id', 0));
@@ -45,7 +67,6 @@ class AdminController
         $result = $this->appRepo->setStatusByModerator($appId, $status);
         
         if ($result) {
-            // Отправляем уведомление пользователю
             if ($status === 'accepted') {
                 $this->notifRepo->notifyApplicationAccepted(
                     $application['user_id'],

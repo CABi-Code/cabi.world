@@ -1,18 +1,14 @@
 <?php
 /**
+ * Страница профиля пользователя
+ * 
  * @var array $profileUser
  * @var array|null $user
  * @var bool $isOwner
  */
 
-var_dump($isOwner);
-
 use App\Repository\ApplicationRepository;
 use App\Core\Role;
-
-global $user;
-
-print_r('А' . $isOwner);
 
 $appRepo = new ApplicationRepository();
 $applications = $appRepo->findByUser($profileUser['id'], $isOwner, 20);
@@ -40,9 +36,8 @@ $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
 <?php include_once 'profile-section.php'; ?>
 
 <?php if ($isOwner): ?>
-    <!-- Универсальное модальное окно для редактирования заявок -->
     <?php 
-    $application = null; // Будет заполняться через JS
+    $application = null;
     $modalId = 'editAppModal';
     $mode = 'edit';
     require TEMPLATES_PATH . '/components/application-modal.php'; 

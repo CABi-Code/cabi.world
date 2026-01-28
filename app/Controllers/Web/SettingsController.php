@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controllers\Web;
 
+use App\Controllers\BaseController;
 use App\Http\Request;
 
-class SettingsController
+class SettingsController extends BaseController
 {
     public function index(Request $request): void
     {
-        $title = 'Настройки — cabi.world';
-        ob_start();
-        require TEMPLATES_PATH . '/pages/settings/index.php';
-        $content = ob_get_clean();
-        require TEMPLATES_PATH . '/layouts/main.php';
+        $user = $request->user();
+        
+        $this->render('pages/settings/index', [
+            'title' => 'Настройки — cabi.world',
+            'user' => $user,
+        ]);
     }
 }

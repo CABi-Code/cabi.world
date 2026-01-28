@@ -1,19 +1,70 @@
 {
-	
     "GET": [
         "/",
         "/login",
-        "/api/notifications",
-        "/api/user/profile",
+        "/register",
+        "/forgot-password",
+        "/logout",
         "/settings",
         "/modrinth",
         "/curseforge",
-        "^/@[\\w\\d_]+$",
         "/admin",
-        "^/modpack/.*"
+        "^/@[\\w\\d_-]+$",
+        "^/modpack/[^/]+/[^/]+$",
+        "^/chat/\\d+$",
+        "/api/notifications",
+        "/api/user/profile",
+        "^/api/chat/messages.*",
+        "^/api/feed.*",
+        "^/api/admin/application/\\d+$"
     ],
+
     "POST": [
+        "/api/auth/login",
+        "/api/auth/register",
+        "/api/auth/refresh",
+        "/api/user/update",
+        "/api/user/avatar",
+        "/api/user/avatar/delete",
+        "/api/user/banner",
         "/api/user/banner/delete",
+        "/api/modpack/apply",
+        "/api/application",
+        "^/api/application/\\d+$",
+        "^/api/application/\\d+/toggle-hidden$",
+        "^/api/application/image/\\d+/delete$",
+        "/api/notifications/read",
+        "/api/chat/send",
+        "/api/chat/like",
+        "/api/chat/poll/vote",
+        "/api/community/create",
+        "/api/community/update",
+        "/api/community/delete",
+        "/api/community/subscribe",
+        "/api/community/unsubscribe",
+        "/api/community/chat/create",
+        "/api/community/chat/update",
+        "/api/community/chat/delete",
+        "/api/community/folder/create",
+        "/api/community/folder/update",
+        "/api/community/folder/delete",
+        "/api/admin/application/status",
+        "/api/admin/application/delete"
+    ],
+
+    "PUT": [
+        "/api/user/update",
+        "^/api/application/\\d+$"
+    ],
+
+    "DELETE": [
+        "/api/user/avatar",
+        "/api/user/banner",
+        "^/api/application/\\d+$",
+        "^/api/application/image/\\d+$"
+    ],
+
+    "PATCH": [
         "/api/user/update"
     ]
 }

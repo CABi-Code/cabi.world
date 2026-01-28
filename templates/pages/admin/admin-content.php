@@ -4,6 +4,9 @@
 
 ?>
 
+<?php use App\Core\Role; ?>
+
+
 <main class="admin-content">
 	<div class="admin-card">
 		<div class="admin-card-header">

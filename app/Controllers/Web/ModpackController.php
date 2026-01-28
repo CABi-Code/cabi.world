@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controllers\Web;
 
+use App\Controllers\BaseController;
 use App\Http\Request;
 use App\Repository\ModpackRepository;
 
-class ModpackController
+class ModpackController extends BaseController
 {
     private ModpackRepository $modpackRepo;
 
@@ -18,38 +19,36 @@ class ModpackController
 
     public function showModrinth(Request $request): void
     {
-        $title = 'Модпаки Modrinth — cabi.world';
-        ob_start();
-        require TEMPLATES_PATH . '/pages/modpacks/index-modrinth.php';
-        $content = ob_get_clean();
-        require TEMPLATES_PATH . '/layouts/main.php';
+        $user = $request->user();
+        
+        $this->render('pages/modpacks/index-modrinth', [
+            'title' => 'Модпаки Modrinth — cabi.world',
+            'user' => $user,
+            'platform' => 'modrinth',
+        ]);
     }
 
     public function showCurseforge(Request $request): void
     {
-        $title = 'Модпаки CurseForge — cabi.world';
-        ob_start();
-        require TEMPLATES_PATH . '/pages/modpacks/index-curseforge.php';
-        $content = ob_get_clean();
-        require TEMPLATES_PATH . '/layouts/main.php';
+        $user = $request->user();
+        
+        $this->render('pages/modpacks/index-curseforge', [
+            'title' => 'Модпаки CurseForge — cabi.world',
+            'user' => $user,
+            'platform' => 'curseforge',
+        ]);
     }
 
     public function show(Request $request, string $platform, string $slug): void
     {
-        $modpack = $this->modpackRepo->findBySlug($platform, $slug);
+        $user = $request->user();
         
-        if (!$modpack) {
-            http_response_code(404);
-            $title = 'Модпак не найден';
-            $content = '<div class="alert alert-error">Модпак не найден</div>';
-            require TEMPLATES_PATH . '/layouts/main.php';
-            return;
-        }
-        
-        $title = ($modpack['name'] ?? $slug) . ' — cabi.world';
-        ob_start();
-        require TEMPLATES_PATH . '/pages/modpack/index.php';
-        $content = ob_get_clean();
-        require TEMPLATES_PATH . '/layouts/main.php';
+        // Передаём platform и slug в шаблон - там идёт загрузка из API если нет в БД
+        $this->render('pages/modpack/index', [
+            'title' => 'Модпак — cabi.world',
+            'platform' => $platform,
+            'slug' => $slug,
+            'user' => $user,
+        ]);
     }
 }

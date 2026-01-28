@@ -1,0 +1,136 @@
+/* ===================================
+   MODAL COMPONENT
+   =================================== */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.modal[style*="display: flex"], .modal.show { opacity: 1; visibility: visible; }
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.modal-dialog {
+    position: relative;
+    width: 100%;
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95) translateY(-10px);
+    transition: transform 0.2s;
+}
+
+.modal.show .modal-dialog { transform: scale(1) translateY(0); }
+
+/* Размеры */
+.modal-sm .modal-dialog, .modal-dialog.modal-sm { max-width: 380px; }
+.modal-md .modal-dialog, .modal-dialog.modal-md { max-width: 500px; }
+.modal-lg .modal-dialog, .modal-dialog.modal-lg { max-width: 700px; }
+.modal-xl .modal-dialog, .modal-dialog.modal-xl { max-width: 900px; }
+
+.modal-content {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 4rem);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.modal-title { font-size: 1.125rem; font-weight: 600; margin: 0; }
+
+.modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-close:hover { background: var(--bg); color: var(--text); }
+
+.modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+/* Блокировка скролла */
+body.modal-open, html.no-scroll, body.no-scroll {
+    overflow: hidden;
+    padding-right: var(--scrollbar-width, 0);
+}
+
+/* ===================================
+   USER AVATAR COMPONENT
+   =================================== */
+
+.user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    color: #fff;
+    font-weight: 600;
+}
+
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.user-avatar--xs { width: 24px; height: 24px; font-size: 0.625rem; }
+.user-avatar--sm { width: 32px; height: 32px; font-size: 0.75rem; }
+.user-avatar--md { width: 40px; height: 40px; font-size: 0.875rem; }
+.user-avatar--lg { width: 48px; height: 48px; font-size: 1rem; }
+.user-avatar--xl { width: 64px; height: 64px; font-size: 1.25rem; }
+.user-avatar--xxl { width: 80px; height: 80px; font-size: 1.5rem; }
+
+/* Для совместимости со старым кодом */
+.feed-avatar, .admin-avatar, .notif-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    color: #fff;
+    font-weight: 600;
+}
+
+.feed-avatar img, .admin-avatar img, .notif-avatar img { width: 100%; height: 100%; object-fit: cover; }
