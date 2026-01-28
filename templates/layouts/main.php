@@ -2,10 +2,16 @@
 <?php
 
 use App\Core\Security; 
+use App\Http\Request;
 
 $security = new Security();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $security->check($currentPath);
+
+global $user;
+
+$request = new Request();
+$user = $request->user();
 
 ?>
 

@@ -10,8 +10,11 @@ class AdminController
 {
     public function index(Request $request): void
     {
+		global $user;
+		
         $title = 'Админ-панель — cabi.world';
-        ob_start();
+        
+		ob_start();
         require TEMPLATES_PATH . '/pages/admin/index.php';
         $content = ob_get_clean();
         require TEMPLATES_PATH . '/layouts/main.php';

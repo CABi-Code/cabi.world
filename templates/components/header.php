@@ -1,6 +1,8 @@
 <?php 
 use App\Core\Role;
 
+global $user;
+
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Получаем цвета аватара пользователя
 $headerAvatarStyle = '';

@@ -8,6 +8,8 @@ $sort = $_GET['sort'] ?? 'date';
 $limit = 20;
 $offset = ($page - 1) * $limit;
 
+global $user;
+
 $applications = $appRepo->findAllAccepted($limit, $offset, $sort);
 $totalCount = $appRepo->countAllAccepted();
 $totalPages = max(1, (int)ceil($totalCount / $limit));

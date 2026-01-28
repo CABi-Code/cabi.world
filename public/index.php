@@ -17,6 +17,7 @@ try {
     $user = $authMiddleware->getUser($request);
     if ($user) {
         $request->setUser($user);
+		print_r($user);
     }
 } catch (\Exception $e) {
     // Игнорируем ошибки аутентификации

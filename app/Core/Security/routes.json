@@ -9,7 +9,8 @@
         "/modrinth",
         "/curseforge",
         "^/@[\\w\\d_]+$",
-        "/admin"
+        "/admin",
+        "^/modpack/.*"
     ],
     "POST": [
         "/api/user/banner/delete",
