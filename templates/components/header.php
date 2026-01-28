@@ -1,8 +1,6 @@
 <?php 
 use App\Core\Role;
 
-global $user;
-
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Получаем цвета аватара пользователя
 $headerAvatarStyle = '';
@@ -50,7 +48,7 @@ $canAccessAdmin = isset($user) && $user && Role::isModerator($user['role'] ?? nu
                     </button>
                 </div>
             </div>
-            
+			
             <?php if (isset($user) && $user): ?>
                 <!-- Notifications -->
                 <div class="notif-menu" id="notifMenu">

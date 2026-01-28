@@ -4,7 +4,7 @@
 	<?php endif; ?>
 	<div style="flex:1;">
 		<h1 style="font-size:1.375rem;margin-bottom:0.25rem;"><?= e($modpack['name']) ?></h1>
-		<p style="color:var(--text-secondary);margin-bottom:0.5rem;">Автор: <?= e($modpack['author']) ?></p>
+		<p style="color:var(--text-secondary);margin-bottom:0.5rem;"><?= e($modpack['author']) ?></p>
 		<div style="display:flex;gap:1rem;margin-bottom:0.75rem;font-size:0.875rem;color:var(--text-secondary);">
 			<span><svg width="14" height="14" style="vertical-align:-2px;"><use href="#icon-download"/></svg> <?= number_format($modpack['downloads']) ?></span>
 			<?php if ($modpack['follows'] > 0): ?>

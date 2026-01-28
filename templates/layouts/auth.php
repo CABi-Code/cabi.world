@@ -2,6 +2,8 @@
 
 use App\Core\Security; 
 
+global $user;
+
 $security = new Security();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $security->check($currentPath);

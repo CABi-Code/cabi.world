@@ -11,6 +11,8 @@ use React\Http\Browser;
 use App\Repository\ModpackRepository;
 use App\Repository\ApplicationRepository;
 
+global $user;
+
 $config = require CONFIG_PATH . '/app.php';
 $modpackRepo = new ModpackRepository();
 $appRepo = new ApplicationRepository();

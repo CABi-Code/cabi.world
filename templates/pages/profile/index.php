@@ -5,8 +5,14 @@
  * @var bool $isOwner
  */
 
+var_dump($isOwner);
+
 use App\Repository\ApplicationRepository;
 use App\Core\Role;
+
+global $user;
+
+print_r('А' . $isOwner);
 
 $appRepo = new ApplicationRepository();
 $applications = $appRepo->findByUser($profileUser['id'], $isOwner, 20);

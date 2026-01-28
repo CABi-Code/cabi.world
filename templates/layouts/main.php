@@ -10,9 +10,6 @@ $security->check($currentPath);
 
 global $user;
 
-$request = new Request();
-$user = $request->user();
-
 ?>
 
 <!DOCTYPE html>

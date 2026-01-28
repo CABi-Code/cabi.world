@@ -19,6 +19,7 @@ class ProfileController
 
     public function show(Request $request, string $username): void
     {
+		
         $profileUser = $this->userRepo->findByLogin($username);
         
         if (!$profileUser) {
@@ -48,7 +49,14 @@ class ProfileController
         $isOwner = $user && $user['id'] === $profileUser['id'];
         $title = $profileUser['username'] . ' — cabi.world';
         
+        $data = compact(
+            'profileUser',
+            'user',
+            'isOwner',
+        );
+		
         ob_start();
+		extract($data);
         require TEMPLATES_PATH . '/pages/profile/index.php';
         $content = ob_get_clean();
         require TEMPLATES_PATH . '/layouts/main.php';
