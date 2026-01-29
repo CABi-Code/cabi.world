@@ -1,16 +1,22 @@
-<?
+<?php
+/**
+ * Модалка настроек чата
+ * Подключается в pages/chat/index.php
+ * 
+ * @var array $chat
+ * @var bool $isOwner
+ * @var bool $isModerator
+ */
 
-// присоеденен в файле pages/chat/index.php через include
-
+if (!$isOwner && !$isModerator) return;
 ?>
 
-<?php if ($isOwner || $isModerator): ?>
 <div class="modal" id="chatSettingsModal" style="display:none;">
-    <div class="modal-backdrop" data-close></div>
+    <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Настройки чата</h3>
-            <button class="modal-close" data-close>&times;</button>
+            <h3 class="modal-title">Настройки чата</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
         </div>
         <div class="modal-body">
             <form id="chatSettingsForm">
@@ -49,33 +55,11 @@
                     </div>
                 </div>
                 
-                <?php if ($isOwner): ?>
-                <div class="settings-section">
-                    <h4>Модераторы чата</h4>
-                    <div id="chatModerators">
-                        <!-- Загружается через JS -->
-                    </div>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="showAddModerator('chat')">
-                        <svg width="14" height="14"><use href="#icon-plus"/></svg>
-                        Добавить модератора
-                    </button>
-                </div>
-                
-                <div class="settings-section danger-zone">
-                    <h4>Опасная зона</h4>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteChat()">
-                        <svg width="14" height="14"><use href="#icon-trash"/></svg>
-                        Удалить чат
-                    </button>
-                </div>
-                <?php endif; ?>
-                
                 <div class="form-actions">
-                    <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+                    <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<?php endif; ?>

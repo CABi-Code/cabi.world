@@ -32,9 +32,13 @@
         "^/api/application/\\d+/toggle-hidden$",
         "^/api/application/image/\\d+/delete$",
         "/api/notifications/read",
+        "/api/notifications/read-all",
         "/api/chat/send",
+        "/api/chat/delete",
         "/api/chat/like",
+        "/api/chat/poll/create",
         "/api/chat/poll/vote",
+        "/api/chat/settings",
         "/api/community/create",
         "/api/community/update",
         "/api/community/delete",
@@ -47,7 +51,9 @@
         "/api/community/folder/update",
         "/api/community/folder/delete",
         "/api/admin/application/status",
-        "/api/admin/application/delete"
+        "/api/admin/application/delete",
+        "^/api/admin/application/\\d+/modal$",
+        "/api/captcha/solve"
     ],
 
     "PUT": [

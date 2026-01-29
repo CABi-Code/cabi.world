@@ -31,11 +31,11 @@ $avatarStyle = $profileUser['avatar']
 $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
 ?>
 
-<?php require $profilePath . '/profile-banner.php'; ?>
+<?php require $profilePath . '/index/profile-banner.php'; ?>
 
-<?php require $profilePath . '/profile-header.php'; ?>
+<?php require $profilePath . '/index/profile-header.php'; ?>
 
-<?php require $profilePath . '/profile-section.php'; ?>
+<?php require $profilePath . '/index/profile-section.php'; ?>
 
 <?php if ($isOwner): ?>
     <?php 

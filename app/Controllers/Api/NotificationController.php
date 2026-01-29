@@ -17,7 +17,7 @@ class NotificationController
         $this->notifRepo = new NotificationRepository();
     }
 
-    public function index(Request $request): void
+    public function getAll(Request $request): void
     {
         $user = $request->user();
         if (!$user) {
@@ -33,7 +33,7 @@ class NotificationController
         ]);
     }
 
-    public function read(Request $request): void
+    public function markAsRead(Request $request): void
     {
         $user = $request->user();
         if (!$user) {

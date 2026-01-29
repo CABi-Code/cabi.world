@@ -21,7 +21,7 @@ class AdminController
     }
 
     /**
-     * Получить детали заявки
+     * Получить детали заявки (JSON)
      */
     public function getApplication(Request $request, int $id): void
     {
@@ -32,7 +32,6 @@ class AdminController
             return;
         }
         
-        // Получаем изображения
         $images = $this->appRepo->getImages($id);
         $application['images'] = $images;
         
@@ -42,6 +41,33 @@ class AdminController
         ]);
     }
 
+    /**
+     * Получить модалку деталей заявки (HTML)
+     */
+    public function getApplicationModal(Request $request, int $id): void
+    {
+        $app = $this->appRepo->findById($id);
+        
+        if (!$app) {
+            http_response_code(404);
+            echo '<div class="modal-error">Заявка не найдена</div>';
+            return;
+        }
+        
+        $app['images'] = $this->appRepo->getImages($id);
+        
+        // Рендерим модалку
+        ob_start();
+        include TEMPLATES_PATH . '/pages/admin/modals/app-details.php';
+        $html = ob_get_clean();
+        
+        header('Content-Type: text/html; charset=utf-8');
+        echo $html;
+    }
+
+    /**
+     * Установить статус заявки
+     */
     public function setApplicationStatus(Request $request): void
     {
         $appId = (int)($request->get('id', 0));
@@ -87,6 +113,9 @@ class AdminController
         }
     }
 
+    /**
+     * Удалить заявку
+     */
     public function deleteApplication(Request $request): void
     {
         $appId = (int)($request->get('id', 0));
@@ -96,14 +125,12 @@ class AdminController
             return;
         }
         
-        $application = $this->appRepo->findById($appId);
+        $result = $this->appRepo->deleteById($appId);
         
-        if (!$application) {
-            Response::error('Application not found', 404);
-            return;
+        if ($result) {
+            Response::json(['success' => true]);
+        } else {
+            Response::error('Failed to delete', 500);
         }
-        
-        $this->appRepo->delete($appId, $application['user_id']);
-        Response::json(['success' => true]);
     }
 }

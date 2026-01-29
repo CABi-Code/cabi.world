@@ -105,7 +105,7 @@ class ApplicationController
         }
 
         if ($id <= 0) {
-            Response::error('Invalid ID', 400);
+            Response::error('Invalid ID Application', 400);
             return;
         }
 
@@ -277,7 +277,7 @@ class ApplicationController
         ];
     }
 
-    private function validateImages(Request $request, int $currentCount = 0): array|array
+    private function validateImages(Request $request, int $currentCount = 0): array
     {
         if (!$request->hasFile('images')) {
             return [];

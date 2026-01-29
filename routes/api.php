@@ -13,7 +13,6 @@ use App\Controllers\Api\AdminController;
 use App\Controllers\Api\CommunityController;
 use App\Controllers\Api\CaptchaController;
 
-
 Router::post('/api/captcha/solve', [CaptchaController::class, 'solve'])
     ->middleware('csrf');
 
@@ -39,27 +38,28 @@ Router::prefix('/api')->group(function() {
         Router::post('/user/banner', [UserController::class, 'uploadBanner'])->middleware('csrf');
         Router::delete('/user/banner', [UserController::class, 'deleteBanner'])->middleware('csrf');
         Router::delete('/user/banner/delete', [UserController::class, 'deleteBanner'])->middleware('csrf');
+        Router::post('/user/password', [UserController::class, 'changePassword'])->middleware('csrf');
         
-        // Application routes
-        Router::post('/modpack/apply', [ModpackController::class, 'apply'])->middleware('csrf');
-        Router::post('/application', [ApplicationController::class, 'create'])->middleware('csrf');
-        Router::put('/application/:id', [ApplicationController::class, 'update'])->middleware('csrf');
-        Router::post('/application/:id', [ApplicationController::class, 'update'])->middleware('csrf');
-        Router::delete('/application/:id', [ApplicationController::class, 'delete'])->middleware('csrf');
+        // Applications
+        Router::post('/modpack/apply', [ApplicationController::class, 'create'])->middleware('csrf');
+        Router::post('/application/update', [ApplicationController::class, 'update'])->middleware('csrf');
+        Router::post('/application/delete', [ApplicationController::class, 'delete'])->middleware('csrf');
         Router::post('/application/:id/toggle-hidden', [ApplicationController::class, 'toggleHidden'])->middleware('csrf');
-        Router::delete('/application/image/:imageId', [ApplicationController::class, 'deleteImage'])->middleware('csrf');
-        Router::post('/application/image/:imageId/delete', [ApplicationController::class, 'deleteImage'])->middleware('csrf');
+        Router::post('/application/image/:id/delete', [ApplicationController::class, 'deleteImage'])->middleware('csrf');
         
-        // Notification routes
-        Router::get('/notifications', [NotificationController::class, 'index']);
-        Router::post('/notifications/read', [NotificationController::class, 'read'])->middleware('csrf');
+        // Notifications
+        Router::get('/notifications', [NotificationController::class, 'getAll']);
+        Router::post('/notifications/read', [NotificationController::class, 'markAsRead'])->middleware('csrf');
+        Router::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->middleware('csrf');
         
-        // Chat routes
+        // Chat
         Router::get('/chat/messages', [ChatController::class, 'getMessages']);
-        Router::get('/chat/messages/new', [ChatController::class, 'getNewMessages']);
-        Router::post('/chat/send', [ChatController::class, 'send'])->middleware('csrf');
-        Router::post('/chat/like', [ChatController::class, 'like'])->middleware('csrf');
+        Router::post('/chat/send', [ChatController::class, 'sendMessage'])->middleware('csrf');
+        Router::post('/chat/delete', [ChatController::class, 'deleteMessage'])->middleware('csrf');
+        Router::post('/chat/like', [ChatController::class, 'toggleLike'])->middleware('csrf');
+        Router::post('/chat/poll/create', [ChatController::class, 'createPoll'])->middleware('csrf');
         Router::post('/chat/poll/vote', [ChatController::class, 'votePoll'])->middleware('csrf');
+        Router::post('/chat/settings', [ChatController::class, 'updateSettings'])->middleware('csrf');
         
         // Community routes
         Router::post('/community/create', [CommunityController::class, 'create'])->middleware('csrf');
@@ -78,6 +78,7 @@ Router::prefix('/api')->group(function() {
     // Admin routes (требуют авторизации + права админа)
     Router::group(['prefix' => '/admin', 'middleware' => ['auth', 'admin']], function() {
         Router::get('/application/:id', [AdminController::class, 'getApplication']);
+        Router::post('/application/:id/modal', [AdminController::class, 'getApplicationModal']);
         Router::post('/application/status', [AdminController::class, 'setApplicationStatus'])->middleware('csrf');
         Router::post('/application/delete', [AdminController::class, 'deleteApplication'])->middleware('csrf');
     });

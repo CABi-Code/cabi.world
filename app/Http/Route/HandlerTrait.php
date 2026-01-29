@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+
 namespace App\Http\Route;
 
 use App\Http\Request;
@@ -52,7 +53,7 @@ trait HandlerTrait
      */
     private function castParams(string $class, string $method, array $params): array
     {
-        $reflection = new ReflectionMethod($class, $method);
+        $reflection = new \ReflectionMethod($class, $method);
         $methodParams = $reflection->getParameters();
         
         // Пропускаем первый параметр (Request)
@@ -69,7 +70,7 @@ trait HandlerTrait
             }
             
             $type = $param->getType();
-            if ($type instanceof ReflectionNamedType && !$type->isBuiltin() === false) {
+            if ($type instanceof \ReflectionNamedType && !$type->isBuiltin() === false) {
                 $typeName = $type->getName();
                 $result[] = match($typeName) {
                     'int' => (int)$value,

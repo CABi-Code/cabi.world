@@ -1,15 +1,16 @@
-<?
-
-// присоеденен в файле pages/chat/index.php через include
-
+<?php
+/**
+ * Модалка создания опроса в чате
+ * Подключается в pages/chat/index.php
+ */
 ?>
 
 <div class="modal" id="chatPollModal" style="display:none;">
-    <div class="modal-backdrop" data-close></div>
+    <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Создать опрос</h3>
-            <button class="modal-close" data-close>&times;</button>
+            <h3 class="modal-title">Создать опрос</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
         </div>
         <div class="modal-body">
             <form id="chatPollForm">
@@ -42,7 +43,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+                    <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
                     <button type="submit" class="btn btn-primary">Создать опрос</button>
                 </div>
             </form>

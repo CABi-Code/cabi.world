@@ -44,27 +44,4 @@ $adminPath = __DIR__;
     </div>
 </div>
 
-<!-- Модальное окно просмотра заявки -->
-<div id="appDetailsModal" class="modal" style="display:none;">
-    <div class="modal-backdrop" data-modal-close></div>
-    <div class="modal-content modal-lg">
-        <div class="modal-header">
-            <h3 class="modal-title">Детали заявки</h3>
-            <button type="button" class="modal-close" data-modal-close>
-                <svg width="20" height="20"><use href="#icon-x"/></svg>
-            </button>
-        </div>
-        <div class="modal-body" id="appDetailsContent"></div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-ghost btn-sm" data-modal-close>Закрыть</button>
-            <button type="button" class="btn admin-btn-accept btn-sm" id="modalAcceptBtn">
-                <svg width="14" height="14"><use href="#icon-check"/></svg> Одобрить
-            </button>
-            <button type="button" class="btn admin-btn-reject btn-sm" id="modalRejectBtn">
-                <svg width="14" height="14"><use href="#icon-x"/></svg> Отклонить
-            </button>
-        </div>
-    </div>
-</div>
-
-<?php require $adminPath . '/js-script.php'; ?>
+<?php require $adminPath . '/js-scripts/main.php'; ?>

@@ -1,22 +1,32 @@
+<?php
+/**
+ * Модалки для вкладки сообщества
+ */
+?>
+
 <!-- Модальное окно создания чата/папки -->
 <div class="modal" id="communityCreateModal" style="display:none;">
-    <div class="modal-backdrop" data-close></div>
+    <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content modal-sm">
         <div class="modal-header">
-            <h3>Создать</h3>
-            <button class="modal-close" data-close>&times;</button>
+            <h3 class="modal-title">Создать</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
         </div>
         <div class="modal-body">
             <div class="create-options">
                 <button class="create-option" onclick="createCommunityItem('chat')">
                     <svg width="24" height="24"><use href="#icon-message-circle"/></svg>
-                    <span>Создать чат</span>
-                    <p>Общайтесь с подписчиками</p>
+                    <div class="create-option-content">
+                        <span>Создать чат</span>
+                        <p>Общайтесь с подписчиками</p>
+                    </div>
                 </button>
                 <button class="create-option" onclick="createCommunityItem('folder')">
                     <svg width="24" height="24"><use href="#icon-folder"/></svg>
-                    <span>Создать папку</span>
-                    <p>Группируйте чаты</p>
+                    <div class="create-option-content">
+                        <span>Создать папку</span>
+                        <p>Группируйте чаты</p>
+                    </div>
                 </button>
             </div>
         </div>
@@ -25,11 +35,11 @@
 
 <!-- Модальное окно ввода имени -->
 <div class="modal" id="communityNameModal" style="display:none;">
-    <div class="modal-backdrop" data-close></div>
+    <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content modal-sm">
         <div class="modal-header">
-            <h3 id="nameModalTitle">Название</h3>
-            <button class="modal-close" data-close>&times;</button>
+            <h3 class="modal-title" id="nameModalTitle">Название</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
         </div>
         <div class="modal-body">
             <form id="communityNameForm">
@@ -48,7 +58,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+                    <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
                     <button type="submit" class="btn btn-primary">Создать</button>
                 </div>
             </form>
@@ -58,23 +68,23 @@
 
 <!-- Модальное окно настроек сообщества -->
 <div class="modal" id="communitySettingsModal" style="display:none;">
-    <div class="modal-backdrop" data-close></div>
+    <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Настройки сообщества</h3>
-            <button class="modal-close" data-close>&times;</button>
+            <h3 class="modal-title">Настройки сообщества</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
         </div>
         <div class="modal-body">
             <form id="communitySettingsForm">
                 <input type="hidden" name="community_id" id="settingsCommunityId">
                 
                 <div class="settings-section">
-                    <h4>Общие настройки (по умолчанию)</h4>
+                    <h4>Общие настройки</h4>
                     
                     <div class="form-group">
                         <label class="form-label">Тайм-аут на сообщения (секунды)</label>
                         <input type="number" name="message_timeout" class="form-input" id="settingsTimeout" min="0" placeholder="0 = без ограничений">
-                        <p class="form-hint">Минимальное время между сообщениями одного пользователя</p>
+                        <p class="form-hint">Минимальное время между сообщениями</p>
                     </div>
                     
                     <div class="form-group">
@@ -98,11 +108,11 @@
                         <svg width="14" height="14"><use href="#icon-trash"/></svg>
                         Удалить сообщество
                     </button>
-                    <p class="form-hint">Это действие нельзя отменить. Все чаты и сообщения будут удалены.</p>
+                    <p class="form-hint">Это действие нельзя отменить.</p>
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+                    <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
                 </div>
             </form>
