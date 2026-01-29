@@ -2,13 +2,19 @@
 /**
  * Основной layout приложения
  * 
- * @var string $title - заголовок страницы
- * @var string $content - контент страницы
- * @var array|null $user - текущий пользователь
- * @var int $unreadNotifications - количество непрочитанных уведомлений
+ * @var string $title
+ * @var string $content
+ * @var array|null $user
+ * @var int $unreadNotifications
  */
 
 use App\Repository\NotificationRepository;
+
+// Защита от повторного рендера
+if (defined('MAIN_LAYOUT_RENDERED')) {
+    return;
+}
+define('MAIN_LAYOUT_RENDERED', true);
 
 // Если $user не передан, он null
 if (!isset($user)) {

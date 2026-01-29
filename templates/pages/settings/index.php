@@ -1,20 +1,27 @@
-<?php /** @var array $user */ ?>
+<?php
+/** 
+ * @var array $user 
+ */
+
+use App\Core\Template;
+
+// Используем абсолютные пути для include
+$settingsPath = __DIR__ . '/settings-card';
+?>
 
 <div class="container-sm">
     <h1 style="font-size:1.25rem;margin-bottom:1.25rem;">Настройки</h1>
 
-    <?php include_once 'settings-card/avatar-and-banner.php'; ?>
+    <?php require $settingsPath . '/avatar-and-banner.php'; ?>
     
-    <?php include_once 'settings-card/collor-profile.php'; ?>
+    <?php require $settingsPath . '/collor-profile.php'; ?>
     
-    <?php include_once 'settings-card/profile.php'; ?>
+    <?php require $settingsPath . '/profile.php'; ?>
     
-    <?php include_once 'settings-card/contacts.php'; ?>
+    <?php require $settingsPath . '/contacts.php'; ?>
     
-    <?php include_once 'settings-card/password.php'; ?>
-	
-	<?php include_once 'settings-card/privacy.php'; ?>
+    <?php require $settingsPath . '/password.php'; ?>
+    
+    <?php require $settingsPath . '/privacy.php'; ?>
 
 </div>
-
-<!-- Image editor is created dynamically by JS module -->

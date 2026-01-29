@@ -9,15 +9,19 @@ use App\Repository\NotificationRepository;
 
 abstract class BaseController
 {
+    private static bool $rendered = false;
+
     /**
-     * Рендерит страницу с layout
-     * 
-     * @param string $template Путь к шаблону относительно TEMPLATES_PATH
-     * @param array $data Данные для передачи в шаблон
-     * @param string $layout Layout для использования
+     * Рендерит страницу с layout (только один раз)
      */
     protected function render(string $template, array $data = [], string $layout = 'layouts/main'): void
     {
+        // Защита от повторного рендера
+        if (self::$rendered) {
+            return;
+        }
+        self::$rendered = true;
+
         // Добавляем счётчик уведомлений если есть пользователь
         if (isset($data['user']) && $data['user'] && !isset($data['unreadNotifications'])) {
             $notifRepo = new NotificationRepository();
@@ -34,6 +38,8 @@ abstract class BaseController
         
         // Рендерим layout с контентом
         require TEMPLATES_PATH . '/' . $layout . '.php';
+        
+        exit; // Прекращаем выполнение после рендера
     }
 
     /**

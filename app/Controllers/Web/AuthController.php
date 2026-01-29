@@ -12,6 +12,7 @@ use App\Services\AuthService;
 class AuthController extends BaseController
 {
     private AuthService $authService;
+    private static bool $authRendered = false;
 
     public function __construct()
     {
@@ -50,10 +51,16 @@ class AuthController extends BaseController
     }
 
     /**
-     * Рендерит страницу с auth layout
+     * Рендерит страницу с auth layout (только один раз)
      */
     private function renderAuth(string $template, array $data = []): void
     {
+        // Защита от повторного рендера
+        if (self::$authRendered) {
+            return;
+        }
+        self::$authRendered = true;
+
         extract($data);
         
         ob_start();
@@ -61,5 +68,7 @@ class AuthController extends BaseController
         $content = ob_get_clean();
         
         require TEMPLATES_PATH . '/layouts/auth.php';
+        
+        exit; // Прекращаем выполнение
     }
 }

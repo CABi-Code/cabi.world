@@ -11,6 +11,8 @@
  */
 
 use App\Core\Role;
+
+$adminPath = __DIR__;
 ?>
 
 <div class="admin-page">
@@ -38,10 +40,7 @@ use App\Core\Role;
             </nav>
         </aside>
         
-
-		<?php include 'admin-content.php' ?>
-
-
+        <?php require $adminPath . '/admin-content.php'; ?>
     </div>
 </div>
 
@@ -68,4 +67,4 @@ use App\Core\Role;
     </div>
 </div>
 
-<?php include 'js-script.php' ?>
+<?php require $adminPath . '/js-script.php'; ?>

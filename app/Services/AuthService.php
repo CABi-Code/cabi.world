@@ -8,6 +8,7 @@ use App\Auth\JWT;
 use App\Repository\UserRepository;
 use App\Repository\RefreshTokenRepository;
 use App\Core\Database;
+use App\Services\TurnstileService;
 
 class AuthService
 {
@@ -15,19 +16,34 @@ class AuthService
     private UserRepository $userRepo;
     private RefreshTokenRepository $tokenRepo;
     private array $config;
+	private TurnstileService $turnstile;
 
-    public function __construct()
-    {
-        $this->config = require CONFIG_PATH . '/app.php';
-        $this->jwt = new JWT($this->config['jwt_secret']);
-        $this->userRepo = new UserRepository();
-        $this->tokenRepo = new RefreshTokenRepository();
-    }
+	public function __construct()
+	{
+		$this->config = require CONFIG_PATH . '/app.php';
+		$this->jwt = new JWT($this->config['jwt_secret']);
+		$this->userRepo = new UserRepository();
+		$this->tokenRepo = new RefreshTokenRepository();
+		$this->turnstile = new TurnstileService();
+	}
 
-    public function register(string $login, string $email, string $password, string $username): array
-    {
+	public function register(
+		string $login, 
+		string $email, 
+		string $password, 
+		string $username, 
+		?string $ip = null, 
+		?string $userAgent = null,
+		?string $captchaToken = null
+	): array {
         $errors = [];
         
+		// Проверка капчи
+		$captchaResult = $this->turnstile->validate($captchaToken, $ip);
+		if (!$captchaResult['success']) {
+			$errors['captcha'] = $captchaResult['error'];
+		}
+		
         $content_reserved = file_get_contents(APP_PATH . '/Auth/login-reserved.txt');
         $reserved = explode(', ', $content_reserved);
         
@@ -77,8 +93,20 @@ class AuthService
 		return ['success' => true, 'user_id' => $userId, 'tokens' => $tokens];
     }
 
-	public function login(string $loginOrEmail, string $password, string $ip, string $userAgent): array
-	{
+	public function login(
+		string $loginOrEmail, 
+		string $password, 
+		string $ip, 
+		string $userAgent,
+		?string $captchaToken = null
+	): array {
+		
+		// Проверка капчи
+		$captchaResult = $this->turnstile->validate($captchaToken, $ip);
+		if (!$captchaResult['success']) {
+			return ['success' => false, 'errors' => ['captcha' => $captchaResult['error']]];
+		}
+
 		$user = $this->userRepo->findForAuth($loginOrEmail);
 
 		if (!$user || !password_verify($password, $user['password_hash'])) {

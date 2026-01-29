@@ -6,32 +6,26 @@
 <form id="loginForm" class="auth-form" novalidate>
     <div class="form-group">
         <label class="form-label" for="login">Логин или Email</label>
-        <input
-			type="text"
-			id="login"
-			name="login"
-			class="form-input"
-			inputmode="email"
-			autocomplete="username"
-			required>
+        <input type="text" id="login" name="login" class="form-input" 
+               inputmode="email" autocomplete="username" required>
+        <div class="form-error" data-error="login"></div>
     </div>
     
     <div class="form-group">
         <label class="form-label" for="password">Пароль</label>
         <div class="password-toggle">
-            <input
-				type="password"
-				id="password"
-				name="password"
-				class="form-input"
-				inputmode="verbatim"
-				autocomplete="current-password"
-				required>
+            <input type="password" id="password" name="password" class="form-input" 
+                   inputmode="verbatim" autocomplete="current-password" required>
             <button type="button" class="password-toggle-btn" data-toggle="password">
                 <svg width="18" height="18"><use href="#icon-eye"/></svg>
             </button>
         </div>
+        <div class="form-error" data-error="password"></div>
     </div>
+    
+    <?php include TEMPLATES_PATH . '/components/turnstile-captcha.php'; ?>
+    
+    <div class="form-error" data-error="general"></div>
     
     <button type="submit" class="btn btn-primary btn-block btn-lg">Войти</button>
 </form>
@@ -45,3 +39,5 @@
 <div style="text-align: center;">
     <a href="/forgot-password">Забыли пароль?</a>
 </div>
+
+<?php include TEMPLATES_PATH . '/pages/auth/js-scripts/login-script.php'; ?>

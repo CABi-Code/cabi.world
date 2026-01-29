@@ -1,15 +1,23 @@
 <?php
+/**
+ * Auth layout
+ * 
+ * @var string $title
+ * @var string $content
+ */
 
-use App\Core\Security; 
+use App\Core\Security;
 
-global $user;
+// Защита от повторного рендера
+if (defined('AUTH_LAYOUT_RENDERED')) {
+    return;
+}
+define('AUTH_LAYOUT_RENDERED', true);
 
 $security = new Security();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $security->check($currentPath);
-
 ?>
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>

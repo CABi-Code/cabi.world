@@ -19,7 +19,7 @@ trait UpdateTrait {
 				if ($key == 'username' && !preg_match('/^[\p{L}\p{N}\s]+$/u', $value)) {
 					$errors['Username'] = ['msg' => 'Имя содержит недопустимые спецсимволы', 'code' => 422];
 				}
-				$lastUpdate = $this->db->query("SELECT updated_at FROM users WHERE id = ? AND updated_at > NOW() - INTERVAL 1 MINUTE", [$id])->fetch();
+				$lastUpdate = $this->db->query("SELECT updated_at FROM users WHERE id = ? AND updated_at > NOW() - INTERVAL 10 SECOND", [$id])->fetch();
 				
 				if ($lastUpdate) {
 					$errors['LastUpdate'] = ['msg' => 'Подожди минуту, прежде чем сделать это', 'code' => 429];

@@ -11,6 +11,11 @@ use App\Controllers\Api\ChatController;
 use App\Controllers\Api\NotificationController;
 use App\Controllers\Api\AdminController;
 use App\Controllers\Api\CommunityController;
+use App\Controllers\Api\CaptchaController;
+
+
+Router::post('/api/captcha/solve', [CaptchaController::class, 'solve'])
+    ->middleware('csrf');
 
 Router::prefix('/api')->group(function() {
     // Auth routes

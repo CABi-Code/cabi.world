@@ -11,32 +11,52 @@ use App\Services\RateLimitService;
 class RateLimitMiddleware implements MiddlewareInterface
 {
     private RateLimitService $rateLimitService;
-    private int $maxAttempts;
-    private int $windowSeconds;
+    private string $type;
 
-    public function __construct(int $maxAttempts = 60, int $windowSeconds = 60)
+    public function __construct(string $type = 'api')
     {
         $this->rateLimitService = new RateLimitService();
-        $this->maxAttempts = $maxAttempts;
-        $this->windowSeconds = $windowSeconds;
+        $this->type = $type;
     }
 
     public function handle(Request $request, callable $next)
     {
-        $key = $this->getKey($request);
+        $identifier = $this->getIdentifier($request);
+        $result = $this->rateLimitService->check($identifier, $this->type);
         
-        if (!$this->rateLimitService->check($key, $this->maxAttempts, $this->windowSeconds)) {
-            Response::json(['error' => 'Too many requests'], 429);
+        if (!$result['allowed']) {
+            $response = [
+                'error' => 'Too many requests',
+                'retry_after' => $result['retry_after'] ?? 60
+            ];
+            
+            if ($result['requires_captcha'] ?? false) {
+                $response['requires_captcha'] = true;
+                $response['captcha_endpoint'] = '/api/captcha/solve';
+            }
+            
+            // Добавляем заголовки
+            header('Retry-After: ' . ($result['retry_after'] ?? 60));
+            header('X-RateLimit-Remaining: 0');
+            
+            Response::json($response, 429);
             return null;
+        }
+        
+        // Добавляем информацию о лимитах в заголовки
+        if (isset($result['remaining'])) {
+            header('X-RateLimit-Remaining: ' . $result['remaining']);
         }
         
         return $next($request);
     }
 
-    private function getKey(Request $request): string
+    private function getIdentifier(Request $request): string
     {
-        $ip = $request->ip();
-        $route = $request->uri();
-        return "rate_limit:{$ip}:{$route}";
+        $user = $request->user();
+        if ($user) {
+            return 'user:' . $user['id'];
+        }
+        return 'ip:' . $request->ip();
     }
 }

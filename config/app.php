@@ -23,6 +23,37 @@ return [
         'httponly' => true,
         'samesite' => 'Strict'
     ],
+	
+	// капча Cloudflare Turnstile
+	'turnstile' => [
+    'site_key' => $_ENV['TURNSTILE_SITE_KEY'] ?? '',
+    'secret_key' => $_ENV['TURNSTILE_SECRET_KEY'] ?? '',
+    'enabled' => (bool)($_ENV['TURNSTILE_ENABLED'] ?? true),
+	],
+	
+	// Rate Limiting
+	'rate_limit' => [
+		// Глобальный лимит запросов
+		'global' => [
+			'requests' => 1,      // запросов
+			'window' => 600,        // за секунд
+			'block_duration' => 300, // блокировка на секунд
+		],
+		// Лимит для API
+		'api' => [
+			'requests' => 1,
+			'window' => 600,
+			'block_duration' => 300,
+		],
+		// Лимит для auth endpoints
+		'auth' => [
+			'requests' => 5,
+			'window' => 60,
+			'block_duration' => 600,
+		],
+		// После скольких превышений требовать капчу
+		'captcha_threshold' => 3,
+	],
     
     // Uploads
     'uploads' => [

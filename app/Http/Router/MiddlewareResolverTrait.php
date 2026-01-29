@@ -10,15 +10,18 @@ use App\Http\Middleware\GuestMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CsrfMiddleware;
 use App\Http\Middleware\RateLimitMiddleware;
+use App\Http\Middleware\RateLimitBlockMiddleware;
 
 trait MiddlewareResolverTrait
 {
-    private static array $middlewareMap = [
-        'auth'  => AuthMiddleware::class,
-        'guest' => GuestMiddleware::class,
-        'admin' => AdminMiddleware::class,
-        'csrf'  => CsrfMiddleware::class,
-    ];
+
+	private static array $middlewareMap = [
+		'auth'  => AuthMiddleware::class,
+		'guest' => GuestMiddleware::class,
+		'admin' => AdminMiddleware::class,
+		'csrf'  => CsrfMiddleware::class,
+		'rate_block' => RateLimitBlockMiddleware::class,
+	];
 
     private static function resolveMiddleware(string $name): ?MiddlewareInterface
     {

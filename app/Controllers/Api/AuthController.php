@@ -20,30 +20,31 @@ class AuthController
         $this->userRepo = new UserRepository();
     }
 
-    public function login(Request $request): void
-    {
-        if (!$request->isMethod('POST')) {
-            Response::error('Method not allowed', 405);
-            return;
-        }
+	public function login(Request $request): void
+	{
+		if (!$request->isMethod('POST')) {
+			Response::error('Method not allowed', 405);
+			return;
+		}
 
-        $result = $this->authService->login(
-            $request->get('login', ''),
-            $request->get('password', ''),
-            $request->ip(),
-            $request->userAgent()
-        );
+		$result = $this->authService->login(
+			$request->get('login', ''),
+			$request->get('password', ''),
+			$request->ip(),
+			$request->userAgent(),
+			$request->get('cf-turnstile-response')
+		);
 
-        if ($result['success']) {
-            $this->authService->setTokenCookies($result['tokens']);
-            Response::json([
-                'success' => true,
-                'redirect' => '/@' . $result['user']['login']
-            ]);
-        } else {
-            Response::json($result, 401);
-        }
-    }
+		if ($result['success']) {
+			$this->authService->setTokenCookies($result['tokens']);
+			Response::json([
+				'success' => true,
+				'redirect' => '/@' . $result['user']['login']
+			]);
+		} else {
+			Response::json($result, 401);
+		}
+	}
 
 	public function register(Request $request): void
 	{
@@ -58,7 +59,8 @@ class AuthController
 			$request->get('password', ''),
 			$request->get('username', ''),
 			$request->ip(),
-			$request->userAgent()
+			$request->userAgent(),
+			$request->get('cf-turnstile-response')
 		);
 
 		if ($result['success']) {
@@ -72,7 +74,7 @@ class AuthController
 			Response::json($result, 400);
 		}
 	}
-	
+
 	public function refresh(Request $request): void
 	{
 		if (!$request->isMethod('POST')) {

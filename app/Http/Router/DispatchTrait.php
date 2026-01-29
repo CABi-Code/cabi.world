@@ -7,6 +7,7 @@ namespace App\Http\Router;
 use App\Http\Request;
 use App\Http\Response;
 use App\Http\Middleware\AuthMiddleware;
+use App\Http\Middleware\RateLimitBlockMiddleware;
 
 trait DispatchTrait
 {
@@ -14,8 +15,13 @@ trait DispatchTrait
     {
         $request = new Request();
         
-        // Инициализируем пользователя в Request
+        // Инициализируем пользователя
         self::initializeUser($request);
+        
+        // Проверяем глобальную блокировку по rate limit
+        if (!self::checkGlobalRateLimit($request)) {
+            return;
+        }
         
         $method = $request->method();
         $uri = $request->uri();
@@ -28,6 +34,29 @@ trait DispatchTrait
         }
 
         self::handleNotFound($request, $uri);
+    }
+
+    /**
+     * Проверяет глобальную блокировку
+     */
+    private static function checkGlobalRateLimit(Request $request): bool
+    {
+		error_log("checkGlobalRateLimit called for: " . $request->uri());
+		
+        // Пропускаем статику и эндпоинт капчи
+        $uri = $request->uri();
+        $skipPaths = ['/api/captcha/solve', '/css/', '/js/', '/images/', '/uploads/'];
+        
+        foreach ($skipPaths as $path) {
+            if (str_starts_with($uri, $path)) {
+                return true;
+            }
+        }
+        
+        $middleware = new RateLimitBlockMiddleware();
+        $result = $middleware->handle($request, fn($r) => true);
+        
+        return $result !== null;
     }
 
     /**

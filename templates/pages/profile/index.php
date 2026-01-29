@@ -10,6 +10,8 @@
 use App\Repository\ApplicationRepository;
 use App\Core\Role;
 
+$profilePath = __DIR__;
+
 $appRepo = new ApplicationRepository();
 $applications = $appRepo->findByUser($profileUser['id'], $isOwner, 20);
 
@@ -29,11 +31,11 @@ $avatarStyle = $profileUser['avatar']
 $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
 ?>
 
-<?php include 'profile-banner.php'; ?>
+<?php require $profilePath . '/profile-banner.php'; ?>
 
-<?php include 'profile-header.php'; ?>
+<?php require $profilePath . '/profile-header.php'; ?>
 
-<?php include 'profile-section.php'; ?>
+<?php require $profilePath . '/profile-section.php'; ?>
 
 <?php if ($isOwner): ?>
     <?php 
@@ -43,7 +45,7 @@ $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
     require TEMPLATES_PATH . '/components/application-modal.php'; 
     ?>
 
-    <?php include 'js-script.php'; ?>
+    <?php require $profilePath . '/js-script.php'; ?>
 <?php endif; ?>
 
 <div id="lightbox" class="lightbox" style="display:none;">
