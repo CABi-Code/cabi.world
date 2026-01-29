@@ -64,70 +64,81 @@ class AuthService
             return ['success' => false, 'errors' => $errors];
         }
 
-        $passwordHash = password_hash($password, PASSWORD_ARGON2ID);
-        $userId = $this->userRepo->create($login, $email, $passwordHash, $username);
+		$passwordHash = password_hash($password, PASSWORD_ARGON2ID);
+		$userId = $this->userRepo->create($login, $email, $passwordHash, $username);
 
-        if (!$userId) {
-            return ['success' => false, 'errors' => ['general' => 'Ошибка создания']];
-        }
+		if (!$userId) {
+			return ['success' => false, 'errors' => ['general' => 'Ошибка создания']];
+		}
+		
+		$tokens = $this->generateTokens($userId, $ip, $userAgent);
+		$this->logAuth($userId, 'register', true, $ip, $userAgent);
 
-        $tokens = $this->generateTokens($userId);
-        $this->logAuth($userId, 'register', true);
-
-        return ['success' => true, 'user_id' => $userId, 'tokens' => $tokens];
+		return ['success' => true, 'user_id' => $userId, 'tokens' => $tokens];
     }
 
-    public function login(string $loginOrEmail, string $password, string $ip, string $userAgent): array
-    {
-        $user = $this->userRepo->findForAuth($loginOrEmail);
+	public function login(string $loginOrEmail, string $password, string $ip, string $userAgent): array
+	{
+		$user = $this->userRepo->findForAuth($loginOrEmail);
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            usleep(random_int(500000, 1000000));
-            return ['success' => false, 'errors' => ['general' => 'Неверный логин или пароль']];
-        }
+		if (!$user || !password_verify($password, $user['password_hash'])) {
+			usleep(random_int(500000, 1000000));
+			return ['success' => false, 'errors' => ['general' => 'Неверный логин или пароль']];
+		}
 
-        $fullUser = $this->userRepo->findById($user['id']);
-        
-        if (!$fullUser['is_active']) {
-            return ['success' => false, 'errors' => ['general' => 'Аккаунт деактивирован']];
-        }
+		$fullUser = $this->userRepo->findById($user['id']);
+		
+		if (!$fullUser['is_active']) {
+			return ['success' => false, 'errors' => ['general' => 'Аккаунт деактивирован']];
+		}
 
-        $tokens = $this->generateTokens($user['id']);
-        $this->userRepo->updateLastLogin($user['id']);
-        $this->logAuth($user['id'], 'login', true, $ip, $userAgent);
+		$tokens = $this->generateTokens($user['id'], $ip, $userAgent);
+		$this->userRepo->updateLastLogin($user['id']);
+		$this->logAuth($user['id'], 'login', true, $ip, $userAgent);
 
-        return [
-            'success' => true,
-            'user' => [
-                'id' => $fullUser['id'],
-                'login' => $fullUser['login'],
-                'username' => $fullUser['username'],
-                'avatar' => $fullUser['avatar']
-            ],
-            'tokens' => $tokens
-        ];
-    }
+		return [
+			'success' => true,
+			'user' => [
+				'id' => $fullUser['id'],
+				'login' => $fullUser['login'],
+				'username' => $fullUser['username'],
+				'avatar' => $fullUser['avatar']
+			],
+			'tokens' => $tokens
+		];
+	}
+	
+	public function refresh(string $refreshToken, ?string $ip = null, ?string $userAgent = null): array
+	{
+		$payload = $this->jwt->decode($refreshToken);
+		if (!$payload || ($payload['type'] ?? '') !== 'refresh') {
+			return ['success' => false, 'error' => 'Invalid token'];
+		}
 
-    public function refresh(string $refreshToken): array
-    {
-        $payload = $this->jwt->decode($refreshToken);
-        if (!$payload || ($payload['type'] ?? '') !== 'refresh') {
-            return ['success' => false, 'error' => 'Invalid token'];
-        }
+		$tokenHash = hash('sha256', $refreshToken);
+		$stored = $this->tokenRepo->findByHash($tokenHash);
+		
+		if (!$stored || $stored['revoked']) {
+			return ['success' => false, 'error' => 'Token revoked'];
+		}
 
-        $tokenHash = hash('sha256', $refreshToken);
-        $stored = $this->tokenRepo->findByHash($tokenHash);
-        
-        if (!$stored || $stored['revoked']) {
-            return ['success' => false, 'error' => 'Token revoked'];
-        }
+		// Проверяем fingerprint (если он был сохранён)
+		if ($stored['fingerprint']) {
+			$currentFingerprint = $this->getFingerprint($ip, $userAgent);
+			if ($stored['fingerprint'] !== $currentFingerprint) {
+				// Подозрительная активность - отзываем ВСЕ токены пользователя
+				$this->tokenRepo->revokeAllForUser($payload['user_id']);
+				$this->logAuth($payload['user_id'], 'suspicious_refresh', false, $ip, $userAgent);
+				return ['success' => false, 'error' => 'Session invalidated'];
+			}
+		}
 
-        $this->tokenRepo->revoke($tokenHash);
-        $tokens = $this->generateTokens($payload['user_id']);
+		$this->tokenRepo->revoke($tokenHash);
+		$tokens = $this->generateTokens($payload['user_id'], $ip, $userAgent);
 
-        return ['success' => true, 'tokens' => $tokens];
-    }
-
+		return ['success' => true, 'tokens' => $tokens];
+	}
+	
     public function logout(string $refreshToken): void
     {
         $this->tokenRepo->revoke(hash('sha256', $refreshToken));
@@ -138,16 +149,24 @@ class AuthService
         $this->tokenRepo->revokeAllForUser($userId);
     }
 
-    public function getCurrentUser(): ?array
-    {
-        $token = $_COOKIE['access_token'] ?? null;
-        if (!$token) return null;
+	public function getCurrentUser(): ?array
+	{
+		$token = $_COOKIE['access_token'] ?? null;
+		if (!$token) return null;
 
-        $payload = $this->jwt->decode($token);
-        if (!$payload || ($payload['type'] ?? '') !== 'access') return null;
+		$payload = $this->jwt->decode($token);
+		if (!$payload || ($payload['type'] ?? '') !== 'access') return null;
 
-        return $this->userRepo->findById($payload['user_id']);
-    }
+		$user = $this->userRepo->findById($payload['user_id']);
+		if (!$user || !$user['is_active']) return null;
+		
+		// Проверка версии токена (если используется)
+		if (isset($payload['version']) && isset($user['token_version'])) {
+			if ($payload['version'] !== $user['token_version']) return null;
+		}
+
+		return $user;
+	}
 
     public function setTokenCookies(array $tokens): void
     {
@@ -170,28 +189,35 @@ class AuthService
         setcookie('refresh_token', '', ['expires' => time() - 3600, 'path' => '/']);
     }
 
-    private function generateTokens(int $userId): array
-    {
-        $accessToken = $this->jwt->encode([
-            'user_id' => $userId,
-            'type' => 'access',
-            'exp' => time() + $this->config['jwt_access_lifetime']
-        ]);
+	private function generateTokens(int $userId, ?string $ip = null, ?string $userAgent = null): array
+	{
+		$accessToken = $this->jwt->encode([
+			'user_id' => $userId,
+			'type' => 'access',
+			'exp' => time() + $this->config['jwt_access_lifetime']
+		]);
 
-        $refreshToken = $this->jwt->encode([
-            'user_id' => $userId,
-            'type' => 'refresh',
-            'exp' => time() + $this->config['jwt_refresh_lifetime']
-        ]);
+		$refreshToken = $this->jwt->encode([
+			'user_id' => $userId,
+			'type' => 'refresh',
+			'exp' => time() + $this->config['jwt_refresh_lifetime']
+		]);
 
-        $this->tokenRepo->create($userId, hash('sha256', $refreshToken), $this->config['jwt_refresh_lifetime']);
+		$fingerprint = $this->getFingerprint($ip, $userAgent);
+		
+		$this->tokenRepo->create(
+			$userId, 
+			hash('sha256', $refreshToken), 
+			$this->config['jwt_refresh_lifetime'],
+			$fingerprint
+		);
 
-        return [
-            'access_token' => $accessToken,
-            'refresh_token' => $refreshToken,
-            'expires_in' => $this->config['jwt_access_lifetime']
-        ];
-    }
+		return [
+			'access_token' => $accessToken,
+			'refresh_token' => $refreshToken,
+			'expires_in' => $this->config['jwt_access_lifetime']
+		];
+	}
 
     private function logAuth(int $userId, string $action, bool $success, ?string $ip = null, ?string $ua = null): void
     {
@@ -200,4 +226,16 @@ class AuthService
             [$userId, $action, $success ? 1 : 0, $ip ?? $_SERVER['REMOTE_ADDR'] ?? '', $ua ?? '']
         );
     }
+	
+	private function getFingerprint(?string $ip = null, ?string $userAgent = null): string
+	{
+		$ip = $ip ?? ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+		$userAgent = $userAgent ?? ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown');
+		
+		// Берём только основную часть User-Agent (браузер + ОС)
+		// чтобы минорные обновления браузера не ломали сессию
+		$uaShort = preg_replace('/[\d._]+/', '', substr($userAgent, 0, 100));
+		
+		return hash('sha256', $ip . '|' . $uaShort);
+	}
 }

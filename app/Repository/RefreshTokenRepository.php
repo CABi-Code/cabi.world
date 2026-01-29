@@ -15,12 +15,12 @@ class RefreshTokenRepository
         $this->db = Database::getInstance();
     }
 
-    public function create(int $userId, string $tokenHash, int $lifetime): void
+    public function create(int $userId, string $tokenHash, int $lifetime, ?string $fingerprint = null): void
     {
         $expiresAt = date('Y-m-d H:i:s', time() + $lifetime);
         $this->db->execute(
-            'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
-            [$userId, $tokenHash, $expiresAt]
+            'INSERT INTO refresh_tokens (user_id, token_hash, fingerprint, expires_at) VALUES (?, ?, ?, ?)',
+            [$userId, $tokenHash, $fingerprint, $expiresAt]
         );
     }
 

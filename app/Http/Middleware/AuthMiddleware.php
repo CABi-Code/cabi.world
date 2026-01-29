@@ -34,24 +34,31 @@ class AuthMiddleware implements MiddlewareInterface
         return $next($request);
     }
 
-    public function getUser(?Request $request = null): ?array
-    {
-        $user = $this->auth->getCurrentUser();
+	public function getUser(?Request $request = null): ?array
+	{
+		$user = $this->auth->getCurrentUser();
 
-        if (!$user) {
-            $refreshToken = $_COOKIE['refresh_token'] ?? null;
-            if ($refreshToken) {
-                $result = $this->auth->refresh($refreshToken);
-                if ($result['success']) {
-                    $this->auth->setTokenCookies($result['tokens']);
-                    $user = $this->auth->getCurrentUser();
-                }
-            }
-        }
+		if (!$user) {
+			$refreshToken = $_COOKIE['refresh_token'] ?? null;
+			if ($refreshToken) {
+				// Передаём ip и userAgent
+				$ip = $request?->ip() ?? ($_SERVER['REMOTE_ADDR'] ?? null);
+				$userAgent = $request?->userAgent() ?? ($_SERVER['HTTP_USER_AGENT'] ?? null);
+				
+				$result = $this->auth->refresh($refreshToken, $ip, $userAgent);
+				if ($result['success']) {
+					$this->auth->setTokenCookies($result['tokens']);
+					$user = $this->auth->getCurrentUser();
+				} else {
+					// Токен невалиден - очищаем cookies
+					$this->auth->clearTokenCookies();
+				}
+			}
+		}
 
-        return $user;
-    }
-
+		return $user;
+	}
+	
     public function requireAuth(): array
     {
         $user = $this->getUser();

@@ -12,7 +12,7 @@ class DbFields
     // === Users ===
     public const USER_PUBLIC = 'id, login, email, username, bio, avatar, banner, discord, telegram, vk, 
         is_active, role, theme, view_mode, profile_bg_type, profile_bg_value, avatar_bg_type, avatar_bg_value, 
-        banner_bg_type, banner_bg_value, created_at';
+        banner_bg_type, banner_bg_value, created_at, token_version';
     
     public const USER_AUTH = 'id, login, email, password_hash, username, is_active, role';
     
