@@ -90,7 +90,7 @@ function setupDeleteHandler(buttonId, endpoint, csrf) {
         
         try {
             const res = await fetch(endpoint, { 
-                method: 'POST', 
+                method: 'DELETE', 
                 headers: { 'X-CSRF-Token': csrf } 
             });
             const data = await res.json();

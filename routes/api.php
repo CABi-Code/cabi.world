@@ -30,10 +30,10 @@ Router::prefix('/api')->group(function() {
         Router::post('/user/update', [UserController::class, 'update'])->middleware('csrf');
         Router::post('/user/avatar', [UserController::class, 'uploadAvatar'])->middleware('csrf');
         Router::delete('/user/avatar', [UserController::class, 'deleteAvatar'])->middleware('csrf');
-        Router::post('/user/avatar/delete', [UserController::class, 'deleteAvatar'])->middleware('csrf');
+        Router::delete('/user/avatar/delete', [UserController::class, 'deleteAvatar'])->middleware('csrf');
         Router::post('/user/banner', [UserController::class, 'uploadBanner'])->middleware('csrf');
         Router::delete('/user/banner', [UserController::class, 'deleteBanner'])->middleware('csrf');
-        Router::post('/user/banner/delete', [UserController::class, 'deleteBanner'])->middleware('csrf');
+        Router::delete('/user/banner/delete', [UserController::class, 'deleteBanner'])->middleware('csrf');
         
         // Application routes
         Router::post('/modpack/apply', [ModpackController::class, 'apply'])->middleware('csrf');

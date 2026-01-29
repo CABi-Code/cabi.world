@@ -25,9 +25,7 @@
         "/api/auth/refresh",
         "/api/user/update",
         "/api/user/avatar",
-        "/api/user/avatar/delete",
         "/api/user/banner",
-        "/api/user/banner/delete",
         "/api/modpack/apply",
         "/api/application",
         "^/api/application/\\d+$",
@@ -58,6 +56,8 @@
     ],
 
     "DELETE": [
+        "/api/user/avatar/delete",
+        "/api/user/banner/delete",
         "/api/user/avatar",
         "/api/user/banner",
         "^/api/application/\\d+$",

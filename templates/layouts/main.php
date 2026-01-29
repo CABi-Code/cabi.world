@@ -5,15 +5,10 @@
  * @var string $title - заголовок страницы
  * @var string $content - контент страницы
  * @var array|null $user - текущий пользователь
+ * @var int $unreadNotifications - количество непрочитанных уведомлений
  */
 
-use App\Core\Security;
 use App\Repository\NotificationRepository;
-
-// Проверка безопасности
-$security = new Security();
-$currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$security->check($currentPath);
 
 // Если $user не передан, он null
 if (!isset($user)) {
@@ -55,6 +50,5 @@ if (!isset($unreadNotifications)) {
     <?php require TEMPLATES_PATH . '/components/icons.php'; ?>
     
     <script type="module" src="/js/app.js"></script>
-    <script type="module" src="/js/modules/modal.js"></script>
 </body>
 </html>

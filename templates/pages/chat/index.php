@@ -113,10 +113,9 @@ $canSendFiles = $canSendMessages && !$settings['files_disabled'] && Role::isPrem
 </div>
 
 <!-- Модальное окно создания опроса -->
-<?php include 'modals/chatPollModal.php' ?>
+<?php include __DIR__ . '/modals/chatPollModal.php'; ?>
 
 <!-- Модальное окно настроек чата (для владельца/модератора) -->
-<?php include 'modals/chatSettingsModal.php' ?>
+<?php include __DIR__ . '/modals/chatSettingsModal.php'; ?>
 
-
-<?php include 'js-script.php' ?>
+<?php include __DIR__ . '/js-script.php'; ?>

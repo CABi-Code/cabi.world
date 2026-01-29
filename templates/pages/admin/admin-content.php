@@ -44,12 +44,15 @@
 						</tr>
 					</thead>
 					<tbody>
-						<?php foreach ($applications as $app): ?>
+						<?php foreach ($applications as $app): 
+							$avatarColors = explode(',', $app['avatar_bg_value'] ?? '#3b82f6,#8b5cf6');
+							$avatarStyle = 'background:linear-gradient(135deg,' . ($avatarColors[0] ?? '#3b82f6') . ',' . ($avatarColors[1] ?? $avatarColors[0]) . ')';
+						?>
 							<tr data-app-id="<?= $app['id'] ?>">
 								<td class="admin-td-id">#<?= $app['id'] ?></td>
 								<td>
 									<a href="/@<?= e($app['login']) ?>" class="admin-user-link">
-										<div class="admin-avatar">
+										<div class="admin-avatar" style="<?= empty($app['avatar']) ? $avatarStyle : '' ?>">
 											<?php if ($app['avatar']): ?>
 												<img src="<?= e($app['avatar']) ?>" alt="">
 											<?php else: ?>
@@ -77,11 +80,6 @@
 									<div class="admin-message-preview" title="<?= e($app['message']) ?>">
 										<?= e(mb_substr($app['message'], 0, 100)) ?><?= mb_strlen($app['message']) > 100 ? '...' : '' ?>
 									</div>
-									<?php if ($app['relevant_until']): ?>
-										<div class="admin-relevant">
-											До: <?= date('d.m.Y', strtotime($app['relevant_until'])) ?>
-										</div>
-									<?php endif; ?>
 								</td>
 								<td class="admin-td-date">
 									<?= date('d.m.Y', strtotime($app['created_at'])) ?><br>

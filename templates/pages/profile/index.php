@@ -29,11 +29,11 @@ $avatarStyle = $profileUser['avatar']
 $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
 ?>
 
-<?php include_once 'profile-banner.php'; ?>
+<?php include 'profile-banner.php'; ?>
 
-<?php include_once 'profile-header.php'; ?>
+<?php include 'profile-header.php'; ?>
 
-<?php include_once 'profile-section.php'; ?>
+<?php include 'profile-section.php'; ?>
 
 <?php if ($isOwner): ?>
     <?php 
@@ -43,7 +43,7 @@ $canAccessAdmin = $isOwner && Role::isModerator($user['role'] ?? null);
     require TEMPLATES_PATH . '/components/application-modal.php'; 
     ?>
 
-    <?php include_once 'js-script.php'; ?>
+    <?php include 'js-script.php'; ?>
 <?php endif; ?>
 
 <div id="lightbox" class="lightbox" style="display:none;">

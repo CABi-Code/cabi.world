@@ -1,17 +1,16 @@
 <?php
 /**
- * @var string $platform
- * @var string $slug
- * @var array|null $modpack
- * @var array|null $user
+ * Страница модпака
+ * 
+ * @var string $platform - платформа (modrinth/curseforge)
+ * @var string $slug - слаг модпака
+ * @var array|null $user - текущий пользователь (передаётся из контроллера)
  */
 
 use React\EventLoop\Loop;
 use React\Http\Browser;
 use App\Repository\ModpackRepository;
 use App\Repository\ApplicationRepository;
-
-global $user;
 
 $config = require CONFIG_PATH . '/app.php';
 $modpackRepo = new ModpackRepository();
@@ -21,7 +20,7 @@ $modpack = $modpackRepo->findBySlug($platform, $slug);
 $isLoading = false;
 
 if (!$modpack) {
-    include_once 'api-loading-modpack.php';
+    include_once __DIR__ . '/api-loading-modpack.php';
 }
 
 $currentUserId = $user['id'] ?? null;
@@ -37,12 +36,11 @@ $defaultRelevantDate = date('Y-m-d', strtotime('+14 days'));
 <?php if (!$modpack): ?>
     <div class="alert alert-error">Модпак не найден</div>
 <?php else: ?>
-    <?php include_once 'modpack-page/modpack-page.php'; ?>
+    <?php include_once __DIR__ . '/modpack-page/modpack-page.php'; ?>
     
     <?php if ($user): ?>
         <?php if ($userApplication): ?>
             <?php 
-            // Модалка редактирования существующей заявки
             $application = $userApplication;
             $modalId = 'editMyAppModal';
             $mode = 'edit';
@@ -50,7 +48,6 @@ $defaultRelevantDate = date('Y-m-d', strtotime('+14 days'));
             ?>
         <?php else: ?>
             <?php 
-            // Модалка создания новой заявки
             $application = null;
             $modalId = 'createAppModal';
             $mode = 'create';
@@ -59,7 +56,7 @@ $defaultRelevantDate = date('Y-m-d', strtotime('+14 days'));
             ?>
         <?php endif; ?>
         
-        <?php include_once 'js-script.php'; ?>
+        <?php include_once __DIR__ . '/js-script.php'; ?>
     <?php endif; ?>
 <?php endif; ?>
 
