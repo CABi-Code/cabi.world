@@ -2,7 +2,7 @@
 // Profile page specific functionality
 // Image upload is handled by the global image-editor module
 
-const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+//const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 
 // Toggle application visibility
 async function toggleHidden(id) {

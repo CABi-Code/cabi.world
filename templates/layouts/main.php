@@ -9,6 +9,11 @@
  */
 
 use App\Repository\NotificationRepository;
+use App\Core\Security;
+
+$security = new Security();
+$currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$security->check($currentPath);
 
 // Защита от повторного рендера
 if (defined('MAIN_LAYOUT_RENDERED')) {

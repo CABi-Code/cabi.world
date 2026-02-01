@@ -26,8 +26,8 @@ $canAccessAdmin = isset($user) && $user && Role::isModerator($user['role'] ?? nu
             <a href="/" class="logo">cabi.world</a>
             <nav class="nav">
                 <a href="/" class="nav-link <?= $path === '/' ? 'active' : '' ?>">Главная</a>
-                <a href="/modrinth" class="nav-link <?= $path === '/modrinth' ? 'active' : '' ?>">Modrinth</a>
-                <a href="/curseforge" class="nav-link <?= $path === '/curseforge' ? 'active' : '' ?>">CurseForge</a>
+                <?php /* <a href="/modrinth" class="nav-link <?= $path === '/modrinth' ? 'active' : '' ?>">Modrinth</a> */ ?>
+                <?php /* <a href="/curseforge" class="nav-link <?= $path === '/curseforge' ? 'active' : '' ?>">CurseForge</a> */ ?>
             </nav>
         </div>
         <div class="header-right">
@@ -114,8 +114,8 @@ $canAccessAdmin = isset($user) && $user && Role::isModerator($user['role'] ?? nu
 <!-- Mobile Navigation -->
 <nav class="mobile-nav" id="mobileNav">
     <a href="/" class="nav-link <?= $path === '/' ? 'active' : '' ?>">Главная</a>
-    <a href="/modrinth" class="nav-link <?= $path === '/modrinth' ? 'active' : '' ?>">Modrinth</a>
-    <a href="/curseforge" class="nav-link <?= $path === '/curseforge' ? 'active' : '' ?>">CurseForge</a>
+    <?php /* <a href="/modrinth" class="nav-link <?= $path === '/modrinth' ? 'active' : '' ?>">Modrinth</a> */ ?>
+    <?php /* <a href="/curseforge" class="nav-link <?= $path === '/curseforge' ? 'active' : '' ?>">CurseForge</a> */ ?>
     <?php if ($canAccessAdmin): ?>
         <a href="/admin" class="nav-link <?= str_starts_with($path, '/admin') ? 'active' : '' ?>">Панель</a>
     <?php endif; ?>

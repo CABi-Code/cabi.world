@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Core;
+use App\Controllers\BaseController;
 
 /**
  * Security - проверка маршрутов и CSRF
@@ -12,7 +13,7 @@ namespace App\Core;
  * - Маска с регуляркой: "^/@[\w\d_]+$" разрешит /@john, /@cabi
  * - Диапазоны: "^/api/chat/.*" разрешит всё после /api/chat/
  */
-class Security
+class Security extends BaseController
 {
     private array $allowedRoutes = [];
     private string $configPath;
@@ -50,16 +51,58 @@ class Security
      */
     public function check(string $currentRoute): void
     {
+		$currentRoute = $currentRoute ?? '/';
+		$currentRoute = '/' . ltrim($currentRoute, '/'); // точно один слэш вналае
+		$currentRoute = preg_replace('#/{2,}#', '/', $currentRoute); // точно нет лишних слешей где-либо еще 
+		
+		// сегментирование и удаление лишнего
+		$segments = array_filter(explode('/', $currentRoute), function($s) {return $s !== '' && $s !== '.' && $s !== '..';});
+		$cleanSegments = [];
+		// Пропуск только букв, цифр, дефисов, подчёркивание, точкек, собак
+		foreach ($segments as $seg) {if (!preg_match('/^[a-zA-Z0-9@._-]+$/', $seg)) $this->sendError('Bad Request', 400);$cleanSegments[] = $seg;}
+		
+		$normalizedPath = '/' . implode('/', $cleanSegments);
+		if (strlen($normalizedPath) > 4096) $this->sendError('URI Too Long', 414);
+		
         $method = $_SERVER['REQUEST_METHOD'];
 
         // 1. Проверяем маршрут
         if (!$this->isRouteAllowed($method, $currentRoute)) {
-            $this->sendError("Доступ к маршруту $currentRoute запрещен", 403);
+			//$this->sendError("Страница не найдена", 404);
+			$message = 'Страница не найдена';
+			http_response_code(404);
+			$this->notFound('эу',[
+				'title' => 'Не найдено',
+				'message' => $message
+			]);
+            
+			exit;
+			//$this->sendError("Доступ к маршруту $currentRoute запрещен", 423);
             return;
         }
 
-        // 2. CSRF для всех методов кроме безопасных
-        if (!in_array($method, ['GET', 'HEAD', 'OPTIONS'])) {
+		//$allowedByMethod  = isset($this->allowedRoutes[$method]) 
+		//	&& $this->matchRoute($currentRoute, $this->allowedRoutes[$method] ?? []);
+		//
+		//$allowedByWildcard = isset($this->allowedRoutes['*']) 
+		//	&& $this->matchRoute($currentRoute, $this->allowedRoutes['*'] ?? []);
+		//
+		//if ($allowedByMethod || $allowedByWildcard) {
+		//	// маршрут найден и разрешён → продолжаем
+		//	if (!in_array($method, ['GET'])) {
+		//		$this->validateCsrf();
+		//	}
+		//} else {
+		//	$message = 'Страница не найдена';
+		//	http_response_code(404);
+		//	$this->notFound('эу',[
+		//		'title' => 'Не найдено',
+		//		'message' => $message
+		//	]);
+		//}
+
+        // 2. CSRF для всех методов 
+        if (!in_array($method, ['GET'])) {
             $this->validateCsrf();
         }
     }
@@ -69,6 +112,7 @@ class Security
      */
     private function isRouteAllowed(string $method, string $route): bool
     {
+		
         // Проверяем точный метод
         if (isset($this->allowedRoutes[$method])) {
             if ($this->matchRoute($route, $this->allowedRoutes[$method])) {
@@ -86,32 +130,39 @@ class Security
         return false;
     }
 
-    /**
-     * Сопоставляет маршрут с паттернами
-     */
-    private function matchRoute(string $route, array $patterns): bool
-    {
-        foreach ($patterns as $pattern) {
-            // Игнорируем пустые записи
-            if (trim($pattern) === '') {
-                continue;
-            }
+	/**
+	 * Сопоставляет маршрут с паттернами
+	 * $route - вызваный метод пользователем строчка из браузера, например '/login', '/registr', '/@cabi', ' /modpack/curseforge/nightfallcraft-the-casket-of-reveries'
+	 * $patterns - список методов из файла
+	 */
+	private function matchRoute(string $route, array $patterns): bool
+	{
+		
+		$route = trim($route);
+		$route = filter_var($route, FILTER_SANITIZE_URL);
+		
+		foreach ($patterns as $pattern) {
+			$patternBan = false;
+			
+			// Игнорирует пустые записи
+			if (trim($pattern) === '') continue;
 
-            // 1. Точное совпадение
-            if ($route === $pattern) {
-                return true;
-            }
+			// Точное совпадение
+			if ($route === $pattern) {
+				if (str_starts_with($pattern, '!')) return false; // Отклоняет записи с ! вначале
+				return true;
+			}
 
-            // 2. Регулярное выражение (содержит ^ или $ или .*)
-            if ($this->isRegexPattern($pattern)) {
-                if (@preg_match("#$pattern#u", $route)) {
-                    return true;
-                }
-            }
-        }
+			// Регулярное выражение (содержит ^ или $ или .*)
+			if ($this->isRegexPattern($pattern)) {
+				$isNegative = str_starts_with($pattern, '!');
+				if ($isNegative) $pattern = ltrim($pattern, '!'); // Отклоняет записи с ! вначале
+				if (@preg_match("#$pattern#u", $route)) return !$isNegative;
+			}
+		}
 
-        return false;
-    }
+		return false;
+	}
 
     /**
      * Проверяет, является ли паттерн регуляркой
@@ -140,10 +191,9 @@ class Security
      */
     private function sendError(string $message, int $code): void
     {
-        http_response_code($code);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
-        exit;
+		echo $message;
+		exit;
+		//json(['error' => $message], $code);
     }
 
     /**
