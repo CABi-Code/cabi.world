@@ -1,22 +1,11 @@
 <div class="profile-tabs">
 	<button 
-		class="profile-tab <?= $activeTab === 'community' ? 'active' : '' ?> <?= !$canViewCommunity ? 'disabled' : '' ?>" 
-		data-tab="community"
-		<?= !$canViewCommunity ? 'disabled title="В папке пусто"' : '' ?>
+		class="profile-tab <?= $activeTab === 'folder' ? 'active' : '' ?> <?= !$canViewFolder ? 'disabled' : '' ?>" 
+		data-tab="folder"
+		<?= !$canViewFolder ? 'disabled title="Папка пуста"' : '' ?>
 	>
-		<svg width="16" height="16"><use href="#icon-message-circle"/></svg>
+		<svg width="16" height="16"><use href="#icon-folder"/></svg>
 		Моя папка
-	</button>
-	
-	<button 
-		class="profile-tab <?= $activeTab === 'applications' ? 'active' : '' ?>" 
-		data-tab="applications"
-	>
-		<svg width="16" height="16"><use href="#icon-send"/></svg>
-		<?= $isOwner ? 'Мои заявки' : 'Заявки' ?>
-		<?php if (!empty($applications)): ?>
-			<span class="tab-count"><?= count($applications) ?></span>
-		<?php endif; ?>
 	</button>
 	
 	<?php if ($showSubscriptions): ?>

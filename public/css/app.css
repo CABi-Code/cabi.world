@@ -8,7 +8,7 @@
 @import 'components/buttons.css';
 @import 'components/forms.css';
 @import 'components/cards.css';
-@import 'components/modals.css';
+@import 'components/modal.css';
 @import 'components/image-editor.css';
 @import 'components/application-modal.css';
 @import 'sections/popular.css';
@@ -17,6 +17,7 @@
 @import 'sections/settings.css';
 @import 'sections/admin.css';
 @import 'sections/auth.css';
+@import 'sections/my-folder.css';
 @import 'layout.css';
 @import 'sections/hero.css';
 @import 'utils.css';

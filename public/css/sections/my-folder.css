@@ -1,0 +1,122 @@
+/* ===================================
+   MY FOLDER - Стили для "Моей папки"
+   =================================== */
+
+/* === Контейнер === */
+.my-folder-container { display: flex; gap: 0; min-height: 400px; position: relative; }
+
+/* === Сайдбар === */
+.folder-sidebar {
+    width: 0;
+    overflow: hidden;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.folder-sidebar.open { width: 320px; min-width: 320px; }
+
+.folder-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.folder-sidebar-title { font-weight: 600; font-size: 0.9375rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.folder-sidebar-content { flex: 1; padding: 1rem; overflow-y: auto; }
+
+.sidebar-section { margin-bottom: 1rem; }
+.sidebar-label { font-size: 0.8125rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem; }
+.sidebar-value { font-size: 0.875rem; color: var(--text); }
+.sidebar-value.online { color: var(--success); }
+.sidebar-value.offline { color: var(--text-muted); }
+.sidebar-description { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* === Основной контент === */
+.folder-main { flex: 1; min-width: 0; transition: margin-left 0.3s ease; }
+
+/* === Тулбар === */
+.folder-toolbar { display: flex; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+
+/* === Структура === */
+.folder-structure { display: flex; flex-direction: column; gap: 0.125rem; }
+
+/* === Элемент папки === */
+.folder-item { border-radius: 6px; user-select: none; }
+
+.folder-item.collapsed .folder-item-children { display: none; }
+.folder-item.collapsed .toggle-arrow { transform: rotate(-90deg); }
+
+.folder-item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.folder-item-row:hover { background: var(--bg); }
+
+.folder-item-toggle { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
+.folder-item-toggle:hover { color: var(--text); }
+
+.toggle-arrow { transition: transform 0.2s; }
+.folder-item-spacer { width: 20px; flex-shrink: 0; }
+.folder-item-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0; }
+
+.folder-item-name { flex: 1; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.folder-item-name:hover { color: var(--primary); }
+
+.folder-item-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.15s; }
+.folder-item-row:hover .folder-item-actions { opacity: 1; }
+
+/* === Типы элементов === */
+.folder-item.type-category > .folder-item-row .folder-item-icon { color: var(--primary); }
+.folder-item.type-modpack > .folder-item-row .folder-item-icon { color: #8b5cf6; }
+.folder-item.type-mod > .folder-item-row .folder-item-icon { color: #10b981; }
+.folder-item.type-server > .folder-item-row .folder-item-icon { color: #f59e0b; }
+.folder-item.type-application > .folder-item-row .folder-item-icon { color: #3b82f6; }
+.folder-item.type-chat > .folder-item-row .folder-item-icon { color: #ec4899; }
+.folder-item.type-shortcut > .folder-item-row .folder-item-icon { color: #6366f1; }
+
+/* === Drag & Drop === */
+.folder-item.dragging { opacity: 0.5; }
+.folder-item.drag-over > .folder-item-row { background: var(--primary-light); outline: 2px dashed var(--primary); }
+.folder-item.drop-disabled { opacity: 0.4; pointer-events: none; }
+
+.folder-drop-zone { padding: 1rem; border: 2px dashed var(--border); border-radius: 8px; text-align: center; color: var(--text-muted); font-size: 0.8125rem; margin-top: 0.5rem; transition: all 0.2s; display: none; }
+.folder-item.dragging ~ .folder-drop-zone { display: block; }
+.folder-drop-zone.drag-over { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+
+/* === Пустое состояние === */
+.folder-empty { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
+.folder-empty .empty-icon { color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem; }
+.folder-empty p { margin-bottom: 0.5rem; }
+.folder-empty .empty-hint { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+/* === Выбор типа элемента === */
+.item-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+
+.item-type-btn { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+.item-type-btn:hover { border-color: var(--primary); color: var(--primary); }
+.item-type-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+
+/* === Формы === */
+.form-divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+.form-section-title { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 1rem; }
+.form-row { display: flex; gap: 0.75rem; }
+.form-row .form-group { flex: 1; }
+.form-color { height: 38px; padding: 0.25rem; }
+
+/* === Адаптивность === */
+@media (max-width: 768px) {
+    .folder-sidebar.open { width: 100%; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; }
+    .item-type-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -12,6 +12,7 @@ use App\Controllers\Api\NotificationController;
 use App\Controllers\Api\AdminController;
 use App\Controllers\Api\CommunityController;
 use App\Controllers\Api\CaptchaController;
+use App\Controllers\Api\UserFolderController;
 
 Router::post('/api/captcha/solve', [CaptchaController::class, 'solve'])
     ->middleware('csrf');
@@ -60,6 +61,19 @@ Router::prefix('/api')->group(function() {
         Router::post('/chat/poll/create', [ChatController::class, 'createPoll'])->middleware('csrf');
         Router::post('/chat/poll/vote', [ChatController::class, 'votePoll'])->middleware('csrf');
         Router::post('/chat/settings', [ChatController::class, 'updateSettings'])->middleware('csrf');
+        
+        // User Folder (Моя папка)
+        Router::get('/user-folder/structure', [UserFolderController::class, 'getStructure']);
+        Router::get('/user-folder/item', [UserFolderController::class, 'getItem']);
+        Router::post('/user-folder/create', [UserFolderController::class, 'create'])->middleware('csrf');
+        Router::post('/user-folder/update', [UserFolderController::class, 'update'])->middleware('csrf');
+        Router::post('/user-folder/delete', [UserFolderController::class, 'delete'])->middleware('csrf');
+        Router::post('/user-folder/move', [UserFolderController::class, 'move'])->middleware('csrf');
+        Router::post('/user-folder/toggle-collapse', [UserFolderController::class, 'toggleCollapse'])->middleware('csrf');
+        Router::post('/user-folder/subscribe', [UserFolderController::class, 'subscribe'])->middleware('csrf');
+        Router::post('/user-folder/unsubscribe', [UserFolderController::class, 'unsubscribe'])->middleware('csrf');
+        Router::post('/user-folder/show-application', [UserFolderController::class, 'showApplication'])->middleware('csrf');
+        Router::post('/user-folder/hide-application', [UserFolderController::class, 'hideApplication'])->middleware('csrf');
         
         // Community routes
         Router::post('/community/create', [CommunityController::class, 'create'])->middleware('csrf');
