@@ -38,6 +38,23 @@ class Request
         return $this->data;
     }
 
+	/**
+	 * Возвращает только указанные поля из данных запроса
+	 * 
+	 * @param array $keys Список ключей, которые нужно получить
+	 * @return array
+	 */
+	public function only(array $keys): array
+	{
+		$result = [];
+		foreach ($keys as $key) {
+			if (array_key_exists($key, $this->data)) {
+				$result[$key] = $this->data[$key];
+			}
+		}
+		return $result;
+	}
+
     public function get(string $key, $default = null)
     {
         return $this->data[$key] ?? $default;

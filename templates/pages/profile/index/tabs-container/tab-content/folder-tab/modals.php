@@ -12,45 +12,21 @@
             <h3 class="modal-title">Создать</h3>
             <button class="modal-close" data-modal-close>&times;</button>
         </div>
-        <div class="modal-body">
-            <div class="create-options">
-                <button class="create-option" onclick="selectCreateType('folder')">
-                    <svg width="24" height="24" style="color:#eab308"><use href="#icon-folder"/></svg>
-                    <div class="create-option-content">
-                        <span>Папка</span>
-                        <p>Группируйте элементы</p>
-                    </div>
-                </button>
-                <button class="create-option" onclick="selectCreateType('chat')">
-                    <svg width="24" height="24" style="color:#ec4899"><use href="#icon-message-circle"/></svg>
-                    <div class="create-option-content">
-                        <span>Чат</span>
-                        <p>Общение с подписчиками</p>
-                    </div>
-                </button>
-                <button class="create-option" onclick="selectCreateType('modpack')">
-                    <svg width="24" height="24" style="color:#8b5cf6"><use href="#icon-package"/></svg>
-                    <div class="create-option-content">
-                        <span>Модпак</span>
-                        <p>Выберите из каталога</p>
-                    </div>
-                </button>
-                <button class="create-option" onclick="selectCreateType('server')">
-                    <svg width="24" height="24" style="color:#f59e0b"><use href="#icon-server"/></svg>
-                    <div class="create-option-content">
-                        <span>Сервер</span>
-                        <p>Добавьте Minecraft сервер</p>
-                    </div>
-                </button>
-                <button class="create-option" onclick="selectCreateType('shortcut')">
-                    <svg width="24" height="24" style="color:#6366f1"><use href="#icon-link"/></svg>
-                    <div class="create-option-content">
-                        <span>Ярлык</span>
-                        <p>Внешняя ссылка</p>
-                    </div>
-                </button>
-            </div>
-        </div>
+		<div class="modal-body">
+			<div class="create-options">
+				<?php foreach ($iconMap as $type => $data): ?>
+					<button class="create-option" onclick="selectCreateType('<?= e($type) ?>')">
+						<svg width="24" height="24" style="color: <?= e($data['color']) ?>">
+							<use href="#icon-<?= e($data['icon']) ?>"/>
+						</svg>
+						<div class="create-option-content">
+							<span><?= e($data['label']) ?></span>
+							<p><?= e($data['descriptions'] ?? '') ?></p>
+						</div>
+					</button>
+				<?php endforeach; ?>
+			</div>
+		</div>
     </div>
 </div>
 

@@ -41,11 +41,11 @@
 .folder-item.collapsed .folder-children { display: none; }
 .folder-item.collapsed .toggle-arrow { transform: rotate(-90deg); }
 
-.folder-item-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.5rem 0.5rem 0; border-radius: 6px; cursor: grab; transition: background 0.15s; }
+.folder-item-row { display: flex; align-items: center; justify-content: flex-start; gap: 0.5rem; padding: 0.3rem 0.3rem 0.3rem 0.3rem; border-radius: 6px; cursor: grab; transition: background 0.15s; }
 .folder-item-row:hover { background: var(--bg); }
 
 /* Toggle */
-.folder-toggle { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
+.folder-toggle { width: 20px; height: 20px; flex: 0 0 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
 .folder-toggle:hover { background: var(--surface-hover); color: var(--text); }
 .toggle-arrow { transition: transform 0.2s; }
 .folder-spacer { width: 20px; flex-shrink: 0; }
@@ -54,7 +54,7 @@
 .folder-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* Name */
-.folder-name { flex: 1; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.folder-name { flex: 0 1 auto; text-align: left; display: block; line-height: 1.5; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
 .folder-name:hover { color: var(--primary); }
 a.folder-name { cursor: pointer; }
 
@@ -63,7 +63,7 @@ a.folder-name { cursor: pointer; }
 .folder-badge.hidden { background: var(--surface-hover); color: var(--text-muted); }
 
 /* Actions */
-.folder-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.15s; }
+.folder-actions { margin-left: auto; display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.15s; }
 .folder-item-row:hover .folder-actions { opacity: 1; }
 
 .folder-action-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 6px; transition: all 0.15s; }
