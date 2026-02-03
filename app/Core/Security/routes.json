@@ -18,7 +18,9 @@
         "^/api/feed.*",
         "^/api/admin/application/\\d+$",
         "^/api/user-folder/structure$",
-        "^/api/user-folder/item$"
+        "^/api/user-folder/item$",
+        "^/api/user-folder/public/.*",
+        "^/api/modpack-selector/.*"
     ],
 
     "POST": [

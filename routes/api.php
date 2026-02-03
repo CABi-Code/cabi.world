@@ -29,12 +29,19 @@ Router::prefix('/api')->group(function() {
     Router::post('/auth/refresh', [AuthController::class, 'refresh'])
         ->middleware('csrf');
     
-	// Modpack Selector
-	Router::get('/modpack-selector/modal', [ModpackSelectorController::class, 'modal']);
-	Router::get('/modpack-selector/list', [ModpackSelectorController::class, 'list']);
-	Router::get('/modpack-selector/search', [ModpackSelectorController::class, 'search']);
-	
-    // User routes (требуют авторизации)
+    // === ПУБЛИЧНЫЕ РОУТЫ (без авторизации) ===
+    
+    // Modpack Selector
+    Router::get('/modpack-selector/modal', [ModpackSelectorController::class, 'modal']);
+    Router::get('/modpack-selector/list', [ModpackSelectorController::class, 'list']);
+    Router::get('/modpack-selector/search', [ModpackSelectorController::class, 'search']);
+    
+    // User Folder - публичные методы
+    Router::get('/user-folder/public/item', [UserFolderController::class, 'getItemPublic']);
+    Router::get('/user-folder/public/contents', [UserFolderController::class, 'getFolderContents']);
+    Router::get('/user-folder/public/structure', [UserFolderController::class, 'getStructurePublic']);
+    
+    // === АВТОРИЗОВАННЫЕ РОУТЫ ===
     Router::group(['middleware' => 'auth'], function() {
         // User profile
         Router::put('/user/update', [UserController::class, 'update'])->middleware('csrf');
@@ -80,7 +87,19 @@ Router::prefix('/api')->group(function() {
         Router::post('/user-folder/unsubscribe', [UserFolderController::class, 'unsubscribe'])->middleware('csrf');
         Router::post('/user-folder/show-application', [UserFolderController::class, 'showApplication'])->middleware('csrf');
         Router::post('/user-folder/hide-application', [UserFolderController::class, 'hideApplication'])->middleware('csrf');
-       
+        
+        // Community routes
+        Router::post('/community/create', [CommunityController::class, 'create'])->middleware('csrf');
+        Router::post('/community/update', [CommunityController::class, 'update'])->middleware('csrf');
+        Router::post('/community/delete', [CommunityController::class, 'delete'])->middleware('csrf');
+        Router::post('/community/subscribe', [CommunityController::class, 'subscribe'])->middleware('csrf');
+        Router::post('/community/unsubscribe', [CommunityController::class, 'unsubscribe'])->middleware('csrf');
+        Router::post('/community/chat/create', [CommunityController::class, 'createChat'])->middleware('csrf');
+        Router::post('/community/chat/update', [CommunityController::class, 'updateChat'])->middleware('csrf');
+        Router::post('/community/chat/delete', [CommunityController::class, 'deleteChat'])->middleware('csrf');
+        Router::post('/community/folder/create', [CommunityController::class, 'createFolder'])->middleware('csrf');
+        Router::post('/community/folder/update', [CommunityController::class, 'updateFolder'])->middleware('csrf');
+        Router::post('/community/folder/delete', [CommunityController::class, 'deleteFolder'])->middleware('csrf');
     });
     
     // Admin routes (требуют авторизации + права админа)

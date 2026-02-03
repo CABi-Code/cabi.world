@@ -17,6 +17,85 @@ class UserFolderController
         $this->repo = new UserFolderRepository();
     }
 
+    // ========== ПУБЛИЧНЫЕ МЕТОДЫ (без авторизации) ==========
+
+    /**
+     * Получить элемент публично (для просмотра)
+     */
+    public function getItemPublic(Request $request): void
+    {
+        $id = (int)$request->query('id', 0);
+        $item = $this->repo->getItem($id);
+        
+        if (!$item || !empty($item['is_hidden'])) {
+            Response::error('Not found', 404);
+            return;
+        }
+        
+        // Получаем путь до корня
+        $path = $this->repo->getItemPath($id);
+        
+        // Получаем детей (если это сущность)
+        $children = [];
+        if ($this->repo->isEntity($item['item_type'])) {
+            $children = $this->repo->getChildrenPublic($item['user_id'], $id);
+        }
+        
+        Response::json([
+            'item' => $item,
+            'path' => $path,
+            'children' => $children
+        ]);
+    }
+
+    /**
+     * Получить содержимое папки публично
+     */
+    public function getFolderContents(Request $request): void
+    {
+        $folderId = $request->query('folder_id') ? (int)$request->query('folder_id') : null;
+        $userId = (int)$request->query('user_id', 0);
+        
+        if (!$userId) {
+            Response::error('user_id required', 400);
+            return;
+        }
+        
+        // Если указана папка - проверяем что она существует
+        $folder = null;
+        if ($folderId) {
+            $folder = $this->repo->getItem($folderId);
+            if (!$folder || $folder['user_id'] !== $userId || !empty($folder['is_hidden'])) {
+                Response::error('Folder not found', 404);
+                return;
+            }
+        }
+        
+        $children = $this->repo->getChildrenPublic($userId, $folderId);
+        $path = $folderId ? $this->repo->getItemPath($folderId) : [];
+        
+        Response::json([
+            'folder' => $folder,
+            'path' => $path,
+            'children' => $children
+        ]);
+    }
+
+    /**
+     * Получить структуру публично
+     */
+    public function getStructurePublic(Request $request): void
+    {
+        $userId = (int)$request->query('user_id', 0);
+        if (!$userId) {
+            Response::error('user_id required', 400);
+            return;
+        }
+        Response::json(['structure' => $this->repo->getPublicStructure($userId)]);
+    }
+
+    // ========== АВТОРИЗОВАННЫЕ МЕТОДЫ ==========
+
     public function getStructure(Request $request): void
     {
         $user = $request->user();
@@ -49,7 +128,17 @@ class UserFolderController
             'icon' => $request->get('icon'),
             'color' => $request->get('color'),
             'folder_category' => $request->get('folder_category'),
+            'reference_id' => $request->get('reference_id'),
+            'reference_type' => $request->get('reference_type'),
         ];
+        
+        // Для сервера - дополнительные данные в settings
+        if ($type === 'server') {
+            $data['settings'] = [
+                'ip' => $request->get('server_ip'),
+                'port' => $request->get('server_port', 25565),
+            ];
+        }
         
         $id = $this->repo->createItem($user['id'], $type, $name, $parentId, $data);
         Response::json(['id' => $id, 'success' => true]);

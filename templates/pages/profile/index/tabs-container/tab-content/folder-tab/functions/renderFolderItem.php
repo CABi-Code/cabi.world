@@ -1,9 +1,9 @@
 <?php
 
 function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repository\UserFolderRepository $folderRepository): void {
-	
-	$iconMap = $folderRepository->getItemsMap();
-	
+    
+    $iconMap = $folderRepository->getItemsMap();
+    
     $item = $node['data'];
     $type = $node['type'];
     $children = $node['children'] ?? [];
@@ -14,6 +14,35 @@ function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repositor
     $icon = $item['icon'] ?? $iconData['icon'];
     $color = $item['color'] ?? $iconData['color'];
     $hasChildren = !empty($children);
+
+    // ==================== СОРТИРОВКА ДЕТЕЙ ====================
+    if ($hasChildren) {
+        $typeOrder = array_keys($iconMap);   // порядок типов из getItemsMap()
+
+        usort($children, function(array $a, array $b) use ($typeOrder) {
+            $typeA = $a['type'] ?? '';
+            $typeB = $b['type'] ?? '';
+
+            $posA = array_search($typeA, $typeOrder);
+            $posB = array_search($typeB, $typeOrder);
+
+            // Если тип не найден в карте — отправляем в конец
+            if ($posA === false) $posA = 999;
+            if ($posB === false) $posB = 999;
+
+            // Сначала по порядку типа
+            if ($posA !== $posB) {
+                return $posA <=> $posB;
+            }
+
+            // Одинаковый тип → по названию (регистронезависимо)
+            $nameA = $a['data']['name'] ?? '';
+            $nameB = $b['data']['name'] ?? '';
+            return strcasecmp($nameA, $nameB);
+        });
+    }
+    // ==========================================================
+
     ?>
     <div class="folder-item <?= $isEntity ? 'is-entity' : 'is-element' ?> type-<?= $type ?> <?= !empty($item['is_collapsed']) ? 'collapsed' : '' ?>"
          data-id="<?= $item['id'] ?>"

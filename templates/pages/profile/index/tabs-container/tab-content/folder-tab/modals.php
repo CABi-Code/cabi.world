@@ -12,21 +12,45 @@
             <h3 class="modal-title">Создать</h3>
             <button class="modal-close" data-modal-close>&times;</button>
         </div>
-		<div class="modal-body">
-			<div class="create-options">
-				<?php foreach ($iconMap as $type => $data): ?>
-					<button class="create-option" onclick="selectCreateType('<?= e($type) ?>')">
-						<svg width="24" height="24" style="color: <?= e($data['color']) ?>">
-							<use href="#icon-<?= e($data['icon']) ?>"/>
-						</svg>
-						<div class="create-option-content">
-							<span><?= e($data['label']) ?></span>
-							<p><?= e($data['descriptions'] ?? '') ?></p>
-						</div>
-					</button>
-				<?php endforeach; ?>
-			</div>
-		</div>
+        <div class="modal-body">
+            <div class="create-options">
+                <button class="create-option" onclick="selectCreateType('folder')">
+                    <svg width="24" height="24" style="color:#eab308"><use href="#icon-folder"/></svg>
+                    <div class="create-option-content">
+                        <span>Папка</span>
+                        <p>Группируйте элементы</p>
+                    </div>
+                </button>
+                <button class="create-option" onclick="selectCreateType('chat')">
+                    <svg width="24" height="24" style="color:#ec4899"><use href="#icon-message-circle"/></svg>
+                    <div class="create-option-content">
+                        <span>Чат</span>
+                        <p>Общение с подписчиками</p>
+                    </div>
+                </button>
+                <button class="create-option" onclick="selectCreateType('modpack')">
+                    <svg width="24" height="24" style="color:#8b5cf6"><use href="#icon-package"/></svg>
+                    <div class="create-option-content">
+                        <span>Модпак</span>
+                        <p>Выберите из каталога</p>
+                    </div>
+                </button>
+                <button class="create-option" onclick="selectCreateType('server')">
+                    <svg width="24" height="24" style="color:#f59e0b"><use href="#icon-server"/></svg>
+                    <div class="create-option-content">
+                        <span>Сервер</span>
+                        <p>Добавьте Minecraft сервер</p>
+                    </div>
+                </button>
+                <button class="create-option" onclick="selectCreateType('shortcut')">
+                    <svg width="24" height="24" style="color:#6366f1"><use href="#icon-link"/></svg>
+                    <div class="create-option-content">
+                        <span>Ярлык</span>
+                        <p>Внешняя ссылка</p>
+                    </div>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -97,6 +121,43 @@
                     <div style="flex:1"></div>
                     <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка создания сервера -->
+<div class="modal" id="serverCreateModal" style="display:none;">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">Новый сервер</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="serverCreateForm">
+                <input type="hidden" name="parent_id" id="serverFormParentId">
+                
+                <div class="form-group">
+                    <label class="form-label">Название сервера</label>
+                    <input type="text" name="name" class="form-input" id="serverFormName" maxlength="100" required placeholder="Мой крутой сервер">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">IP адрес</label>
+                    <input type="text" name="server_ip" class="form-input" id="serverFormIp" maxlength="255" required placeholder="play.example.com">
+                    <p class="form-hint">IP или домен сервера</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Описание <span class="text-muted">(необязательно)</span></label>
+                    <textarea name="description" class="form-input" rows="2" id="serverFormDescription" placeholder="Описание сервера..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
                 </div>
             </form>
         </div>

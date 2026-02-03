@@ -5,19 +5,50 @@
 .folder-main { flex: 1; min-width: 0; }
 
 /* Panel */
-.folder-panel { width: 280px; flex-shrink: 0; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-.folder-panel.open { opacity: 1; pointer-events: auto; }
-.folder-panel.loading .panel-placeholder { display: flex; }
+.folder-panel { width: 320px; flex-shrink: 0; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); transition: all 0.2s; overflow: hidden; }
+.folder-panel:not(.open) { width: 0; border: none; padding: 0; }
 
-.panel-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); gap: 0.5rem; }
-.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border); }
-.panel-header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
-.panel-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 6px; }
-.panel-close:hover { background: var(--bg); color: var(--text); }
-.panel-body { padding: 1rem; }
-.panel-description { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem; }
-.panel-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; }
-.panel-error { padding: 2rem; text-align: center; color: var(--danger); }
+.panel-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); gap: 0.5rem; padding: 1rem; }
+.panel-loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+.panel-loading .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+.panel-header { display: flex; justify-content: flex-end; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+.panel-close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.panel-close-btn:hover { background: var(--bg); color: var(--text); }
+
+.panel-error { display: flex; align-items: center; justify-content: space-between; padding: 1rem; color: var(--danger); background: var(--danger-light, rgba(239,68,68,0.1)); }
+
+/* Path */
+.panel-path { padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; }
+.path-items { display: flex; align-items: center; gap: 0.25rem; }
+.path-ellipsis { color: var(--text-muted); padding: 0 0.25rem; }
+.path-item { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: none; border: none; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; border-radius: 4px; transition: all 0.15s; }
+.path-item:hover { background: var(--bg); color: var(--text); }
+.path-item.current { color: var(--text); font-weight: 500; }
+.path-sep { color: var(--text-muted); font-size: 0.75rem; }
+
+/* Item header */
+.panel-item-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; }
+.panel-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--bg); border-radius: 10px; flex-shrink: 0; }
+.panel-title { font-size: 1.125rem; font-weight: 600; margin: 0; }
+
+.panel-description { padding: 0 1rem 1rem; font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
+
+/* Children list */
+.panel-children { padding: 0 1rem 1rem; }
+.panel-children-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+.panel-child-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem; background: none; border: none; text-align: left; cursor: pointer; border-radius: 6px; font-size: 0.875rem; color: var(--text); transition: background 0.15s; }
+.panel-child-item:hover { background: var(--bg); }
+.panel-empty-children { padding: 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+
+/* Server info */
+.panel-server-info { padding: 1rem; background: var(--bg); margin: 0 1rem 1rem; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.server-ip { font-family: monospace; font-size: 0.875rem; color: var(--text); }
+
+/* Chat in panel */
+.panel-chat { padding: 1rem; }
+.panel-chat-placeholder { text-align: center; padding: 1rem; }
+.chat-loading { text-align: center; color: var(--text-muted); padding: 2rem; }
 
 /* Empty state */
 .folder-empty, .folder-empty-owner { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
@@ -42,10 +73,10 @@
 .folder-item.collapsed .toggle-arrow { transform: rotate(-90deg); }
 
 .folder-item-row { display: flex; align-items: center; justify-content: flex-start; gap: 0.5rem; padding: 0.3rem 0.3rem 0.3rem 0.3rem; border-radius: 6px; cursor: grab; transition: background 0.15s; }
-.folder-item-row:hover { background: var(--bg); }
+.folder-item-row:hover { margin-left: 0.2rem; background: var(--bg); transition: margin-left 0.15s; }
 
 /* Toggle */
-.folder-toggle { width: 20px; height: 20px; flex: 0 0 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
+.folder-toggle { margin-left: 0rem; width: 20px; height: 20px; flex: 0 0 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
 .folder-toggle:hover { background: var(--surface-hover); color: var(--text); }
 .toggle-arrow { transition: transform 0.2s; }
 .folder-spacer { width: 20px; flex-shrink: 0; }
@@ -54,7 +85,7 @@
 .folder-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* Name */
-.folder-name { flex: 0 1 auto; text-align: left; display: block; line-height: 1.5; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.folder-name { flex: 0 1 auto; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
 .folder-name:hover { color: var(--primary); }
 a.folder-name { cursor: pointer; }
 
