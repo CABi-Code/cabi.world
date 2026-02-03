@@ -13,6 +13,7 @@ use App\Controllers\Api\AdminController;
 use App\Controllers\Api\CommunityController;
 use App\Controllers\Api\CaptchaController;
 use App\Controllers\Api\UserFolderController;
+use App\Controllers\Api\ModpackSelectorController;
 
 Router::post('/api/captcha/solve', [CaptchaController::class, 'solve'])
     ->middleware('csrf');
@@ -27,7 +28,12 @@ Router::prefix('/api')->group(function() {
     
     Router::post('/auth/refresh', [AuthController::class, 'refresh'])
         ->middleware('csrf');
-    
+		
+	// Modpack Selector
+	Router::get('/modpack-selector/modal', [ModpackSelectorController::class, 'modal']);
+	Router::get('/modpack-selector/list', [ModpackSelectorController::class, 'list']);
+	Router::get('/modpack-selector/search', [ModpackSelectorController::class, 'search']);
+
     // User routes (требуют авторизации)
     Router::group(['middleware' => 'auth'], function() {
         // User profile

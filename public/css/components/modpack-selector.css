@@ -1,0 +1,159 @@
+/* ===================================
+   MODPACK SELECTOR COMPONENT
+   =================================== */
+
+/* Toolbar */
+.modpack-selector-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.modpack-selector-search {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.modpack-selector-search svg { position: absolute; left: 0.75rem; color: var(--text-muted); pointer-events: none; }
+
+.modpack-selector-search input {
+    width: 100%;
+    padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.modpack-selector-search input:focus { outline: none; border-color: var(--primary); }
+
+.modpack-selector-sort {
+    padding: 0.625rem 2rem 0.625rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.875rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    cursor: pointer;
+}
+
+.modpack-selector-sort:hover { border-color: var(--primary); }
+
+/* List */
+.modpack-selector-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.modpack-selector-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+    gap: 0.75rem;
+}
+
+.modpack-selector-loading .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.modpack-selector-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+/* Card */
+.modpack-selector-card {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modpack-selector-card:hover { background: var(--surface-hover); border-color: var(--border); }
+.modpack-selector-card.selected { border-color: var(--primary); background: var(--primary-light); }
+
+/* Card Icon */
+.modpack-selector-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modpack-selector-card-icon img { width: 100%; height: 100%; object-fit: cover; }
+.modpack-selector-card-icon svg { color: var(--text-muted); }
+
+/* Card Info */
+.modpack-selector-card-info { flex: 1; min-width: 0; }
+
+.modpack-selector-card-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}
+
+.modpack-selector-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.modpack-selector-card-meta span { display: flex; align-items: center; gap: 0.25rem; }
+.modpack-selector-card-meta svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* Platform badge */
+.modpack-selector-platform {
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.modpack-selector-platform.modrinth { background: rgba(30, 200, 120, 0.15); color: #1ec878; }
+.modpack-selector-platform.curseforge { background: rgba(246, 130, 70, 0.15); color: #f68246; }
+
+/* Adaptive */
+@media (max-width: 480px) {
+    .modpack-selector-toolbar { flex-direction: column; }
+    .modpack-selector-sort { width: 100%; }
+    .modpack-selector-card-meta { flex-wrap: wrap; gap: 0.5rem; }
+}

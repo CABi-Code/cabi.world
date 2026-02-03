@@ -33,9 +33,10 @@ if (!function_exists('getAvatarStyle')) {
     <p class="hero-subtitle">Смотри заявки игроков и находи тиммейтов</p>
 </div>
 
+<!-- Временная кнопка для тестирования модпак-селектора -->
+<?php include_once TEMPLATES_PATH . '/components/modpack-selector/demo-button.php'; ?>
 
 <?php include_once __DIR__ . '/applications/applications.php'; ?>
-
 
 <div id="lightbox" class="lightbox" style="display:none;">
     <button class="lightbox-close" data-close>&times;</button>

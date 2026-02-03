@@ -35,6 +35,7 @@ if (!isset($unreadNotifications)) {
     <link rel="stylesheet" href="/css/components/modal.css">
     <link rel="stylesheet" href="/css/sections/community.css">
     <link rel="stylesheet" href="/css/sections/chat.css">
+	<link rel="stylesheet" href="/css/components/modpack-selector.css">
 </head>
 <body>
     <?php require TEMPLATES_PATH . '/components/header.php'; ?>
