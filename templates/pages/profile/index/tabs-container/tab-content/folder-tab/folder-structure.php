@@ -5,73 +5,92 @@
  * @var bool $isOwner
  */
 
-function renderFolderItem(array $node, bool $isOwner, int $depth = 0): void {
+$iconMap = [
+    'folder' => ['icon' => 'folder', 'color' => '#eab308'],
+    'chat' => ['icon' => 'message-circle', 'color' => '#ec4899'],
+    'modpack' => ['icon' => 'package', 'color' => '#8b5cf6'],
+    'mod' => ['icon' => 'puzzle', 'color' => '#10b981'],
+    'server' => ['icon' => 'server', 'color' => '#f59e0b'],
+    'application' => ['icon' => 'file-text', 'color' => '#3b82f6'],
+    'shortcut' => ['icon' => 'link', 'color' => '#6366f1'],
+];
+
+function renderFolderItem(array $node, bool $isOwner, int $depth, array $iconMap): void {
     $item = $node['data'];
     $type = $node['type'];
     $children = $node['children'] ?? [];
     $isEntity = in_array($type, ['folder', 'chat', 'modpack', 'mod']);
-    $paddingLeft = $depth * 1.25;
+    $isElement = !$isEntity;
     
-    $icons = [
-        'folder' => 'folder', 'chat' => 'message-circle', 'modpack' => 'package',
-        'mod' => 'puzzle', 'server' => 'server', 'application' => 'file-text', 'shortcut' => 'link'
-    ];
-    $icon = $item['icon'] ?? $icons[$type] ?? 'file';
+    $iconData = $iconMap[$type] ?? ['icon' => 'file', 'color' => '#94a3b8'];
+    $icon = $item['icon'] ?? $iconData['icon'];
+    $color = $item['color'] ?? $iconData['color'];
+    $hasChildren = !empty($children);
     ?>
-    <div class="community-folder <?= $item['is_collapsed'] ? 'collapsed' : '' ?>" 
-         data-item-id="<?= $item['id'] ?>" 
+    <div class="folder-item <?= $isEntity ? 'is-entity' : 'is-element' ?> type-<?= $type ?> <?= !empty($item['is_collapsed']) ? 'collapsed' : '' ?>"
+         data-id="<?= $item['id'] ?>"
          data-type="<?= $type ?>"
-         draggable="<?= $isOwner ? 'true' : 'false' ?>"
-         style="padding-left: <?= $paddingLeft ?>rem;">
+         data-parent="<?= $item['parent_id'] ?? 'root' ?>"
+         data-is-entity="<?= $isEntity ? '1' : '0' ?>"
+         draggable="<?= $isOwner ? 'true' : 'false' ?>">
         
-        <div class="folder-header">
-            <?php if ($isEntity && !empty($children)): ?>
-                <button class="folder-toggle" onclick="toggleItem(<?= $item['id'] ?>)">
-                    <svg width="14" height="14" class="folder-arrow"><use href="#icon-chevron-down"/></svg>
+        <div class="folder-item-row" style="padding-left: <?= $depth * 16 ?>px;">
+            <?php if ($isEntity && $hasChildren): ?>
+                <button class="folder-toggle" onclick="window.toggleItem(<?= $item['id'] ?>); event.stopPropagation();">
+                    <svg width="12" height="12" class="toggle-arrow"><use href="#icon-chevron-down"/></svg>
                 </button>
             <?php else: ?>
-                <span class="folder-toggle-spacer"></span>
+                <span class="folder-spacer"></span>
             <?php endif; ?>
             
-            <span class="folder-icon" <?= $item['color'] ? 'style="color:'.$item['color'].'"' : '' ?>>
+            <span class="folder-icon" style="color: <?= e($color) ?>;">
                 <svg width="16" height="16"><use href="#icon-<?= e($icon) ?>"/></svg>
             </span>
             
             <?php if ($type === 'chat'): ?>
-                <a href="/chat/<?= $item['id'] ?>" class="folder-name chat-link"><?= e($item['name']) ?></a>
-            <?php elseif ($type === 'application'): ?>
-                <span class="folder-name" onclick="openItemSidebar(<?= $item['id'] ?>, '<?= $type ?>')"><?= e($item['name']) ?></span>
-                <?php if (!empty($item['is_hidden'])): ?>
-                    <span class="badge badge-muted">скрыта</span>
-                <?php endif; ?>
+                <a href="/chat/<?= $item['id'] ?>" class="folder-name"><?= e($item['name']) ?></a>
             <?php else: ?>
-                <span class="folder-name" onclick="openItemSidebar(<?= $item['id'] ?>, '<?= $type ?>')"><?= e($item['name']) ?></span>
+                <span class="folder-name" onclick="window.openItemPanel(<?= $item['id'] ?>, '<?= $type ?>')"><?= e($item['name']) ?></span>
+            <?php endif; ?>
+            
+            <?php if (!empty($item['is_hidden'])): ?>
+                <span class="folder-badge hidden">скрыта</span>
             <?php endif; ?>
             
             <?php if ($isOwner): ?>
             <div class="folder-actions">
                 <?php if ($isEntity): ?>
-                    <button class="btn btn-ghost btn-icon btn-xs" onclick="showCreateModal(<?= $item['id'] ?>)" title="Добавить">
-                        <svg width="12" height="12"><use href="#icon-plus"/></svg>
+                    <button class="folder-action-btn" onclick="window.showCreateModal(<?= $item['id'] ?>); event.stopPropagation();" title="Добавить">
+                        <svg width="14" height="14"><use href="#icon-plus"/></svg>
                     </button>
                 <?php endif; ?>
-                <button class="btn btn-ghost btn-icon btn-xs" onclick="showSettingsModal(<?= $item['id'] ?>)" title="Настройки">
-                    <svg width="12" height="12"><use href="#icon-settings"/></svg>
+                <button class="folder-action-btn" onclick="window.showSettingsModal(<?= $item['id'] ?>); event.stopPropagation();" title="Настройки">
+                    <svg width="14" height="14"><use href="#icon-settings"/></svg>
                 </button>
             </div>
             <?php endif; ?>
         </div>
         
-        <?php if ($isEntity && !empty($children)): ?>
-            <div class="folder-content" id="folder-content-<?= $item['id'] ?>">
+        <?php if ($isEntity && $hasChildren): ?>
+            <div class="folder-children" id="children-<?= $item['id'] ?>">
                 <?php foreach ($children as $child): ?>
-                    <?php renderFolderItem($child, $isOwner, $depth + 1); ?>
+                    <?php renderFolderItem($child, $isOwner, $depth + 1, $iconMap); ?>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
     </div>
 <?php }
 
-foreach ($structure as $node): ?>
-    <?php renderFolderItem($node, $isOwner); ?>
-<?php endforeach; ?>
+if (empty($structure)): ?>
+    <div class="folder-empty">
+        <svg width="48" height="48"><use href="#icon-folder"/></svg>
+        <p>Папка пуста</p>
+        <?php if ($isOwner): ?>
+            <p class="folder-empty-hint">Нажмите "Добавить" чтобы создать элемент</p>
+        <?php endif; ?>
+    </div>
+<?php else: ?>
+    <?php foreach ($structure as $node): ?>
+        <?php renderFolderItem($node, $isOwner, 0, $iconMap); ?>
+    <?php endforeach; ?>
+<?php endif; ?>

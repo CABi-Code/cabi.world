@@ -6,35 +6,50 @@
     
     let currentParentId = null;
     let currentItemId = null;
-    let currentItemType = null;
+    let draggedElement = null;
+    let dropIndicator = null;
 
-    // Свернуть/развернуть
+    // === Свернуть/развернуть ===
     window.toggleItem = function(itemId) {
-        const item = document.querySelector(`[data-item-id="${itemId}"]`);
-        if (item) {
-            item.classList.toggle('collapsed');
-            fetch('/api/user-folder/toggle-collapse', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-                body: JSON.stringify({ id: itemId })
-            });
-        }
+        const item = document.querySelector(`[data-id="${itemId}"]`);
+        if (!item) return;
+        item.classList.toggle('collapsed');
+        fetch('/api/user-folder/toggle-collapse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            body: JSON.stringify({ id: itemId })
+        });
     };
 
-    // Открыть модалку создания
+    // === Модалка создания ===
     window.showCreateModal = function(parentId) {
         currentParentId = parentId;
         window.openModal('folderCreateModal');
     };
 
-    // Выбрать тип создания
     window.selectCreateType = function(type) {
-        currentItemType = type;
         window.closeModal('folderCreateModal');
         
+        // Для модпака - открываем селектор
+        if (type === 'modpack') {
+            if (typeof window.openModpackSelector === 'function') {
+                window.openModpackSelector((modpack) => {
+                    createItemWithData('modpack', modpack.name, {
+                        reference_id: modpack.id,
+                        reference_type: 'modpacks',
+                        icon: 'package',
+                        color: '#8b5cf6'
+                    });
+                });
+            } else {
+                alert('Модуль выбора модпаков не загружен');
+            }
+            return;
+        }
+        
         const titles = {
-            folder: 'Новая папка', chat: 'Новый чат', modpack: 'Новый модпак',
-            mod: 'Новый мод', server: 'Новый сервер', shortcut: 'Новый ярлык'
+            folder: 'Новая папка', chat: 'Новый чат', mod: 'Новый мод',
+            server: 'Новый сервер', shortcut: 'Новый ярлык'
         };
         
         document.getElementById('nameModalTitle').textContent = titles[type] || 'Название';
@@ -46,47 +61,38 @@
         setTimeout(() => {
             window.openModal('folderNameModal');
             document.getElementById('nameFormInput').focus();
-        }, 200);
+        }, 250);
     };
 
-    // Кнопка создания (пустая папка)
-    document.getElementById('folderCreateBtn')?.addEventListener('click', function() {
-        showCreateModal(null);
-    });
-
-    // Форма создания
-    document.getElementById('folderNameForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
+    async function createItemWithData(type, name, data = {}) {
         const res = await fetch('/api/user-folder/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
             body: JSON.stringify({
-                type: formData.get('type'),
-                name: formData.get('name'),
-                description: formData.get('description'),
-                parent_id: formData.get('parent_id') || null
+                type, name,
+                parent_id: currentParentId,
+                ...data
             })
         });
-        
-        if (res.ok) {
-            location.reload();
-        } else {
-            const data = await res.json();
-            alert(data.error || 'Ошибка');
-        }
+        if (res.ok) location.reload();
+        else alert((await res.json()).error || 'Ошибка');
+    }
+
+    document.getElementById('folderCreateBtn')?.addEventListener('click', () => showCreateModal(null));
+
+    document.getElementById('folderNameForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const fd = new FormData(this);
+        await createItemWithData(fd.get('type'), fd.get('name'), { description: fd.get('description') });
     });
 
-    // Открыть настройки
+    // === Модалка настроек ===
     window.showSettingsModal = async function(itemId) {
         currentItemId = itemId;
-        
         const res = await fetch(`/api/user-folder/item?id=${itemId}`);
         if (!res.ok) { alert('Ошибка загрузки'); return; }
         
         const { item } = await res.json();
-        
         document.getElementById('settingsModalTitle').textContent = 'Настройки: ' + item.name;
         document.getElementById('settingsFormId').value = item.id;
         document.getElementById('settingsFormName').value = item.name || '';
@@ -96,50 +102,33 @@
         window.openModal('folderSettingsModal');
     };
 
-    // Форма настроек
     document.getElementById('folderSettingsForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        const formData = new FormData(this);
+        const fd = new FormData(this);
         const res = await fetch('/api/user-folder/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
             body: JSON.stringify({
-                id: formData.get('id'),
-                name: formData.get('name'),
-                description: formData.get('description'),
-                color: formData.get('color')
+                id: fd.get('id'), name: fd.get('name'),
+                description: fd.get('description'), color: fd.get('color')
             })
         });
-        
-        if (res.ok) {
-            location.reload();
-        } else {
-            const data = await res.json();
-            alert(data.error || 'Ошибка');
-        }
+        if (res.ok) location.reload();
+        else alert((await res.json()).error || 'Ошибка');
     });
 
-    // Удалить элемент
     window.deleteItem = async function() {
-        if (!currentItemId) return;
-        if (!confirm('Удалить этот элемент и все вложенные?')) return;
-        
+        if (!currentItemId || !confirm('Удалить элемент и всё содержимое?')) return;
         const res = await fetch('/api/user-folder/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
             body: JSON.stringify({ id: currentItemId })
         });
-        
-        if (res.ok) {
-            location.reload();
-        } else {
-            const data = await res.json();
-            alert(data.error || 'Ошибка');
-        }
+        if (res.ok) location.reload();
+        else alert((await res.json()).error || 'Ошибка');
     };
 
-    // Подписка
+    // === Подписка ===
     window.toggleSubscription = async function(ownerId, subscribe) {
         const endpoint = subscribe ? '/api/user-folder/subscribe' : '/api/user-folder/unsubscribe';
         const res = await fetch(endpoint, {
@@ -150,65 +139,194 @@
         if (res.ok) location.reload();
     };
 
-    // Открыть сайдбар с информацией
-    window.openItemSidebar = function(itemId, type) {
-        // TODO: реализовать выдвигающийся сайдбар
-        console.log('Open sidebar:', itemId, type);
+    // === Панель элемента ===
+    window.openItemPanel = async function(itemId, type) {
+        const panel = document.getElementById('itemPanel');
+        if (!panel) return;
+        
+        panel.classList.add('loading');
+        panel.classList.add('open');
+        
+        const res = await fetch(`/api/user-folder/item?id=${itemId}`);
+        if (!res.ok) {
+            panel.classList.remove('loading');
+            panel.innerHTML = '<div class="panel-error">Ошибка загрузки</div>';
+            return;
+        }
+        
+        const { item } = await res.json();
+        panel.classList.remove('loading');
+        
+        let content = `
+            <div class="panel-header">
+                <h3>${escapeHtml(item.name)}</h3>
+                <button class="panel-close" onclick="closeItemPanel()">
+                    <svg width="20" height="20"><use href="#icon-x"/></svg>
+                </button>
+            </div>
+            <div class="panel-body">
+        `;
+        
+        if (item.description) {
+            content += `<p class="panel-description">${escapeHtml(item.description)}</p>`;
+        }
+        
+        content += `<div class="panel-meta">Тип: ${item.item_type}</div>`;
+        
+        if (type === 'chat') {
+            content += `<a href="/chat/${item.id}" class="btn btn-primary btn-sm">Открыть чат</a>`;
+        }
+        
+        content += '</div>';
+        panel.innerHTML = content;
     };
 
-    // Drag and Drop
+    window.closeItemPanel = function() {
+        document.getElementById('itemPanel')?.classList.remove('open');
+    };
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // === Drag and Drop с анимацией ===
     if (isOwner) {
-        let draggedItem = null;
-        
-        document.querySelectorAll('.community-folder[draggable="true"]').forEach(item => {
-            item.addEventListener('dragstart', function(e) {
-                draggedItem = this;
-                this.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            
-            item.addEventListener('dragend', function() {
-                this.classList.remove('dragging');
-                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-                draggedItem = null;
-            });
-            
-            item.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                if (draggedItem === this) return;
-                this.classList.add('drag-over');
-            });
-            
-            item.addEventListener('dragleave', function() {
-                this.classList.remove('drag-over');
-            });
-            
-            item.addEventListener('drop', async function(e) {
-                e.preventDefault();
-                this.classList.remove('drag-over');
-                if (!draggedItem || draggedItem === this) return;
-                
-                const itemId = draggedItem.dataset.itemId;
-                const targetId = this.dataset.itemId;
-                const targetType = this.dataset.type;
-                
-                // Если цель - сущность, кладём внутрь
-                const entities = ['folder', 'chat', 'modpack', 'mod'];
-                const newParentId = entities.includes(targetType) ? targetId : null;
-                
-                const res = await fetch('/api/user-folder/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        parent_id: newParentId,
-                        after_id: entities.includes(targetType) ? null : targetId
-                    })
-                });
-                
-                if (res.ok) location.reload();
-            });
+        // Создаём индикатор drop
+        dropIndicator = document.createElement('div');
+        dropIndicator.className = 'drop-indicator';
+        dropIndicator.style.display = 'none';
+        document.body.appendChild(dropIndicator);
+
+        document.querySelectorAll('.folder-item[draggable="true"]').forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragend', handleDragEnd);
+            item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('dragleave', handleDragLeave);
+            item.addEventListener('drop', handleDrop);
         });
+
+        // Корневая зона
+        const structure = document.querySelector('.community-structure');
+        if (structure) {
+            structure.addEventListener('dragover', handleRootDragOver);
+            structure.addEventListener('drop', handleRootDrop);
+        }
+    }
+
+    function handleDragStart(e) {
+        draggedElement = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', this.dataset.id);
+        
+        // Скрываем детей от drop
+        document.querySelectorAll('.folder-item').forEach(item => {
+            if (isDescendantOf(item, this)) {
+                item.classList.add('drag-disabled');
+            }
+        });
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        dropIndicator.style.display = 'none';
+        document.querySelectorAll('.folder-item').forEach(item => {
+            item.classList.remove('drag-over', 'drag-disabled', 'drop-before', 'drop-inside');
+        });
+        draggedElement = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        if (!draggedElement || draggedElement === this) return;
+        if (this.classList.contains('drag-disabled')) return;
+        
+        const rect = this.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const isEntity = this.dataset.isEntity === '1';
+        
+        // Убираем старые классы
+        this.classList.remove('drop-before', 'drop-inside');
+        
+        if (isEntity && y > rect.height * 0.3 && y < rect.height * 0.7) {
+            // Drop внутрь сущности
+            this.classList.add('drop-inside');
+        } else if (y < rect.height / 2) {
+            // Drop перед элементом
+            this.classList.add('drop-before');
+        }
+        
+        this.classList.add('drag-over');
+    }
+
+    function handleDragLeave() {
+        this.classList.remove('drag-over', 'drop-before', 'drop-inside');
+    }
+
+    async function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!draggedElement || draggedElement === this) return;
+        
+        const itemId = draggedElement.dataset.id;
+        const targetId = this.dataset.id;
+        const targetIsEntity = this.dataset.isEntity === '1';
+        const dropInside = this.classList.contains('drop-inside');
+        
+        let newParentId = null;
+        let afterId = null;
+        
+        if (dropInside && targetIsEntity) {
+            // Кладём внутрь
+            newParentId = targetId;
+        } else {
+            // Кладём рядом (на том же уровне)
+            newParentId = this.dataset.parent === 'root' ? null : this.dataset.parent;
+            afterId = targetId;
+        }
+        
+        const res = await fetch('/api/user-folder/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            body: JSON.stringify({ item_id: itemId, parent_id: newParentId, after_id: afterId })
+        });
+        
+        if (res.ok) location.reload();
+        else alert((await res.json()).error || 'Ошибка перемещения');
+    }
+
+    function handleRootDragOver(e) {
+        if (!draggedElement) return;
+        if (e.target.closest('.folder-item')) return;
+        e.preventDefault();
+    }
+
+    async function handleRootDrop(e) {
+        if (!draggedElement) return;
+        if (e.target.closest('.folder-item')) return;
+        e.preventDefault();
+        
+        const itemId = draggedElement.dataset.id;
+        const res = await fetch('/api/user-folder/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+            body: JSON.stringify({ item_id: itemId, parent_id: null, after_id: null })
+        });
+        
+        if (res.ok) location.reload();
+    }
+
+    function isDescendantOf(child, parent) {
+        let node = child.parentElement;
+        while (node) {
+            if (node === parent) return true;
+            node = node.parentElement;
+        }
+        return false;
     }
 })();
 </script>

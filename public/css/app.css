@@ -8,6 +8,7 @@
 @import 'components/buttons.css';
 @import 'components/forms.css';
 @import 'components/cards.css';
+@import 'components/modpack-selector.css';
 @import 'components/image-editor.css';
 @import 'components/application-modal.css';
 @import 'sections/popular.css';

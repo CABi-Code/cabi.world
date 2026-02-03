@@ -15,35 +15,35 @@
         <div class="modal-body">
             <div class="create-options">
                 <button class="create-option" onclick="selectCreateType('folder')">
-                    <svg width="24" height="24"><use href="#icon-folder"/></svg>
+                    <svg width="24" height="24" style="color:#eab308"><use href="#icon-folder"/></svg>
                     <div class="create-option-content">
                         <span>Папка</span>
                         <p>Группируйте элементы</p>
                     </div>
                 </button>
                 <button class="create-option" onclick="selectCreateType('chat')">
-                    <svg width="24" height="24"><use href="#icon-message-circle"/></svg>
+                    <svg width="24" height="24" style="color:#ec4899"><use href="#icon-message-circle"/></svg>
                     <div class="create-option-content">
                         <span>Чат</span>
                         <p>Общение с подписчиками</p>
                     </div>
                 </button>
                 <button class="create-option" onclick="selectCreateType('modpack')">
-                    <svg width="24" height="24"><use href="#icon-package"/></svg>
+                    <svg width="24" height="24" style="color:#8b5cf6"><use href="#icon-package"/></svg>
                     <div class="create-option-content">
                         <span>Модпак</span>
-                        <p>Добавьте модпак</p>
+                        <p>Выберите из каталога</p>
                     </div>
                 </button>
                 <button class="create-option" onclick="selectCreateType('server')">
-                    <svg width="24" height="24"><use href="#icon-server"/></svg>
+                    <svg width="24" height="24" style="color:#f59e0b"><use href="#icon-server"/></svg>
                     <div class="create-option-content">
                         <span>Сервер</span>
-                        <p>Добавьте сервер</p>
+                        <p>Добавьте Minecraft сервер</p>
                     </div>
                 </button>
                 <button class="create-option" onclick="selectCreateType('shortcut')">
-                    <svg width="24" height="24"><use href="#icon-link"/></svg>
+                    <svg width="24" height="24" style="color:#6366f1"><use href="#icon-link"/></svg>
                     <div class="create-option-content">
                         <span>Ярлык</span>
                         <p>Внешняя ссылка</p>
@@ -72,8 +72,8 @@
                     <input type="text" name="name" class="form-input" id="nameFormInput" maxlength="100" required>
                 </div>
                 
-                <div class="form-group" id="descriptionGroup">
-                    <label class="form-label">Описание <span class="form-hint">(необязательно)</span></label>
+                <div class="form-group">
+                    <label class="form-label">Описание <span class="text-muted">(необязательно)</span></label>
                     <textarea name="description" class="form-input" rows="2" id="nameFormDescription"></textarea>
                 </div>
                 
@@ -86,7 +86,7 @@
     </div>
 </div>
 
-<!-- Модалка настроек элемента -->
+<!-- Модалка настроек -->
 <div class="modal" id="folderSettingsModal" style="display:none;">
     <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content modal-sm">
@@ -109,7 +109,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Цвет</label>
+                    <label class="form-label">Цвет иконки</label>
                     <input type="color" name="color" class="form-input form-color" id="settingsFormColor" value="#3b82f6">
                 </div>
                 

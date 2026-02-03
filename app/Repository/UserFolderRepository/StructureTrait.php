@@ -4,22 +4,18 @@ namespace App\Repository\UserFolderRepository;
 
 trait StructureTrait
 {
-    /**
-     * Получить полную структуру папки пользователя
-     */
     public function getStructure(int $userId): array
     {
+        // Сначала исправляем потерянные элементы
+        $this->fixOrphanedItems($userId);
+        
         $items = $this->getAllItems($userId);
         return $this->buildTree($items);
     }
 
-    /**
-     * Рекурсивное построение дерева
-     */
     private function buildTree(array $items, ?int $parentId = null): array
     {
         $result = [];
-        
         foreach ($items as $item) {
             if ($item['parent_id'] == $parentId) {
                 $node = [
@@ -27,104 +23,38 @@ trait StructureTrait
                     'data' => $item,
                     'children' => []
                 ];
-                
-                // Только сущности могут иметь детей
                 if ($this->isEntity($item['item_type'])) {
                     $node['children'] = $this->buildTree($items, $item['id']);
                 }
-                
                 $result[] = $node;
             }
         }
-        
         return $result;
     }
 
-    /**
-     * Получить структуру для просмотра (без скрытых элементов)
-     */
     public function getPublicStructure(int $userId): array
     {
         $items = $this->db->fetchAll(
-            'SELECT * FROM user_folder_items 
-             WHERE user_id = ? AND is_hidden = 0 
-             ORDER BY sort_order, name',
+            'SELECT * FROM user_folder_items WHERE user_id = ? AND is_hidden = 0 ORDER BY sort_order, name',
             [$userId]
         );
-        
         return $this->buildTree($items);
     }
 
-    /**
-     * Получить количество элементов
-     */
     public function countItems(int $userId): int
     {
-        $result = $this->db->fetchOne(
-            'SELECT COUNT(*) as cnt FROM user_folder_items WHERE user_id = ?',
-            [$userId]
-        );
-        return (int)($result['cnt'] ?? 0);
+        $r = $this->db->fetchOne('SELECT COUNT(*) as cnt FROM user_folder_items WHERE user_id = ?', [$userId]);
+        return (int)($r['cnt'] ?? 0);
     }
 
-    /**
-     * Получить количество чатов
-     */
     public function countChats(int $userId): int
     {
-        $result = $this->db->fetchOne(
-            "SELECT COUNT(*) as cnt FROM user_folder_items WHERE user_id = ? AND item_type = 'chat'",
-            [$userId]
-        );
-        return (int)($result['cnt'] ?? 0);
+        $r = $this->db->fetchOne("SELECT COUNT(*) as cnt FROM user_folder_items WHERE user_id = ? AND item_type = 'chat'", [$userId]);
+        return (int)($r['cnt'] ?? 0);
     }
 
     /**
-     * Получить чаты для просмотра
-     */
-    public function getChats(int $userId, ?int $folderId = null): array
-    {
-        if ($folderId === null) {
-            return $this->db->fetchAll(
-                "SELECT * FROM user_folder_items 
-                 WHERE user_id = ? AND item_type = 'chat' AND parent_id IS NULL 
-                 ORDER BY sort_order, name",
-                [$userId]
-            );
-        }
-        
-        return $this->db->fetchAll(
-            "SELECT * FROM user_folder_items 
-             WHERE user_id = ? AND item_type = 'chat' AND parent_id = ? 
-             ORDER BY sort_order, name",
-            [$userId, $folderId]
-        );
-    }
-
-    /**
-     * Получить папки
-     */
-    public function getFolders(int $userId, ?int $parentId = null): array
-    {
-        if ($parentId === null) {
-            return $this->db->fetchAll(
-                "SELECT * FROM user_folder_items 
-                 WHERE user_id = ? AND item_type = 'folder' AND parent_id IS NULL 
-                 ORDER BY sort_order, name",
-                [$userId]
-            );
-        }
-        
-        return $this->db->fetchAll(
-            "SELECT * FROM user_folder_items 
-             WHERE user_id = ? AND item_type = 'folder' AND parent_id = ? 
-             ORDER BY sort_order, name",
-            [$userId, $parentId]
-        );
-    }
-
-    /**
-     * Получить элемент чата по ID (для совместимости)
+     * Получить чат по ID (теперь из user_folder_items)
      */
     public function getChat(int $chatId): ?array
     {
@@ -145,6 +75,73 @@ trait StructureTrait
              JOIN users u ON ufi.user_id = u.id
              WHERE ufi.id = ? AND ufi.item_type = 'chat'",
             [$chatId]
+        );
+    }
+
+    /**
+     * Получить настройки чата (из JSON поля settings)
+     */
+    public function getChatSettings(int $chatId): array
+    {
+        $chat = $this->getChat($chatId);
+        if (!$chat) return [];
+        
+        $settings = $chat['settings'] ? json_decode($chat['settings'], true) : [];
+        return array_merge([
+            'message_timeout' => 0,
+            'files_disabled' => false,
+            'messages_disabled' => false,
+        ], $settings);
+    }
+
+    /**
+     * Обновить настройки чата
+     */
+    public function updateChatSettings(int $chatId, int $userId, array $settings): bool
+    {
+        $chat = $this->getItemByUser($chatId, $userId);
+        if (!$chat || $chat['item_type'] !== 'chat') return false;
+        
+        $currentSettings = $chat['settings'] ? json_decode($chat['settings'], true) : [];
+        $newSettings = array_merge($currentSettings, $settings);
+        
+        return $this->db->execute(
+            'UPDATE user_folder_items SET settings = ? WHERE id = ?',
+            [json_encode($newSettings), $chatId]
+        ) > 0;
+    }
+
+    /**
+     * Получить чаты пользователя
+     */
+    public function getChats(int $userId, ?int $folderId = null): array
+    {
+        if ($folderId === null) {
+            return $this->db->fetchAll(
+                "SELECT * FROM user_folder_items WHERE user_id = ? AND item_type = 'chat' AND parent_id IS NULL ORDER BY sort_order, name",
+                [$userId]
+            );
+        }
+        return $this->db->fetchAll(
+            "SELECT * FROM user_folder_items WHERE user_id = ? AND item_type = 'chat' AND parent_id = ? ORDER BY sort_order, name",
+            [$userId, $folderId]
+        );
+    }
+
+    /**
+     * Получить папки
+     */
+    public function getFolders(int $userId, ?int $parentId = null): array
+    {
+        if ($parentId === null) {
+            return $this->db->fetchAll(
+                "SELECT * FROM user_folder_items WHERE user_id = ? AND item_type = 'folder' AND parent_id IS NULL ORDER BY sort_order, name",
+                [$userId]
+            );
+        }
+        return $this->db->fetchAll(
+            "SELECT * FROM user_folder_items WHERE user_id = ? AND item_type = 'folder' AND parent_id = ? ORDER BY sort_order, name",
+            [$userId, $parentId]
         );
     }
 }

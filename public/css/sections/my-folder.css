@@ -1,122 +1,100 @@
-/* ===================================
-   MY FOLDER - Стили для "Моей папки"
-   =================================== */
+/* === My Folder - Моя папка === */
 
-/* === Контейнер === */
-.my-folder-container { display: flex; gap: 0; min-height: 400px; position: relative; }
+/* Layout */
+.folder-layout { display: flex; gap: 1rem; min-height: 300px; }
+.folder-main { flex: 1; min-width: 0; }
 
-/* === Сайдбар === */
-.folder-sidebar {
-    width: 0;
-    overflow: hidden;
-    background: var(--bg);
-    border-right: 1px solid var(--border);
-    transition: width 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
+/* Panel */
+.folder-panel { width: 280px; flex-shrink: 0; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.folder-panel.open { opacity: 1; pointer-events: auto; }
+.folder-panel.loading .panel-placeholder { display: flex; }
 
-.folder-sidebar.open { width: 320px; min-width: 320px; }
+.panel-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); gap: 0.5rem; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid var(--border); }
+.panel-header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
+.panel-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 6px; }
+.panel-close:hover { background: var(--bg); color: var(--text); }
+.panel-body { padding: 1rem; }
+.panel-description { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem; }
+.panel-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; }
+.panel-error { padding: 2rem; text-align: center; color: var(--danger); }
 
-.folder-sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-}
+/* Empty state */
+.folder-empty, .folder-empty-owner { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
+.folder-empty svg { color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem; }
+.folder-empty-hint, .folder-create-hint { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.5rem; }
 
-.folder-sidebar-title { font-weight: 600; font-size: 0.9375rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.folder-create-btn { width: 64px; height: 64px; border-radius: 50%; border: 2px dashed var(--border); background: var(--bg); color: var(--text-muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+.folder-create-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
-.folder-sidebar-content { flex: 1; padding: 1rem; overflow-y: auto; }
+/* Subscribe */
+.folder-subscribe-wrap { margin-bottom: 1rem; }
 
-.sidebar-section { margin-bottom: 1rem; }
-.sidebar-label { font-size: 0.8125rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem; }
-.sidebar-value { font-size: 0.875rem; color: var(--text); }
-.sidebar-value.online { color: var(--success); }
-.sidebar-value.offline { color: var(--text-muted); }
-.sidebar-description { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
+/* Toolbar */
+.folder-toolbar { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 
-/* === Основной контент === */
-.folder-main { flex: 1; min-width: 0; transition: margin-left 0.3s ease; }
+/* Structure */
+.community-structure { display: flex; flex-direction: column; gap: 2px; }
 
-/* === Тулбар === */
-.folder-toolbar { display: flex; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
-
-/* === Структура === */
-.folder-structure { display: flex; flex-direction: column; gap: 0.125rem; }
-
-/* === Элемент папки === */
+/* Folder item */
 .folder-item { border-radius: 6px; user-select: none; }
-
-.folder-item.collapsed .folder-item-children { display: none; }
+.folder-item.collapsed .folder-children { display: none; }
 .folder-item.collapsed .toggle-arrow { transform: rotate(-90deg); }
 
-.folder-item-row {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.5rem 0.5rem 0;
-    border-radius: 6px;
-    transition: background 0.15s;
-}
-
+.folder-item-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.5rem 0.5rem 0; border-radius: 6px; cursor: grab; transition: background 0.15s; }
 .folder-item-row:hover { background: var(--bg); }
 
-.folder-item-toggle { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
-.folder-item-toggle:hover { color: var(--text); }
-
+/* Toggle */
+.folder-toggle { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
+.folder-toggle:hover { background: var(--surface-hover); color: var(--text); }
 .toggle-arrow { transition: transform 0.2s; }
-.folder-item-spacer { width: 20px; flex-shrink: 0; }
-.folder-item-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-shrink: 0; }
+.folder-spacer { width: 20px; flex-shrink: 0; }
 
-.folder-item-name { flex: 1; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.folder-item-name:hover { color: var(--primary); }
+/* Icon */
+.folder-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-.folder-item-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.15s; }
-.folder-item-row:hover .folder-item-actions { opacity: 1; }
+/* Name */
+.folder-name { flex: 1; font-size: 0.875rem; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.folder-name:hover { color: var(--primary); }
+a.folder-name { cursor: pointer; }
 
-/* === Типы элементов === */
-.folder-item.type-category > .folder-item-row .folder-item-icon { color: var(--primary); }
-.folder-item.type-modpack > .folder-item-row .folder-item-icon { color: #8b5cf6; }
-.folder-item.type-mod > .folder-item-row .folder-item-icon { color: #10b981; }
-.folder-item.type-server > .folder-item-row .folder-item-icon { color: #f59e0b; }
-.folder-item.type-application > .folder-item-row .folder-item-icon { color: #3b82f6; }
-.folder-item.type-chat > .folder-item-row .folder-item-icon { color: #ec4899; }
-.folder-item.type-shortcut > .folder-item-row .folder-item-icon { color: #6366f1; }
+/* Badge */
+.folder-badge { font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 4px; }
+.folder-badge.hidden { background: var(--surface-hover); color: var(--text-muted); }
 
-/* === Drag & Drop === */
-.folder-item.dragging { opacity: 0.5; }
-.folder-item.drag-over > .folder-item-row { background: var(--primary-light); outline: 2px dashed var(--primary); }
-.folder-item.drop-disabled { opacity: 0.4; pointer-events: none; }
+/* Actions */
+.folder-actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.15s; }
+.folder-item-row:hover .folder-actions { opacity: 1; }
 
-.folder-drop-zone { padding: 1rem; border: 2px dashed var(--border); border-radius: 8px; text-align: center; color: var(--text-muted); font-size: 0.8125rem; margin-top: 0.5rem; transition: all 0.2s; display: none; }
-.folder-item.dragging ~ .folder-drop-zone { display: block; }
-.folder-drop-zone.drag-over { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.folder-action-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); cursor: pointer; border-radius: 6px; transition: all 0.15s; }
+.folder-action-btn:hover { background: var(--surface-hover); color: var(--text); }
 
-/* === Пустое состояние === */
-.folder-empty { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
-.folder-empty .empty-icon { color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem; }
-.folder-empty p { margin-bottom: 0.5rem; }
-.folder-empty .empty-hint { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+/* Children */
+.folder-children { display: flex; flex-direction: column; gap: 2px; }
 
-/* === Выбор типа элемента === */
-.item-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+/* Drag & Drop */
+.folder-item.dragging { opacity: 0.4; }
+.folder-item.drag-disabled { opacity: 0.3; pointer-events: none; }
+.folder-item.drag-over.drop-inside > .folder-item-row { background: var(--primary-light); outline: 2px solid var(--primary); outline-offset: -2px; }
+.folder-item.drag-over.drop-before { border-top: 2px solid var(--primary); margin-top: -2px; }
 
-.item-type-btn { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
-.item-type-btn:hover { border-color: var(--primary); color: var(--primary); }
-.item-type-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.drop-indicator { position: absolute; height: 2px; background: var(--primary); pointer-events: none; z-index: 100; }
 
-/* === Формы === */
-.form-divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
-.form-section-title { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 1rem; }
-.form-row { display: flex; gap: 0.75rem; }
-.form-row .form-group { flex: 1; }
-.form-color { height: 38px; padding: 0.25rem; }
+/* === Modals === */
+.create-options { display: flex; flex-direction: column; gap: 0.75rem; }
 
-/* === Адаптивность === */
+.create-option { display: flex; align-items: flex-start; gap: 1rem; width: 100%; padding: 1rem; background: var(--bg); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-align: left; }
+.create-option:hover { border-color: var(--primary); background: var(--primary-light); }
+.create-option svg { color: var(--text-muted); flex-shrink: 0; }
+.create-option:hover svg { color: var(--primary); }
+.create-option-content span { font-weight: 500; color: var(--text); display: block; }
+.create-option-content p { font-size: 0.8125rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+.form-color { height: 40px; padding: 0.25rem; cursor: pointer; }
+
+/* Responsive */
 @media (max-width: 768px) {
-    .folder-sidebar.open { width: 100%; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; }
-    .item-type-grid { grid-template-columns: repeat(2, 1fr); }
+    .folder-layout { flex-direction: column; }
+    .folder-panel { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; max-height: 50vh; border-radius: 12px 12px 0 0; z-index: 50; transform: translateY(100%); opacity: 1; pointer-events: auto; }
+    .folder-panel.open { transform: translateY(0); }
 }
