@@ -11,25 +11,25 @@
 <?php if ($showSubscriptions): ?>
 <div class="tab-pane <?= $activeTab === 'subscriptions' ? 'active' : '' ?>" id="tab-subscriptions">
 	<?php if (!empty($subscriptions)): ?>
-		<div class="subscriptions-list">
+		<div class="subscriptions-list">]
 			<?php foreach ($subscriptions as $sub): ?>
 				<?php
 				$avatarColors = explode(',', $sub['owner_avatar_bg'] ?? '#3b82f6,#8b5cf6');
-				$avatarStyle = $sub['owner_avatar'] 
+				$avatarStyle = $sub['avatar_bg_value'] 
 					? '' 
 					: 'background:linear-gradient(135deg,' . $avatarColors[0] . ',' . ($avatarColors[1] ?? $avatarColors[0]) . ')';
 				?>
-				<a href="/@<?= e($sub['owner_login']) ?>?tab=community" class="subscription-item">
+				<a href="/@<?= e($sub['login']) ?>?tab=community" class="subscription-item">
 					<div class="subscription-avatar" style="<?= $avatarStyle ?>">
-						<?php if ($sub['owner_avatar']): ?>
-							<img src="<?= e($sub['owner_avatar']) ?>" alt="">
+						<?php if ($sub['avatar']): ?>
+							<img src="<?= e($sub['avatar']) ?>" alt="">
 						<?php else: ?>
 							<?= mb_strtoupper(mb_substr($sub['owner_username'], 0, 1)) ?>
 						<?php endif; ?>
 					</div>
 					<div class="subscription-info">
-						<span class="subscription-name"><?= e($sub['owner_username']) ?></span>
-						<span class="subscription-login">@<?= e($sub['owner_login']) ?></span>
+						<span class="subscription-name"><?= e($sub['username']) ?></span>
+						<span class="subscription-login">@<?= e($sub['login']) ?></span>
 					</div>
 					<div class="subscription-meta">
 						<span class="subscription-subscribers">
