@@ -10,6 +10,11 @@ use App\Core\DbFields;
 class ApplicationRepository
 {
 	use \App\Repository\ApplicationRepository\ValidateRelevantUntilTrait;
+	use \App\Repository\ApplicationRepository\ImageTrait;
+	use \App\Repository\ApplicationRepository\WarpTrait;
+	use \App\Repository\ApplicationRepository\PendingTrait;
+	use \App\Repository\ApplicationRepository\ByModpackTrait;
+	use \App\Repository\ApplicationRepository\ForAdminTrait;
 	
     private Database $db;
     public const MAX_MESSAGE_LENGTH = 2000;
@@ -19,111 +24,6 @@ class ApplicationRepository
     public function __construct()
     {
         $this->db = Database::getInstance();
-    }
-
-    /**
-     * Создание заявки
-     * Если контакты null - будут использоваться контакты из профиля
-     */
-    public function create(
-        int $modpackId, 
-        int $userId, 
-        string $message, 
-        ?string $discord, 
-        ?string $telegram, 
-        ?string $vk, 
-        ?string $relevantUntil = null
-    ): int {
-        $message = mb_substr($message, 0, self::MAX_MESSAGE_LENGTH);
-        
-        $dateValidation = $this->validateRelevantUntil($relevantUntil);
-        if (!$dateValidation['valid']) {
-            throw new \InvalidArgumentException($dateValidation['error']);
-        }
-        
-        $this->db->execute(
-            'INSERT INTO modpack_applications 
-             (modpack_id, user_id, message, char_count, relevant_until, 
-              contact_discord, contact_telegram, contact_vk, status) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, "pending")',
-            [
-                $modpackId, 
-                $userId, 
-                $message, 
-                mb_strlen($message), 
-                $dateValidation['date'], 
-                $discord, 
-                $telegram, 
-                $vk
-            ]
-        );
-        return $this->db->lastInsertId();
-    }
-
-    /**
-     * Обновление заявки
-     */
-    public function update(
-        int $id, 
-        int $userId, 
-        string $message, 
-        ?string $discord, 
-        ?string $telegram, 
-        ?string $vk, 
-        ?string $relevantUntil = null
-    ): bool {
-        $message = mb_substr($message, 0, self::MAX_MESSAGE_LENGTH);
-        
-        $dateValidation = $this->validateRelevantUntil($relevantUntil);
-        if (!$dateValidation['valid']) {
-            throw new \InvalidArgumentException($dateValidation['error']);
-        }
-        
-        return $this->db->execute(
-            'UPDATE modpack_applications 
-             SET message = ?, char_count = ?, relevant_until = ?, 
-                 contact_discord = ?, contact_telegram = ?, contact_vk = ?, 
-                 status = "pending", updated_at = NOW() 
-             WHERE id = ? AND user_id = ?',
-            [
-                $message, 
-                mb_strlen($message), 
-                $dateValidation['date'], 
-                $discord, 
-                $telegram, 
-                $vk, 
-                $id, 
-                $userId
-            ]
-        ) > 0;
-    }
-
-    public function delete(int $id, int $userId): bool
-    {
-        return $this->db->execute(
-            'DELETE FROM modpack_applications WHERE id = ? AND user_id = ?', 
-            [$id, $userId]
-        ) > 0;
-    }
-
-    public function toggleHidden(int $id, int $userId): bool
-    {
-        return $this->db->execute(
-            'UPDATE modpack_applications SET is_hidden = NOT is_hidden WHERE id = ? AND user_id = ?', 
-            [$id, $userId]
-        ) > 0;
-    }
-
-    public function findById(int $id): ?array
-    {
-        return $this->db->fetchOne(
-            'SELECT ' . DbFields::APP_FULL . '
-             FROM modpack_applications a
-             JOIN modpacks m ON a.modpack_id = m.id
-             JOIN users u ON a.user_id = u.id
-             WHERE a.id = ?',
-            [$id]
-        );
     }
 
     /**
@@ -171,36 +71,6 @@ class ApplicationRepository
     }
 
     /**
-     * Заявки по модпаку с эффективными контактами
-     */
-    public function findByModpack(int $modpackId, ?int $currentUserId = null, int $limit = 50, int $offset = 0): array
-    {
-        $baseSelect = 'SELECT ' . DbFields::APP_WITH_USER . ',
-                       COALESCE(a.contact_discord, u.discord) as effective_discord,
-                       COALESCE(a.contact_telegram, u.telegram) as effective_telegram,
-                       COALESCE(a.contact_vk, u.vk) as effective_vk';
-        
-        if ($currentUserId) {
-            return $this->db->fetchAll(
-                $baseSelect . '
-                 FROM modpack_applications a 
-                 JOIN users u ON a.user_id = u.id 
-                 WHERE a.modpack_id = ? AND (a.status = "accepted" OR a.user_id = ?)
-                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?',
-                [$modpackId, $currentUserId, $limit, $offset]
-            );
-        }
-        return $this->db->fetchAll(
-            $baseSelect . '
-             FROM modpack_applications a 
-             JOIN users u ON a.user_id = u.id 
-             WHERE a.modpack_id = ? AND a.status = "accepted"
-             ORDER BY a.created_at DESC LIMIT ? OFFSET ?',
-            [$modpackId, $limit, $offset]
-        );
-    }
-
-    /**
      * Заявки пользователя
      */
     public function findByUser(int $userId, bool $isOwner = false, int $limit = 50, int $offset = 0): array
@@ -227,30 +97,6 @@ class ApplicationRepository
         );
     }
 
-    public function countByModpack(int $modpackId, bool $acceptedOnly = true): int
-    {
-        $sql = 'SELECT COUNT(*) as cnt FROM modpack_applications WHERE modpack_id = ?';
-        if ($acceptedOnly) $sql .= ' AND status = "accepted"';
-        $result = $this->db->fetchOne($sql, [$modpackId]);
-        return (int) ($result['cnt'] ?? 0);
-    }
-
-    public function userHasApplied(int $modpackId, int $userId): bool
-    {
-        return (bool) $this->db->fetchOne(
-            'SELECT 1 FROM modpack_applications WHERE modpack_id = ? AND user_id = ?', 
-            [$modpackId, $userId]
-        );
-    }
-
-    public function getUserApplication(int $modpackId, int $userId): ?array
-    {
-        return $this->db->fetchOne(
-            'SELECT ' . DbFields::APP_BASE . ' FROM modpack_applications a WHERE a.modpack_id = ? AND a.user_id = ?', 
-            [$modpackId, $userId]
-        );
-    }
-
     public function setStatus(int $id, string $status): bool
     {
         if (!in_array($status, ['pending', 'accepted', 'rejected'])) return false;
@@ -269,107 +115,4 @@ class ApplicationRepository
         ) > 0;
     }
 
-    public function findPending(int $limit = 50, int $offset = 0): array
-    {
-        return $this->db->fetchAll(
-            'SELECT ' . DbFields::APP_FULL . '
-             FROM modpack_applications a 
-             JOIN modpacks m ON a.modpack_id = m.id 
-             JOIN users u ON a.user_id = u.id
-             WHERE a.status = "pending"
-             ORDER BY a.created_at ASC
-             LIMIT ? OFFSET ?',
-            [$limit, $offset]
-        );
-    }
-
-    public function countPending(): int
-    {
-        $result = $this->db->fetchOne(
-            "SELECT COUNT(*) as cnt FROM modpack_applications WHERE status = 'pending'"
-        );
-        return (int) ($result['cnt'] ?? 0);
-    }
-
-    public function findAllForAdmin(int $limit = 50, int $offset = 0, ?string $status = null): array
-    {
-        $sql = 'SELECT ' . DbFields::APP_FULL . '
-                FROM modpack_applications a 
-                JOIN modpacks m ON a.modpack_id = m.id 
-                JOIN users u ON a.user_id = u.id';
-        
-        $params = [];
-        
-        if ($status) {
-            $sql .= ' WHERE a.status = ?';
-            $params[] = $status;
-        }
-        
-        $sql .= ' ORDER BY a.created_at DESC LIMIT ? OFFSET ?';
-        $params[] = $limit;
-        $params[] = $offset;
-        
-        return $this->db->fetchAll($sql, $params);
-    }
-
-    public function countAllForAdmin(?string $status = null): int
-    {
-        $sql = 'SELECT COUNT(*) as cnt FROM modpack_applications';
-        $params = [];
-        
-        if ($status) {
-            $sql .= ' WHERE status = ?';
-            $params[] = $status;
-        }
-        
-        $result = $this->db->fetchOne($sql, $params);
-        return (int) ($result['cnt'] ?? 0);
-    }
-
-    public function addImage(int $applicationId, string $path, int $sortOrder = 0): int
-    {
-        // Проверяем лимит изображений
-        $currentCount = $this->countImages($applicationId);
-        if ($currentCount >= self::MAX_IMAGES) {
-            return 0;
-        }
-        
-        $this->db->execute(
-            'INSERT INTO application_images (application_id, image_path, sort_order) VALUES (?, ?, ?)', 
-            [$applicationId, $path, $sortOrder]
-        );
-        return $this->db->lastInsertId();
-    }
-
-    public function countImages(int $applicationId): int
-    {
-        $result = $this->db->fetchOne(
-            'SELECT COUNT(*) as cnt FROM application_images WHERE application_id = ?',
-            [$applicationId]
-        );
-        return (int) ($result['cnt'] ?? 0);
-    }
-
-    public function getImages(int $applicationId): array
-    {
-        return $this->db->fetchAll(
-            'SELECT * FROM application_images WHERE application_id = ? ORDER BY sort_order', 
-            [$applicationId]
-        );
-    }
-
-    public function deleteImage(int $imageId, int $userId): bool
-    {
-        return $this->db->execute(
-            'DELETE ai FROM application_images ai 
-             JOIN modpack_applications a ON ai.application_id = a.id 
-             WHERE ai.id = ? AND a.user_id = ?',
-            [$imageId, $userId]
-        ) > 0;
-    }
-
-    public function deleteAllImages(int $applicationId): void
-    {
-        $this->db->execute('DELETE FROM application_images WHERE application_id = ?', [$applicationId]);
-    }
 }

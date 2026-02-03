@@ -24,13 +24,13 @@
     // Открыть модалку создания
     window.showCreateModal = function(parentId) {
         currentParentId = parentId;
-        openModal('folderCreateModal');
+        window.openModal('folderCreateModal');
     };
 
     // Выбрать тип создания
     window.selectCreateType = function(type) {
         currentItemType = type;
-        closeModal('folderCreateModal');
+        window.closeModal('folderCreateModal');
         
         const titles = {
             folder: 'Новая папка', chat: 'Новый чат', modpack: 'Новый модпак',
@@ -44,7 +44,7 @@
         document.getElementById('nameFormDescription').value = '';
         
         setTimeout(() => {
-            openModal('folderNameModal');
+            window.openModal('folderNameModal');
             document.getElementById('nameFormInput').focus();
         }, 200);
     };
@@ -93,7 +93,7 @@
         document.getElementById('settingsFormDescription').value = item.description || '';
         document.getElementById('settingsFormColor').value = item.color || '#3b82f6';
         
-        openModal('folderSettingsModal');
+        window.openModal('folderSettingsModal');
     };
 
     // Форма настроек

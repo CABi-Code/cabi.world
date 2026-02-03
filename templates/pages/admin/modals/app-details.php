@@ -52,6 +52,7 @@ $statusLabels = ['pending' => 'Ожидает', 'accepted' => 'Одобрена'
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
+                <?php print_r($app); ?>
                 
                 <?php if ($app['effective_discord'] || $app['effective_telegram'] || $app['effective_vk']): ?>
                 <div class="app-detail-contacts">

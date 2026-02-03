@@ -1,11 +1,6 @@
 <?php
 /**
  * Основной layout приложения
- * 
- * @var string $title
- * @var string $content
- * @var array|null $user
- * @var int $unreadNotifications
  */
 
 use App\Repository\NotificationRepository;
@@ -15,18 +10,11 @@ $security = new Security();
 $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $security->check($currentPath);
 
-// Защита от повторного рендера
-if (defined('MAIN_LAYOUT_RENDERED')) {
-    return;
-}
+if (defined('MAIN_LAYOUT_RENDERED')) return;
 define('MAIN_LAYOUT_RENDERED', true);
 
-// Если $user не передан, он null
-if (!isset($user)) {
-    $user = null;
-}
+if (!isset($user)) $user = null;
 
-// Счётчик уведомлений
 if (!isset($unreadNotifications)) {
     $unreadNotifications = 0;
     if ($user) {
@@ -60,6 +48,8 @@ if (!isset($unreadNotifications)) {
     <?php require TEMPLATES_PATH . '/components/footer.php'; ?>
     <?php require TEMPLATES_PATH . '/components/icons.php'; ?>
     
+    <!-- Modal.js должен быть загружен ДО любых inline скриптов -->
+    <script src="/js/modules/modal.js"></script>
     <script type="module" src="/js/app.js"></script>
 </body>
 </html>
