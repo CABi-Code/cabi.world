@@ -52,33 +52,6 @@ trait StructureTrait
         );
     }
 
-    /**
-     * Получить путь от корня до элемента
-     */
-    public function getItemPath(int $itemId): array
-    {
-        $path = [];
-        $current = $this->getItem($itemId);
-        
-        while ($current) {
-            array_unshift($path, [
-                'id' => $current['id'],
-                'name' => $current['name'],
-                'icon' => $current['icon'],
-                'color' => $current['color'],
-                'item_type' => $current['item_type']
-            ]);
-            
-            if ($current['parent_id']) {
-                $current = $this->getItem($current['parent_id']);
-            } else {
-                break;
-            }
-        }
-        
-        return $path;
-    }
-
     public function countItems(int $userId): int
     {
         $r = $this->db->fetchOne('SELECT COUNT(*) as cnt FROM user_folder_items WHERE user_id = ?', [$userId]);

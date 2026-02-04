@@ -6,9 +6,6 @@ namespace App\Repository;
 
 use App\Core\Database;
 
-/**
- * Репозиторий для работы с "Моей папкой" пользователя
- */
 class UserFolderRepository
 {
     use UserFolderRepository\ItemsTrait;

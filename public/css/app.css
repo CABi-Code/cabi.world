@@ -17,6 +17,8 @@
 @import 'sections/settings.css';
 @import 'sections/admin.css';
 @import 'sections/auth.css';
+@import 'sections/server-status.css';
+@import 'sections/item-page.css';
 @import 'sections/my-folder.css';
 @import 'layout.css';
 @import 'sections/hero.css';

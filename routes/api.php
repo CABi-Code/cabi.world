@@ -14,6 +14,15 @@ use App\Controllers\Api\CommunityController;
 use App\Controllers\Api\CaptchaController;
 use App\Controllers\Api\UserFolderController;
 use App\Controllers\Api\ModpackSelectorController;
+use App\Controllers\Api\ServerPingController;
+
+// Server Ping - публичные
+Router::get('/api/server-ping', [ServerPingController::class, 'ping']);
+Router::get('/api/server-ping/history', [ServerPingController::class, 'history']);
+
+// Server Ping - отправка отчета (с CSRF)
+Router::post('/api/server-ping/report', [ServerPingController::class, 'report'])
+    ->middleware('csrf');
 
 Router::post('/api/captcha/solve', [CaptchaController::class, 'solve'])
     ->middleware('csrf');

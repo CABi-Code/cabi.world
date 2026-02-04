@@ -12,6 +12,7 @@
         "^/modpack/[^/]+/[^/]+$",
         "^/@[\\w\\d_-]+$",
         "^/chat/\\d+$",
+        "^/item/\\d+$",
         "/api/notifications",
         "/api/user/profile",
         "^/api/chat/messages.*",
@@ -19,8 +20,11 @@
         "^/api/admin/application/\\d+$",
         "^/api/user-folder/structure$",
         "^/api/user-folder/item$",
+        "^/api/user-folder/icon-map$",
         "^/api/user-folder/public/.*",
-        "^/api/modpack-selector/.*"
+        "^/api/modpack-selector/.*",
+        "^/api/server-ping$",
+        "^/api/server-ping/history$"
     ],
 
     "POST": [
@@ -63,6 +67,7 @@
         "/api/user-folder/unsubscribe",
         "/api/user-folder/show-application",
         "/api/user-folder/hide-application",
+        "/api/server-ping/report",
         "/api/admin/application/status",
         "/api/admin/application/delete",
         "^/api/admin/application/\\d+/modal$",
