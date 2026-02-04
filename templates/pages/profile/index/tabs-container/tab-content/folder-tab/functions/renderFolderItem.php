@@ -7,51 +7,39 @@ function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repositor
     $item = $node['data'];
     $type = $node['type'];
     $children = $node['children'] ?? [];
-    $isElement = $folderRepository->isElement($type);
     $isEntity = $folderRepository->isEntity($type);
-    
+    $hasChildren = !empty($children);
+
     $iconData = $iconMap[$type] ?? ['icon' => 'file', 'color' => '#94a3b8'];
     $icon = $item['icon'] ?? $iconData['icon'];
     $color = $item['color'] ?? $iconData['color'];
-    $hasChildren = !empty($children);
 
     // ==================== СОРТИРОВКА ДЕТЕЙ ====================
-    if ($hasChildren) {
-        $typeOrder = array_keys($iconMap);   // порядок типов из getItemsMap()
+    if (!empty($children)) {
+        usort($children, function(array $a, array $b) {
+            $soA = (float)($a['data']['sort_order'] ?? 9999999);
+            $soB = (float)($b['data']['sort_order'] ?? 9999999);
 
-        usort($children, function(array $a, array $b) use ($typeOrder) {
-            $typeA = $a['type'] ?? '';
-            $typeB = $b['type'] ?? '';
-
-            $posA = array_search($typeA, $typeOrder);
-            $posB = array_search($typeB, $typeOrder);
-
-            // Если тип не найден в карте — отправляем в конец
-            if ($posA === false) $posA = 999;
-            if ($posB === false) $posB = 999;
-
-            // Сначала по порядку типа
-            if ($posA !== $posB) {
-                return $posA <=> $posB;
+            if ($soA !== $soB) {
+                return $soA <=> $soB;
             }
 
-            // Одинаковый тип → по названию (регистронезависимо)
             $nameA = $a['data']['name'] ?? '';
             $nameB = $b['data']['name'] ?? '';
             return strcasecmp($nameA, $nameB);
         });
     }
-    // ==========================================================
-
+    // =====================================================================
     ?>
     <div class="folder-item <?= $isEntity ? 'is-entity' : 'is-element' ?> type-<?= $type ?> <?= !empty($item['is_collapsed']) ? 'collapsed' : '' ?>"
          data-id="<?= $item['id'] ?>"
          data-type="<?= $type ?>"
          data-parent="<?= $item['parent_id'] ?? 'root' ?>"
          data-is-entity="<?= $isEntity ? '1' : '0' ?>"
+		 data-sort-order="<?= (float)($item['sort_order'] ?? 0) ?>"
          draggable="<?= $isOwner ? 'true' : 'false' ?>">
         
-        <div class="folder-item-row" style="padding-left: <?= $depth * 16 ?>px;">
+        <div class="folder-item-row" onclick="window.openItemPanel(<?= $item['id'] ?>, '<?= $type ?>')" style="padding-left: <?= $depth * 16 ?>px;">
             <?php if ($isEntity && $hasChildren): ?>
                 <button class="folder-toggle" onclick="window.toggleItem(<?= $item['id'] ?>); event.stopPropagation();">
                     <svg width="12" height="12" class="toggle-arrow"><use href="#icon-chevron-down"/></svg>
@@ -60,19 +48,21 @@ function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repositor
                 <span class="folder-spacer"></span>
             <?php endif; ?>
             
-            <span class="folder-icon" style="color: <?= e($color) ?>;">
-                <svg width="16" height="16"><use href="#icon-<?= e($icon) ?>"/></svg>
-            </span>
+            <div class="span-move">
+				<span class="folder-icon" style="color: <?= e($color) ?>;">
+					<svg width="16" height="16"><use href="#icon-<?= e($icon) ?>"/></svg>
+				</span>
             
-            <?php if ($type === 'chat'): ?>
-                <a href="/chat/<?= $item['id'] ?>" class="folder-name"><?= e($item['name']) ?></a>
-            <?php else: ?>
-                <span class="folder-name" onclick="window.openItemPanel(<?= $item['id'] ?>, '<?= $type ?>')"><?= e($item['name']) ?></span>
-            <?php endif; ?>
-            
-            <?php if (!empty($item['is_hidden'])): ?>
-                <span class="folder-badge hidden">скрыта</span>
-            <?php endif; ?>
+				<?php if ($type === 'chat'): ?>
+					<a href="/chat/<?= $item['id'] ?>" class="folder-name"><?= e($item['name']) ?></a>
+				<?php else: ?>
+					<span class="folder-name"><?= e($item['name']) ?></span>
+				<?php endif; ?>
+				
+				<?php if (!empty($item['is_hidden'])): ?>
+					<span class="folder-badge hidden">скрыта</span>
+				<?php endif; ?>
+            </div>
             
             <?php if ($isOwner): ?>
             <div class="folder-actions">

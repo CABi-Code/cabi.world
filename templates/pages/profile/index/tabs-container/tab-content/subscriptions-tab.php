@@ -11,7 +11,7 @@
 <?php if ($showSubscriptions): ?>
 <div class="tab-pane <?= $activeTab === 'subscriptions' ? 'active' : '' ?>" id="tab-subscriptions">
 	<?php if (!empty($subscriptions)): ?>
-		<div class="subscriptions-list">]
+		<div class="subscriptions-list">
 			<?php foreach ($subscriptions as $sub): ?>
 				<?php
 				$avatarColors = explode(',', $sub['owner_avatar_bg'] ?? '#3b82f6,#8b5cf6');

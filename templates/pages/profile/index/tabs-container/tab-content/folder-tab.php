@@ -35,23 +35,7 @@ if (!$folderIsEmpty || $isOwner) {
                 <?php endif; ?>
                 
             <?php else: ?>
-                <?php if (!$folderIsEmpty): ?>
-                    <?php if ($user): ?>
-                        <div class="folder-subscribe-wrap">
-                            <?php if ($isSubscribed): ?>
-                                <button class="btn btn-secondary btn-sm" onclick="toggleSubscription(<?= $profileUser['id'] ?>, false)">
-                                    <svg width="14" height="14"><use href="#icon-check"/></svg>
-                                    Вы подписаны
-                                </button>
-                            <?php else: ?>
-                                <button class="btn btn-primary btn-sm" onclick="toggleSubscription(<?= $profileUser['id'] ?>, true)">
-                                    <svg width="14" height="14"><use href="#icon-plus"/></svg>
-                                    Подписаться
-                                </button>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                    
+                <?php if (!$folderIsEmpty): ?>                    
                     <div class="community-structure" id="folderStructure">
                         <?php include __DIR__ . '/folder-tab/folder-structure.php'; ?>
                     </div>

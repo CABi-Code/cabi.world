@@ -114,41 +114,99 @@ trait ItemsTrait
         return $this->db->execute('DELETE FROM user_folder_items WHERE id = ? AND user_id = ?', [$id, $userId]) > 0;
     }
 
-    protected function getNextSortOrder(int $userId, ?int $parentId): int
-    {
-        $sql = 'SELECT MAX(sort_order) as mx FROM user_folder_items WHERE user_id = ?';
-        $params = [$userId];
-        $sql .= $parentId === null ? ' AND parent_id IS NULL' : ' AND parent_id = ?';
-        if ($parentId !== null) $params[] = $parentId;
-        $r = $this->db->fetchOne($sql, $params);
-        return ($r['mx'] ?? 0) + 1;
+protected function getNextSortOrder(int $userId, ?int $parentId): int
+{
+    $sql = 'SELECT COALESCE(MAX(sort_order), 0) as mx 
+            FROM user_folder_items 
+            WHERE user_id = ?';
+    
+    $params = [$userId];
+    
+    if ($parentId === null) {
+        $sql .= ' AND parent_id IS NULL';
+    } else {
+        $sql .= ' AND parent_id = ?';
+        $params[] = $parentId;
     }
 
-    public function moveItem(int $itemId, int $userId, ?int $newParentId, ?int $afterItemId = null): bool
-    {
-        $item = $this->getItemByUser($itemId, $userId);
-        if (!$item) return false;
-        if ($newParentId === $itemId) return false;
-        
-        if ($newParentId !== null) {
-            $parent = $this->getItemByUser($newParentId, $userId);
-            if (!$parent || !$this->isEntity($parent['item_type'])) return false;
-            if ($this->isDescendant($itemId, $newParentId)) return false;
-        }
-        
-        $oldParentId = $item['parent_id'];
-        if ($oldParentId == $newParentId) {
-            if ($afterItemId) {
-                $so = $this->getSortOrderAfter($userId, $newParentId, $afterItemId);
-                return $this->db->execute('UPDATE user_folder_items SET sort_order = ? WHERE id = ?', [$so, $itemId]) > 0;
-            }
-            return true;
-        }
-        
-        $this->updateClosurePaths($itemId, $oldParentId, $newParentId);
-        $so = $afterItemId ? $this->getSortOrderAfter($userId, $newParentId, $afterItemId) : $this->getNextSortOrder($userId, $newParentId);
-        return $this->db->execute('UPDATE user_folder_items SET parent_id = ?, sort_order = ? WHERE id = ?', [$newParentId, $so, $itemId]) > 0;
+    $r = $this->db->fetchOne($sql, $params);
+    return ($r['mx'] ?? 0) + 1;
+}
+
+public function moveItem(
+    int $itemId, 
+    int $userId, 
+    ?int $newParentId, 
+    ?int $afterItemId = null, 
+    ?float $newSortOrder = null
+): bool
+{
+    $item = $this->getItemByUser($itemId, $userId);
+    if (!$item) {
+        return false;
     }
+
+    if ($newParentId === $itemId) {
+        return false;
+    }
+
+    // Проверка родителя
+    if ($newParentId !== null) {
+        $parent = $this->getItemByUser($newParentId, $userId);
+        if (!$parent || !$this->isEntity($parent['item_type'])) {
+            return false;
+        }
+        if ($this->isDescendant($itemId, $newParentId)) {
+            return false;
+        }
+    }
+
+    $oldParentId = $item['parent_id'];
+
+    // === Новый режим: клиент передал конкретное значение sort_order ===
+    if ($newSortOrder !== null) {
+        if ($oldParentId == $newParentId) {
+            // Только меняем порядок внутри той же папки
+            return $this->db->execute(
+                'UPDATE user_folder_items SET sort_order = ? WHERE id = ?',
+                [$newSortOrder, $itemId]
+            ) > 0;
+        } else {
+            // Меняем родителя + устанавливаем новый sort_order
+            $this->updateClosurePaths($itemId, $oldParentId, $newParentId);
+
+            return $this->db->execute(
+                'UPDATE user_folder_items SET parent_id = ?, sort_order = ? WHERE id = ?',
+                [$newParentId, $newSortOrder, $itemId]
+            ) > 0;
+        }
+    }
+
+    // === Старый режим (совместимость): используем afterItemId ===
+    if ($oldParentId == $newParentId) {
+        // Тот же родитель — только меняем порядок
+        if ($afterItemId) {
+            $so = $this->getSortOrderAfter($userId, $newParentId, $afterItemId);
+            return $this->db->execute(
+                'UPDATE user_folder_items SET sort_order = ? WHERE id = ?',
+                [$so, $itemId]
+            ) > 0;
+        }
+        return true;
+    } else {
+        // Меняем родителя
+        $this->updateClosurePaths($itemId, $oldParentId, $newParentId);
+
+        $so = $afterItemId
+            ? $this->getSortOrderAfter($userId, $newParentId, $afterItemId)
+            : $this->getNextSortOrder($userId, $newParentId);
+
+        return $this->db->execute(
+            'UPDATE user_folder_items SET parent_id = ?, sort_order = ? WHERE id = ?',
+            [$newParentId, $so, $itemId]
+        ) > 0;
+    }
+}
 
     protected function updateClosurePaths(int $itemId, ?int $oldParentId, ?int $newParentId): void
     {
@@ -179,11 +237,72 @@ trait ItemsTrait
         }
     }
 
-    protected function getSortOrderAfter(int $userId, ?int $parentId, int $afterItemId): int
-    {
-        $a = $this->getItemByUser($afterItemId, $userId);
-        return $a ? $a['sort_order'] + 1 : $this->getNextSortOrder($userId, $parentId);
+protected function getSortOrderAfter(int $userId, ?int $parentId, int $afterItemId): int
+{
+    $after = $this->getItemByUser($afterItemId, $userId);
+    if (!$after) {
+        return $this->getNextSortOrder($userId, $parentId);
     }
+
+    $afterOrder = (int)$after['sort_order'];
+
+    // Проверяем, есть ли уже элемент с sort_order = afterOrder + 1
+    $sql = 'SELECT COUNT(*) as cnt 
+            FROM user_folder_items 
+            WHERE user_id = ? 
+            AND parent_id ' . ($parentId === null ? 'IS NULL' : '= ?') . '
+            AND sort_order = ?';
+
+    $params = $parentId === null 
+        ? [$userId, $afterOrder + 1] 
+        : [$userId, $parentId, $afterOrder + 1];
+
+    $exists = (int)$this->db->fetchOne($sql, $params)['cnt'];
+
+    if ($exists === 0) {
+        return $afterOrder + 1;                     // безопасно — место свободно
+    }
+
+    // Если место занято → сдвигаем все последующие элементы на +1
+    $this->shiftSortOrdersAfter($userId, $parentId, $afterOrder);
+
+    return $afterOrder + 1;
+}
+
+protected function shiftSortOrdersAfter(int $userId, ?int $parentId, int $fromOrder): void
+{
+    $sql = 'UPDATE user_folder_items 
+            SET sort_order = sort_order + 1 
+            WHERE user_id = ? 
+            AND parent_id ' . ($parentId === null ? 'IS NULL' : '= ?') . '
+            AND sort_order > ?';
+
+    $params = $parentId === null 
+        ? [$userId, $fromOrder] 
+        : [$userId, $parentId, $fromOrder];
+
+    $this->db->execute($sql, $params);
+}
+
+protected function normalizeSortOrders(int $userId, ?int $parentId): void
+{
+    $sql = 'SELECT id FROM user_folder_items 
+            WHERE user_id = ? 
+            AND parent_id ' . ($parentId === null ? 'IS NULL' : '= ?') . '
+            ORDER BY sort_order ASC, id ASC';
+
+    $params = $parentId === null ? [$userId] : [$userId, $parentId];
+    
+    $items = $this->db->fetchAll($sql, $params);
+    
+    foreach ($items as $index => $item) {
+        $newOrder = $index + 1;
+        $this->db->execute(
+            'UPDATE user_folder_items SET sort_order = ? WHERE id = ?', 
+            [$newOrder, $item['id']]
+        );
+    }
+}
 
     public function toggleCollapsed(int $id, int $userId): bool
     {

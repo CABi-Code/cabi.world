@@ -162,18 +162,34 @@ class UserFolderController
         Response::json(['success' => $this->repo->deleteItem((int)$request->get('id'), $user['id'])]);
     }
 
-    public function move(Request $request): void
-    {
-        $user = $request->user();
-        if (!$user) { Response::error('Unauthorized', 401); return; }
+	public function move(Request $request): void
+	{
+		$user = $request->user();
+		if (!$user) { 
+			Response::error('Unauthorized', 401); 
+			return; 
+		}
 
-        $itemId = (int)$request->get('item_id');
-        $newParentId = $request->get('parent_id') !== null ? (int)$request->get('parent_id') : null;
-        $afterItemId = $request->get('after_id') !== null ? (int)$request->get('after_id') : null;
-        
-        Response::json(['success' => $this->repo->moveItem($itemId, $user['id'], $newParentId, $afterItemId)]);
-    }
+		$itemId = (int)$request->get('item_id');
+		$newParentId = $request->get('parent_id') !== null ? (int)$request->get('parent_id') : null;
+		
+		// Новый параметр от клиента
+		$newSortOrder = $request->get('new_sort_order');
+		$newSortOrder = is_numeric($newSortOrder) ? (float)$newSortOrder : null;
 
+		// Старый параметр (на всякий случай)
+		$afterItemId = $request->get('after_id') !== null ? (int)$request->get('after_id') : null;
+
+		$success = $this->repo->moveItem(
+			$itemId, 
+			$user['id'], 
+			$newParentId, 
+			$afterItemId, 
+			$newSortOrder
+		);
+
+		Response::json(['success' => $success]);
+	}
     public function toggleCollapse(Request $request): void
     {
         $user = $request->user();

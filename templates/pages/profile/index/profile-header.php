@@ -53,9 +53,9 @@
         
         <p class="profile-date">На сайте с <?= date('d.m.Y', strtotime($profileUser['created_at'])) ?></p>
     </div>
-    
-    <?php if ($isOwner): ?>
-        <div class="profile-actions">
+
+	<div class="profile-actions">
+		<?php if ($isOwner): ?>
             <?php if ($canAccessAdmin): ?>
                 <a href="/admin" class="btn btn-secondary btn-sm btn-icon" title="Панель управления">
                     <svg width="16" height="16"><use href="#icon-shield"/></svg>
@@ -65,6 +65,22 @@
                 <svg width="14" height="14"><use href="#icon-edit"/></svg>
                 Редактировать
             </a>
-        </div>
-    <?php endif; ?>
+		<?php endif; ?>
+		
+		<?php if (!$isOwner && $user): ?>
+			<div class="folder-subscribe-wrap">
+				<?php if ($isSubscribed): ?>
+					<button class="btn btn-secondary btn-sm" onclick="toggleSubscription(<?= $profileUser['id'] ?>, false)">
+						<svg width="14" height="14"><use href="#icon-check"/></svg>
+						Вы подписаны
+					</button>
+				<?php else: ?>
+					<button class="btn btn-primary btn-sm" onclick="toggleSubscription(<?= $profileUser['id'] ?>, true)">
+						<svg width="14" height="14"><use href="#icon-plus"/></svg>
+						Подписаться
+					</button>
+				<?php endif; ?>
+			</div>
+		<?php endif; ?>
+	</div>
 </div>

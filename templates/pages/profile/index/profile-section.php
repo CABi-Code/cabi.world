@@ -2,30 +2,6 @@
 /**
  * Секция с вкладками в профиле
  */
-
-use App\Repository\UserFolderRepository;
-
-$folderRepo = new UserFolderRepository();
-$folderIsEmpty = $folderRepo->isEmpty($profileUser['id']);
-$subscribersCount = $folderRepo->getSubscribersCount($profileUser['id']);
-
-$isSubscribed = false;
-if ($user && $user['id'] !== $profileUser['id']) {
-    $isSubscribed = $folderRepo->isSubscribed($profileUser['id'], $user['id']);
-}
-
-$showSubscriptions = $isOwner || ($profileUser['subscriptions_visible'] ?? true);
-$subscriptions = [];
-$subscriptionsCount = 0;
-if ($showSubscriptions) {
-    $subscriptions = $folderRepo->getUserSubscriptions($profileUser['id'], 20);
-    $subscriptionsCount = $folderRepo->countUserSubscriptions($profileUser['id']);
-}
-
-$activeTab = $_GET['tab'] ?? 'folder';
-if (!in_array($activeTab, ['folder', 'subscriptions'])) $activeTab = 'folder';
-
-$canViewFolder = $isOwner || !$folderIsEmpty;
 ?>
 
 <?php if ($subscribersCount > 0): ?>
