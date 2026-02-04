@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: localhost:3306
--- Время создания: Янв 23 2026 г., 21:16
+-- Время создания: Фев 04 2026 г., 14:57
 -- Версия сервера: 10.11.14-MariaDB-0+deb12u2
 -- Версия PHP: 8.2.29
 
@@ -14,6 +14,20 @@ SET time_zone = "+00:00";
 --
 -- База данных: `secret`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `application_folder_links`
+--
+
+CREATE TABLE `application_folder_links` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `application_id` int(10) UNSIGNED NOT NULL,
+  `folder_item_id` int(10) UNSIGNED NOT NULL,
+  `is_primary` tinyint(1) DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -43,6 +57,277 @@ CREATE TABLE `auth_logs` (
   `ip_address` varchar(45) DEFAULT NULL,
   `user_agent` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `chat_messages`
+--
+
+CREATE TABLE `chat_messages` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `chat_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `message` text DEFAULT NULL,
+  `likes_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `is_poll` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Является ли сообщение опросом',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Триггеры `chat_messages`
+--
+DELIMITER $$
+CREATE TRIGGER `after_message_delete` AFTER DELETE ON `chat_messages` FOR EACH ROW BEGIN
+    UPDATE community_chats 
+    SET messages_count = messages_count - 1
+    WHERE id = OLD.chat_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_message_insert` AFTER INSERT ON `chat_messages` FOR EACH ROW BEGIN
+    UPDATE community_chats 
+    SET messages_count = messages_count + 1, last_message_at = NEW.created_at 
+    WHERE id = NEW.chat_id;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `chat_message_images`
+--
+
+CREATE TABLE `chat_message_images` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `message_id` int(10) UNSIGNED NOT NULL,
+  `image_path` varchar(500) NOT NULL,
+  `sort_order` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `chat_message_likes`
+--
+
+CREATE TABLE `chat_message_likes` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `message_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Триггеры `chat_message_likes`
+--
+DELIMITER $$
+CREATE TRIGGER `after_like_delete` AFTER DELETE ON `chat_message_likes` FOR EACH ROW BEGIN
+    UPDATE chat_messages SET likes_count = likes_count - 1 WHERE id = OLD.message_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_like_insert` AFTER INSERT ON `chat_message_likes` FOR EACH ROW BEGIN
+    UPDATE chat_messages SET likes_count = likes_count + 1 WHERE id = NEW.message_id;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `chat_polls`
+--
+
+CREATE TABLE `chat_polls` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `message_id` int(10) UNSIGNED NOT NULL,
+  `question` varchar(500) NOT NULL,
+  `is_multiple` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Множественный выбор',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `chat_poll_options`
+--
+
+CREATE TABLE `chat_poll_options` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `poll_id` int(10) UNSIGNED NOT NULL,
+  `option_text` varchar(200) NOT NULL,
+  `votes_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `sort_order` tinyint(3) UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `chat_poll_votes`
+--
+
+CREATE TABLE `chat_poll_votes` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `option_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Триггеры `chat_poll_votes`
+--
+DELIMITER $$
+CREATE TRIGGER `after_vote_delete` AFTER DELETE ON `chat_poll_votes` FOR EACH ROW BEGIN
+    UPDATE chat_poll_options SET votes_count = votes_count - 1 WHERE id = OLD.option_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_vote_insert` AFTER INSERT ON `chat_poll_votes` FOR EACH ROW BEGIN
+    UPDATE chat_poll_options SET votes_count = votes_count + 1 WHERE id = NEW.option_id;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `communities`
+--
+
+CREATE TABLE `communities` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `subscribers_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `message_timeout` int(10) UNSIGNED DEFAULT NULL COMMENT 'Тайм-аут на сообщения в секундах (по умолчанию)',
+  `files_disabled` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Отключить файлы по умолчанию',
+  `messages_disabled` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Отключить сообщения по умолчанию',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `community_bans`
+--
+
+CREATE TABLE `community_bans` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `community_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `banned_by` int(10) UNSIGNED NOT NULL,
+  `scope` enum('community','chat') NOT NULL DEFAULT 'community',
+  `scope_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'ID чата (NULL для всего сообщества)',
+  `reason` varchar(500) DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL COMMENT 'NULL = перманентный бан',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `community_chats`
+--
+
+CREATE TABLE `community_chats` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `community_id` int(10) UNSIGNED NOT NULL,
+  `folder_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'ID папки (NULL = корень сообщества)',
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `sort_order` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `message_timeout` int(10) UNSIGNED DEFAULT NULL COMMENT 'Переопределение тайм-аута',
+  `files_disabled` tinyint(1) DEFAULT NULL COMMENT 'Переопределение настройки файлов',
+  `messages_disabled` tinyint(1) DEFAULT NULL COMMENT 'Переопределение настройки сообщений',
+  `messages_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `last_message_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `community_folders`
+--
+
+CREATE TABLE `community_folders` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `community_id` int(10) UNSIGNED NOT NULL,
+  `parent_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'ID родительской папки (NULL = корень)',
+  `name` varchar(100) NOT NULL,
+  `sort_order` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `message_timeout` int(10) UNSIGNED DEFAULT NULL COMMENT 'Переопределение тайм-аута',
+  `files_disabled` tinyint(1) DEFAULT NULL COMMENT 'Переопределение настройки файлов',
+  `messages_disabled` tinyint(1) DEFAULT NULL COMMENT 'Переопределение настройки сообщений',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `community_moderators`
+--
+
+CREATE TABLE `community_moderators` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `community_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `scope` enum('community','folder','chat') NOT NULL DEFAULT 'community',
+  `scope_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'ID папки или чата (NULL для всего сообщества)',
+  `can_delete_messages` tinyint(1) NOT NULL DEFAULT 1,
+  `can_ban_users` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `community_subscribers`
+--
+
+CREATE TABLE `community_subscribers` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `community_id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Триггеры `community_subscribers`
+--
+DELIMITER $$
+CREATE TRIGGER `after_subscriber_delete` AFTER DELETE ON `community_subscribers` FOR EACH ROW BEGIN
+    UPDATE communities SET subscribers_count = subscribers_count - 1 WHERE id = OLD.community_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_subscriber_insert` AFTER INSERT ON `community_subscribers` FOR EACH ROW BEGIN
+    UPDATE communities SET subscribers_count = subscribers_count + 1 WHERE id = NEW.community_id;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `folder_paths`
+--
+
+CREATE TABLE `folder_paths` (
+  `ancestor_id` int(10) UNSIGNED NOT NULL,
+  `descendant_id` int(10) UNSIGNED NOT NULL,
+  `depth` int(10) UNSIGNED NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -162,6 +447,43 @@ CREATE TABLE `password_resets` (
 -- --------------------------------------------------------
 
 --
+-- Структура таблицы `rate_limit_blocks`
+--
+
+CREATE TABLE `rate_limit_blocks` (
+  `identifier` varchar(255) NOT NULL,
+  `expires_at` int(10) UNSIGNED NOT NULL,
+  `captcha_solved` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `rate_limit_counters`
+--
+
+CREATE TABLE `rate_limit_counters` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `key_name` varchar(255) NOT NULL,
+  `created_at` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `rate_limit_violations`
+--
+
+CREATE TABLE `rate_limit_violations` (
+  `identifier` varchar(255) NOT NULL,
+  `count` int(10) UNSIGNED NOT NULL DEFAULT 1,
+  `updated_at` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Структура таблицы `refresh_tokens`
 --
 
@@ -169,9 +491,29 @@ CREATE TABLE `refresh_tokens` (
   `id` int(10) UNSIGNED NOT NULL,
   `user_id` int(10) UNSIGNED NOT NULL,
   `token_hash` varchar(64) NOT NULL,
+  `fingerprint` varchar(64) DEFAULT NULL,
   `expires_at` datetime NOT NULL,
   `revoked` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `server_ping_history`
+--
+
+CREATE TABLE `server_ping_history` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `item_id` int(10) UNSIGNED NOT NULL,
+  `is_online` tinyint(1) NOT NULL DEFAULT 0,
+  `players_online` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `players_max` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `players_sample` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`players_sample`)),
+  `version` varchar(100) DEFAULT NULL,
+  `source` varchar(20) DEFAULT 'client',
+  `is_same_as_previous` tinyint(1) NOT NULL DEFAULT 0,
+  `checked_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -194,12 +536,12 @@ CREATE TABLE `site_stats` (
 --
 
 CREATE TABLE `users` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `login` varchar(30) NOT NULL,
-  `email` varchar(254) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `bio` text DEFAULT NULL,
+  `id` int(10) UNSIGNED NOT NULL COMMENT 'id',
+  `login` varchar(16) NOT NULL COMMENT 'имя в ссылке',
+  `email` varchar(254) NOT NULL COMMENT 'основная почта',
+  `password_hash` varchar(255) NOT NULL COMMENT 'хэш пароль',
+  `username` varchar(30) NOT NULL COMMENT 'отображаемое имя на сайте',
+  `bio` text DEFAULT NULL COMMENT 'описание профиля',
   `avatar` varchar(255) DEFAULT NULL,
   `banner` varchar(255) DEFAULT NULL,
   `discord` varchar(100) DEFAULT NULL,
@@ -213,10 +555,14 @@ CREATE TABLE `users` (
   `avatar_bg_value` varchar(100) DEFAULT '#2563eb,#8b5cf6',
   `banner_bg_type` varchar(20) DEFAULT 'gradient',
   `banner_bg_value` varchar(100) DEFAULT '#2563eb,#8b5cf6',
+  `subscriptions_visible` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'показывать вкладку подписок',
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `last_login_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `role` enum('user','premium','moderator','admin') NOT NULL DEFAULT 'user' COMMENT 'привилегия на сайте',
+  `last_login_at` datetime DEFAULT NULL COMMENT 'последняя авторизация',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'когда создан аккаунт',
+  `subscribers_count` int(10) UNSIGNED DEFAULT 0,
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `token_version` int(11) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -235,181 +581,81 @@ END
 $$
 DELIMITER ;
 
---
--- Индексы сохранённых таблиц
---
+-- --------------------------------------------------------
 
 --
--- Индексы таблицы `application_images`
---
-ALTER TABLE `application_images`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_app_images_app` (`application_id`);
-
---
--- Индексы таблицы `auth_logs`
---
-ALTER TABLE `auth_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_auth_logs_user` (`user_id`),
-  ADD KEY `idx_auth_logs_created` (`created_at`),
-  ADD KEY `idx_auth_logs_ip` (`ip_address`);
-
---
--- Индексы таблицы `modpacks`
---
-ALTER TABLE `modpacks`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_modpacks_platform_external` (`platform`,`external_id`),
-  ADD KEY `idx_modpacks_slug` (`slug`),
-  ADD KEY `idx_modpacks_platform` (`platform`);
-
---
--- Индексы таблицы `modpack_applications`
---
-ALTER TABLE `modpack_applications`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_applications_modpack` (`modpack_id`),
-  ADD KEY `idx_applications_user` (`user_id`),
-  ADD KEY `idx_applications_status` (`status`);
-
---
--- Индексы таблицы `notifications`
---
-ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_notifications_user` (`user_id`),
-  ADD KEY `idx_notifications_read` (`user_id`,`is_read`);
-
---
--- Индексы таблицы `password_resets`
---
-ALTER TABLE `password_resets`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_password_resets_token` (`token_hash`),
-  ADD KEY `idx_password_resets_user` (`user_id`);
-
---
--- Индексы таблицы `refresh_tokens`
---
-ALTER TABLE `refresh_tokens`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_refresh_tokens_hash` (`token_hash`),
-  ADD KEY `idx_refresh_tokens_user` (`user_id`),
-  ADD KEY `idx_refresh_tokens_expires` (`expires_at`);
-
---
--- Индексы таблицы `site_stats`
---
-ALTER TABLE `site_stats`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `stat_key` (`stat_key`);
-
---
--- Индексы таблицы `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_users_login` (`login`),
-  ADD UNIQUE KEY `uk_users_email` (`email`),
-  ADD KEY `idx_users_is_active` (`is_active`);
-
---
--- AUTO_INCREMENT для сохранённых таблиц
+-- Структура таблицы `user_folder_items`
 --
 
---
--- AUTO_INCREMENT для таблицы `application_images`
---
-ALTER TABLE `application_images`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+CREATE TABLE `user_folder_items` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `parent_id` int(10) UNSIGNED DEFAULT NULL,
+  `item_type` varchar(20) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `icon` varchar(50) DEFAULT NULL,
+  `color` varchar(20) DEFAULT NULL,
+  `sort_order` decimal(12,4) NOT NULL DEFAULT 1.0000,
+  `is_collapsed` tinyint(1) DEFAULT 0,
+  `folder_category` varchar(50) DEFAULT NULL,
+  `reference_id` int(10) UNSIGNED DEFAULT NULL,
+  `reference_type` varchar(50) DEFAULT NULL,
+  `is_hidden` tinyint(1) DEFAULT 0,
+  `settings` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`settings`)),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 
 --
--- AUTO_INCREMENT для таблицы `auth_logs`
---
-ALTER TABLE `auth_logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `modpacks`
---
-ALTER TABLE `modpacks`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `modpack_applications`
---
-ALTER TABLE `modpack_applications`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `notifications`
---
-ALTER TABLE `notifications`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `password_resets`
---
-ALTER TABLE `password_resets`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `refresh_tokens`
---
-ALTER TABLE `refresh_tokens`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `site_stats`
---
-ALTER TABLE `site_stats`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT для таблицы `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- Ограничения внешнего ключа сохраненных таблиц
+-- Структура таблицы `user_folder_subscriptions`
 --
 
---
--- Ограничения внешнего ключа таблицы `application_images`
---
-ALTER TABLE `application_images`
-  ADD CONSTRAINT `fk_app_images_app` FOREIGN KEY (`application_id`) REFERENCES `modpack_applications` (`id`) ON DELETE CASCADE;
+CREATE TABLE `user_folder_subscriptions` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `folder_owner_id` int(10) UNSIGNED NOT NULL,
+  `subscriber_id` int(10) UNSIGNED NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 
 --
--- Ограничения внешнего ключа таблицы `auth_logs`
+-- Структура таблицы `user_servers`
 --
-ALTER TABLE `auth_logs`
-  ADD CONSTRAINT `fk_auth_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+CREATE TABLE `user_servers` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `port` int(5) UNSIGNED DEFAULT 25565,
+  `version` varchar(50) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `icon_url` varchar(500) DEFAULT NULL,
+  `is_online` tinyint(1) DEFAULT 0,
+  `players_online` int(10) UNSIGNED DEFAULT 0,
+  `players_max` int(10) UNSIGNED DEFAULT 0,
+  `last_check` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 
 --
--- Ограничения внешнего ключа таблицы `modpack_applications`
+-- Структура таблицы `user_shortcuts`
 --
-ALTER TABLE `modpack_applications`
-  ADD CONSTRAINT `fk_applications_modpack` FOREIGN KEY (`modpack_id`) REFERENCES `modpacks` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_applications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
---
--- Ограничения внешнего ключа таблицы `notifications`
---
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Ограничения внешнего ключа таблицы `password_resets`
---
-ALTER TABLE `password_resets`
-  ADD CONSTRAINT `fk_password_resets_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Ограничения внешнего ключа таблицы `refresh_tokens`
---
-ALTER TABLE `refresh_tokens`
-  ADD CONSTRAINT `fk_refresh_tokens_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-COMMIT;
+CREATE TABLE `user_shortcuts` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `url` varchar(500) NOT NULL,
+  `icon` varchar(50) DEFAULT 'link',
+  `color` varchar(20) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
