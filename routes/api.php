@@ -15,6 +15,11 @@ use App\Controllers\Api\CaptchaController;
 use App\Controllers\Api\UserFolderController;
 use App\Controllers\Api\ModpackSelectorController;
 use App\Controllers\Api\ServerPingController;
+use App\Controllers\Web\ItemController;
+
+// Страница отдельного элемента папки
+Router::get('/item/:id', [ItemController::class, 'show'])
+    ->where('id', '[0-9]+');
 
 // Server Ping - публичные
 Router::get('/api/server-ping', [ServerPingController::class, 'ping']);

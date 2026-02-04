@@ -16,6 +16,7 @@ class Route
     private $handler;
     private array $middleware = [];
     private array $params = [];
+	protected $constraints = [];
 
     public function __construct(string $method, string $path, $handler)
     {
@@ -24,4 +25,11 @@ class Route
         $this->handler = $handler;
         $this->parsePathParams();
     }
+
+	public function where(string $parameter, string $pattern)
+    {
+        $this->constraints[$parameter] = $pattern;
+        return $this;
+    }
+
 }
