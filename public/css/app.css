@@ -11,6 +11,7 @@
 @import 'components/modpack-selector.css';
 @import 'components/image-editor.css';
 @import 'components/application-modal.css';
+@import 'components/application-form.css';
 @import 'sections/popular.css';
 @import 'sections/profile.css';
 @import 'sections/feed.css';

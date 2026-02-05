@@ -1,0 +1,398 @@
+/* ===================================
+   APPLICATION FORM (Home Page)
+   =================================== */
+
+/* === Wrapper === */
+.app-form-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.2s;
+}
+
+.app-form-wrapper:focus-within {
+    border-color: var(--primary);
+}
+
+/* === Top: message + image === */
+.app-form-top {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.app-form-text {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+.app-form-message {
+    width: 100%;
+    min-height: 68px;
+    max-height: 120px;
+    resize: none;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    padding: 0.25rem 0;
+    outline: none;
+}
+
+.app-form-message::placeholder {
+    color: var(--text-muted);
+}
+
+.app-form-charcount {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 0.125rem;
+}
+
+.app-form-charcount.near-limit {
+    color: var(--warning);
+}
+
+.app-form-charcount.at-limit {
+    color: var(--danger);
+}
+
+/* === Image preview (right side) === */
+.app-form-image-preview {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+    border-radius: 8px;
+    border: 1px dashed var(--border);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.app-form-image-preview:hover {
+    border-color: var(--text-muted);
+}
+
+.app-form-image-placeholder {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-form-image-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.app-form-image-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s;
+}
+
+.app-form-image-remove:hover {
+    background: rgba(239, 68, 68, 0.8);
+}
+
+/* === Contacts === */
+.app-form-contacts {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+}
+
+.app-form-contacts-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.app-form-contacts-label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.contact-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    background: var(--bg);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.app-form-contacts-warn {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.app-form-contacts-warn a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.app-form-contacts-warn a:hover {
+    text-decoration: underline;
+}
+
+/* === Bottom bar: attach, modpack, date, submit === */
+.app-form-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.app-form-bottom-left {
+    display: flex;
+    align-items: center;
+}
+
+.app-form-bottom-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Attach (paperclip) button */
+.app-form-attach-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.app-form-attach-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+.app-form-attach-btn.active {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* Modpack button */
+.app-form-modpack-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-form-modpack-btn:hover {
+    border-color: var(--primary);
+    color: var(--text);
+}
+
+.app-form-modpack-btn.selected {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.app-form-modpack-btn .modpack-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    object-fit: cover;
+}
+
+/* Date input */
+.app-form-date-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    transition: border-color 0.2s;
+}
+
+.app-form-date-wrapper:hover,
+.app-form-date-wrapper:focus-within {
+    border-color: var(--primary);
+}
+
+.app-form-date-input {
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.8125rem;
+    width: 120px;
+    outline: none;
+    cursor: pointer;
+}
+
+.app-form-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
+}
+
+/* === Attachments panel (sliding) === */
+.app-form-attachments {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+}
+
+.app-form-attachments.open {
+    display: block !important;
+    max-height: 300px;
+    opacity: 1;
+    margin-top: 0.75rem;
+}
+
+.app-form-attachments-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.app-form-attachment-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.app-form-attachment-label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.app-form-file-drop {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.app-form-file-hint {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.app-form-folder-input {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.8125rem !important;
+    border-radius: 6px !important;
+}
+
+/* === Guest state === */
+.app-form-guest {
+    padding: 1.25rem;
+}
+
+.app-form-guest-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+}
+
+.app-form-guest-text a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.app-form-guest-text a:hover {
+    text-decoration: underline;
+}
+
+.app-form-guest-text svg {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* === Responsive === */
+@media (max-width: 640px) {
+    .app-form-bottom {
+        flex-wrap: wrap;
+    }
+
+    .app-form-bottom-right {
+        flex-wrap: wrap;
+    }
+
+    .app-form-modpack-btn {
+        max-width: 140px;
+    }
+
+    .app-form-attachments-inner {
+        grid-template-columns: 1fr;
+    }
+
+    .app-form-image-preview {
+        width: 60px;
+        height: 60px;
+        min-width: 60px;
+    }
+}

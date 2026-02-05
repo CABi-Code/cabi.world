@@ -33,8 +33,8 @@ if (!function_exists('getAvatarStyle')) {
     <p class="hero-subtitle">Смотри заявки игроков и находи тиммейтов</p>
 </div>
 
-<!-- Временная кнопка для тестирования модпак-селектора -->
-<?php include_once TEMPLATES_PATH . '/components/modpack-selector/demo-button.php'; ?>
+<!-- Форма подачи заявки -->
+<?php include_once TEMPLATES_PATH . '/components/application-form/form.php'; ?>
 
 <?php include_once __DIR__ . '/applications/applications.php'; ?>
 

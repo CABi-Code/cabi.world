@@ -11,35 +11,41 @@ trait WarpTrait {
      * Если контакты null - будут использоваться контакты из профиля
      */
     public function create(
-        int $modpackId, 
-        int $userId, 
-        string $message, 
-        ?string $discord, 
-        ?string $telegram, 
-        ?string $vk, 
-        ?string $relevantUntil = null
+        int $modpackId,
+        int $userId,
+        string $message,
+        ?string $discord,
+        ?string $telegram,
+        ?string $vk,
+        ?string $relevantUntil = null,
+        ?int $folderItemId = null,
+        bool $autoApprove = false
     ): int {
         $message = mb_substr($message, 0, self::MAX_MESSAGE_LENGTH);
-        
+
         $dateValidation = $this->validateRelevantUntil($relevantUntil);
         if (!$dateValidation['valid']) {
             throw new \InvalidArgumentException($dateValidation['error']);
         }
-        
+
+        $status = $autoApprove ? 'accepted' : 'pending';
+
         $this->db->execute(
-            'INSERT INTO modpack_applications 
-             (modpack_id, user_id, message, char_count, relevant_until, 
-              contact_discord, contact_telegram, contact_vk, status) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, "pending")',
+            'INSERT INTO modpack_applications
+             (modpack_id, user_id, message, char_count, relevant_until,
+              contact_discord, contact_telegram, contact_vk, folder_item_id, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
-                $modpackId, 
-                $userId, 
-                $message, 
-                mb_strlen($message), 
-                $dateValidation['date'], 
-                $discord, 
-                $telegram, 
-                $vk
+                $modpackId,
+                $userId,
+                $message,
+                mb_strlen($message),
+                $dateValidation['date'],
+                $discord,
+                $telegram,
+                $vk,
+                $folderItemId,
+                $status
             ]
         );
         return $this->db->lastInsertId();
