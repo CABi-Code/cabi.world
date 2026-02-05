@@ -12,6 +12,7 @@ import { initLightbox } from './lightbox.js';
 import { initLoginForm } from './forms/login.js';
 import { initRegisterForm } from './forms/register.js';
 import { initModpackApply } from './forms/modpack-apply.js';
+import { initHomeApplication } from './forms/home-application.js';
 import { initSaveColors } from './initSaveColors.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLoginForm(csrf);
     initRegisterForm(csrf);
     initModpackApply(csrf);
+    initHomeApplication(csrf);
 
     // Сохранение цветов (градиенты баннера и аватара)
     initSaveColors(csrf);

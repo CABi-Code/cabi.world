@@ -12,10 +12,16 @@ class ApplicationValidator
     {
         $errors = [];
         
-        // Modpack ID
+        // Modpack: либо modpack_id (DB), либо modpack_external_id + modpack_platform
         $modpackId = $data['modpack_id'] ?? null;
-        if (empty($modpackId) || !is_numeric($modpackId) || (int)$modpackId <= 0) {
-            $errors['modpack_id'] = 'Invalid modpack ID';
+        $modpackExternalId = $data['modpack_external_id'] ?? null;
+        $modpackPlatform = $data['modpack_platform'] ?? null;
+
+        $hasDbId = !empty($modpackId) && is_numeric($modpackId) && (int)$modpackId > 0;
+        $hasExternal = !empty($modpackExternalId) && !empty($modpackPlatform);
+
+        if (!$hasDbId && !$hasExternal) {
+            $errors['modpack_id'] = 'Выберите модпак';
         }
         
         // Message

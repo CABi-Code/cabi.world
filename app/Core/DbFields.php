@@ -20,7 +20,7 @@ class DbFields
     
     // === Applications ===
     public const APP_BASE = 'a.id, a.modpack_id, a.user_id, a.message, a.relevant_until, a.char_count,
-        a.contact_discord, a.contact_telegram, a.contact_vk, a.status, a.is_hidden, a.created_at, a.updated_at';
+        a.contact_discord, a.contact_telegram, a.contact_vk, a.folder_item_id, a.status, a.is_hidden, a.created_at, a.updated_at';
     
     public const APP_WITH_MODPACK = self::APP_BASE . ',
         m.name as modpack_name, m.slug, m.platform, m.icon_url, m.accepted_count';

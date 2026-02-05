@@ -32,11 +32,27 @@ class ApplicationController
         }
 
         $data = $request->all();
-        $modpackId = (int)($data['modpack_id'] ?? 0);
+
+        // Разрешаем modpack: либо по DB id, либо по external_id + platform
+        $modpackId = 0;
+        if (!empty($data['modpack_platform']) && !empty($data['modpack_external_id'])) {
+            $modpackRepo = new \App\Repository\ModpackRepository();
+            $modpack = $modpackRepo->getOrCreate($data['modpack_platform'], [
+                'external_id' => $data['modpack_external_id'],
+                'slug' => $data['modpack_slug'] ?? $data['modpack_external_id'],
+                'name' => $data['modpack_name'] ?? 'Unknown',
+                'icon_url' => $data['modpack_icon_url'] ?? null,
+                'downloads' => (int)($data['modpack_downloads'] ?? 0),
+                'external_url' => $this->buildExternalUrl($data['modpack_platform'], $data['modpack_slug'] ?? $data['modpack_external_id']),
+            ]);
+            $modpackId = (int)($modpack['id'] ?? 0);
+        } else {
+            $modpackId = (int)($data['modpack_id'] ?? 0);
+        }
 
         // Валидация modpack ID
         if ($modpackId <= 0) {
-            Response::error('Invalid modpack ID', 400);
+            Response::error('Выберите модпак', 400);
             return;
         }
 
@@ -66,7 +82,23 @@ class ApplicationController
             return;
         }
 
-        // Создание заявки
+        // Валидация folder_item_id (если указан, проверяем что принадлежит пользователю)
+        $folderItemId = null;
+        if (!empty($data['folder_item_id'])) {
+            $folderItemId = (int)$data['folder_item_id'];
+            if ($folderItemId <= 0) {
+                $folderItemId = null;
+            } else {
+                $folderRepo = new \App\Repository\UserFolderRepository();
+                $folderItem = $folderRepo->getItem($folderItemId);
+                if (!$folderItem || (int)$folderItem['user_id'] !== $user['id']) {
+                    Response::error('Папка не найдена', 400);
+                    return;
+                }
+            }
+        }
+
+        // Создание заявки (временно: авто-одобрение)
         try {
             $appId = $this->appRepo->create(
                 $modpackId,
@@ -75,7 +107,9 @@ class ApplicationController
                 $discord,
                 $telegram,
                 $vk,
-                $data['relevant_until'] ?? null
+                $data['relevant_until'] ?? null,
+                $folderItemId,
+                true // autoApprove — временно все заявки одобряются автоматически
             );
 
             // Загрузка изображений
@@ -323,5 +357,14 @@ class ApplicationController
         }
 
         return $validFiles;
+    }
+
+    private function buildExternalUrl(string $platform, string $slug): string
+    {
+        return match($platform) {
+            'modrinth' => "https://modrinth.com/modpack/{$slug}",
+            'curseforge' => "https://www.curseforge.com/minecraft/modpacks/{$slug}",
+            default => '',
+        };
     }
 }
