@@ -182,17 +182,23 @@ export function initHomeApplication(csrf) {
     }
 
     function renderFolderOptions(items, select, depth) {
-        for (const item of items) {
-            if (item.item_type === 'folder') {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.textContent = '\u00A0\u00A0'.repeat(depth) + item.name;
-                select.appendChild(opt);
-                if (item.children?.length) {
-                    renderFolderOptions(item.children, select, depth + 1);
-                }
-            }
-        }
+		for (const item of items) {
+			// Проверяем правильное поле
+			//if (item.type === 'folder') {
+				const data = item.data;                    // ← берём данные из data
+
+				const opt = document.createElement('option');
+				opt.value = data.id;
+				opt.textContent = '\u00A0\u00A0\u00A0\u00A0'.repeat(depth) + data.name;
+				select.appendChild(opt);
+
+				// Рекурсия только для папок
+				if (item.children && item.children.length > 0) {
+					renderFolderOptions(item.children, select, depth + 1);
+				}
+			//}
+			// Серверы и чаты пропускаем (они не должны быть option)
+		}
     }
 
     // === Отправка формы ===

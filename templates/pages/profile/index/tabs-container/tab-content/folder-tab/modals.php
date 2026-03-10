@@ -2,6 +2,11 @@
 /**
  * Модальные окна для "Моей папки"
  */
+ 
+ 
+$userFolderRepository  = new \App\Repository\UserFolderRepository();
+
+$iconMap = $userFolderRepository->getItemsMap();
 ?>
 
 <!-- Модалка создания -->

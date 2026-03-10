@@ -84,6 +84,7 @@
         "/api/user/banner/delete",
         "/api/user/avatar",
         "/api/user/banner",
+        "^/api/application/delete/\\d+$",
         "^/api/application/\\d+$",
         "^/api/application/image/\\d+$"
     ],

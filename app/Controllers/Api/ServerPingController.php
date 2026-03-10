@@ -10,36 +10,50 @@ use App\Repository\ServerPingRepository;
 
 class ServerPingController
 {
+	use ServerPingController\SkinsTrait;
+	use ServerPingController\PingTrait;
+	use ServerPingController\MotdTrait;
+
     private ServerPingRepository $repo;
     
     public function __construct()
     {
         $this->repo = new ServerPingRepository();
     }
-    
-    /**
-     * Прокси для пинга сервера с клиента
-     */
-    public function ping(Request $request): void
-    {
-        $ip = trim($request->query('ip', ''));
-        $port = (int)$request->query('port', 25565);
-        
-        if (empty($ip)) {
-            Response::error('IP required', 400);
-            return;
-        }
-        
-        // Валидация IP/домена
-        if (!$this->isValidAddress($ip)) {
-            Response::error('Invalid address', 400);
-            return;
-        }
-        
-        // Пингуем
-        $result = $this->pingMinecraftServer($ip, $port);
-        Response::json($result);
+
+private function createCurl(string $url): \CurlHandle
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 5,
+        CURLOPT_CONNECTTIMEOUT => 3,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'MCMonitor/1.0',
+        CURLOPT_HTTPHEADER => ['Accept: application/json'],
+    ]);
+    return $ch;
+}
+
+/**
+ * Резолв SRV-записи _minecraft._tcp.<domain>
+ */
+private function resolveSrv(string $domain): ?array
+{
+    $records = @dns_get_record("_minecraft._tcp.{$domain}", DNS_SRV);
+    if (!$records || empty($records)) {
+        return null;
     }
+
+    // Берём запись с наименьшим приоритетом
+    usort($records, fn($a, $b) => $a['pri'] <=> $b['pri']);
+
+    return [
+        'target' => $records[0]['target'],
+        'port'   => $records[0]['port'],
+    ];
+}
+
     
     /**
      * Получение отчета от клиента о статусе сервера
@@ -111,77 +125,6 @@ class ServerPingController
         }
         
         return false;
-    }
-    
-    private function pingMinecraftServer(string $ip, int $port): array
-    {
-        $socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        if (!$socket) {
-            return ['online' => false, 'error' => 'Socket creation failed'];
-        }
-        
-        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
-        socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
-        
-        $result = @socket_connect($socket, $ip, $port);
-        if (!$result) {
-            socket_close($socket);
-            return ['online' => false, 'error' => 'Connection failed'];
-        }
-        
-        try {
-            // Handshake packet
-            $protocolVersion = 767; // 1.21
-            $handshake = $this->packVarInt(0) // Packet ID
-                . $this->packVarInt($protocolVersion)
-                . $this->packVarInt(strlen($ip)) . $ip
-                . pack('n', $port)
-                . $this->packVarInt(1); // Next state: status
-            
-            $packet = $this->packVarInt(strlen($handshake)) . $handshake;
-            socket_write($socket, $packet, strlen($packet));
-            
-            // Status request
-            $statusRequest = $this->packVarInt(1) . $this->packVarInt(0);
-            socket_write($socket, $statusRequest, strlen($statusRequest));
-            
-            // Read response
-            $packetLen = $this->readVarInt($socket);
-            $packetId = $this->readVarInt($socket);
-            $jsonLen = $this->readVarInt($socket);
-            
-            $response = '';
-            $remaining = $jsonLen;
-            while ($remaining > 0) {
-                $chunk = socket_read($socket, min($remaining, 4096));
-                if ($chunk === false) break;
-                $response .= $chunk;
-                $remaining -= strlen($chunk);
-            }
-            
-            socket_close($socket);
-            
-            $data = json_decode($response, true);
-            if (!$data) {
-                return ['online' => false, 'error' => 'Invalid response'];
-            }
-            
-            return [
-                'online' => true,
-                'version' => $data['version']['name'] ?? null,
-                'protocol' => $data['version']['protocol'] ?? null,
-                'players' => [
-                    'online' => $data['players']['online'] ?? 0,
-                    'max' => $data['players']['max'] ?? 0,
-                    'sample' => $data['players']['sample'] ?? []
-                ],
-                'description' => $data['description'] ?? null,
-                'favicon' => isset($data['favicon'])
-            ];
-        } catch (\Exception $e) {
-            socket_close($socket);
-            return ['online' => false, 'error' => $e->getMessage()];
-        }
     }
     
     private function packVarInt(int $value): string

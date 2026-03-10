@@ -14,6 +14,7 @@
 
 use App\Repository\UserFolderRepository;
 
+
 $itemsMap = UserFolderRepository::ITEMS_MAP;
 $iconData = $itemsMap[$item['item_type']] ?? ['icon' => 'file', 'color' => '#94a3b8'];
 $icon = $item['icon'] ?? $iconData['icon'];

@@ -4,8 +4,9 @@
  * Запускать каждую минуту: * * * * * php /path/to/cron/server-ping.php
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../app/Core/Database.php';
+require_once __DIR__ . '/../app/bootstrap.php';
+require_once ROOT_PATH . '/vendor/autoload.php';
+require_once ROOT_PATH . '/app/Core/Database.php';
 
 use App\Core\Database;
 use App\Repository\ServerPingRepository;

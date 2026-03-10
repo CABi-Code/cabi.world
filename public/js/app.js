@@ -1,5 +1,6 @@
 // js/app.js
 
+import { initApplicationDelete } from './forms/application-delete.js';
 import { initMobileNav } from './mobile-nav.js';
 import { initTheme } from './theme.js';
 import { initPasswordToggle } from './password-toggle.js';
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initRegisterForm(csrf);
     initModpackApply(csrf);
     initHomeApplication(csrf);
+	initApplicationDelete(csrf);
 
     // Сохранение цветов (градиенты баннера и аватара)
     initSaveColors(csrf);

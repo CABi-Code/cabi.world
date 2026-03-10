@@ -18,17 +18,23 @@ function copyItemLink() {
         setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
     });
 }
+</script>
+
+
+<?php if ($item['item_type'] === 'folder'): ?>
+<?php // === ЛОГИКА ДЛЯ ПАПКИ === ?>
+<?php require __DIR__ . '/js-scripts/folder.js.php'; ?>
+<?php endif; ?>
 
 <?php if ($item['item_type'] === 'server'): ?>
-// === ЛОГИКА ДЛЯ СЕРВЕРА ===
+<?php // === ЛОГИКА ДЛЯ СЕРВЕРА === ?>
 <?php require __DIR__ . '/js-scripts/server.js.php'; ?>
 <?php endif; ?>
 
 <?php if ($item['item_type'] === 'chat'): ?>
-// === ЛОГИКА ДЛЯ ЧАТА ===
+<?php // === ЛОГИКА ДЛЯ ЧАТА === ?>
 <?php require __DIR__ . '/js-scripts/chat.js.php'; ?>
 <?php endif; ?>
-</script>
 
 <?php if ($item['item_type'] === 'server'): ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>

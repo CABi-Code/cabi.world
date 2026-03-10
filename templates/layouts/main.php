@@ -36,6 +36,21 @@ if (!isset($unreadNotifications)) {
     <link rel="stylesheet" href="/css/sections/community.css">
     <link rel="stylesheet" href="/css/sections/chat.css">
     <link rel="stylesheet" href="/css/sections/my-folder.css">
+	<link href="https://cabi.world/fonts/minecraft.ttf" rel="stylesheet">
+    <style>
+        
+        @font-face {
+            font-family: 'MinecraftFont';
+            src: url('https://cabi.world/fonts/minecraft.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: block;
+        }
+
+        .font-minecraft {
+            font-family: 'MinecraftFont', 'Courier New', monospace !important;
+        }
+    </style>
 </head>
 <body>
     <?php require TEMPLATES_PATH . '/components/header.php'; ?>

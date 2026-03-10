@@ -47,45 +47,40 @@ class AuthService
         $content_reserved = file_get_contents(APP_PATH . '/Auth/login-reserved.txt');
         $reserved = explode(', ', $content_reserved);
         
-        $forbidden_keywords = ['cabi', 'admin', 'root', 'system', 'moderator', 'support', 'test'];
+        $forbidden_keywords = ['admin', 'root', 'system', 'moderator', 'support', 'test'];
         $login = strtolower($login);
         
-        if (strlen($login) < 4 || strlen($login) > 16) {
-            $errors['login'] = 'Логин должен быть от 4 до 16 символов';
-        } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $login)) {
+        if (strlen($login) < 4 || strlen($login) > 16) 
+			$errors['login'] = 'Логин должен быть от 4 до 16 символов';
+        elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $login))
             $errors['login'] = 'Логин: только буквы, цифры, - и _';
-        } elseif ($this->userRepo->loginExists($login)) {
+        elseif ($this->userRepo->loginExists($login))
             $errors['login'] = 'Логин уже занят';
-        } elseif (in_array(strtolower($login), $reserved) || array_filter($forbidden_keywords, fn($s) => str_contains(strtolower($login), $s))) {
+        elseif (in_array(strtolower($login), $reserved) || array_filter($forbidden_keywords, fn($s) => str_contains(strtolower($login), $s)))
             $errors['login'] = 'Этот логин зарезервирован';
-        }
         
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL))
             $errors['email'] = 'Некорректный email';
-        } elseif ($this->userRepo->emailExists($email)) {
+        elseif ($this->userRepo->emailExists($email))
             $errors['email'] = 'Email уже зарегистрирован';
-        }
         
-        if (strlen($password) < 8) {
-            $errors['password'] = 'Пароль минимум 8 символов';
-        }
-        
-        if (mb_strlen($username) < 2 || mb_strlen($username) > 30) {
+        if (mb_strlen($username) < 2 || mb_strlen($username) > 30)
             $errors['username'] = 'Имя от 2 до 30 символов';
-        } elseif (!preg_match('/^[\p{L}\p{N}\s]+$/u', $username)) {
+        elseif (!preg_match('/^[\p{L}\p{N}\s]+$/u', $username))
             $errors['username'] = 'Имя содержит недопустимые спецсимволы';
-        }
+
+        if (strlen($password) < 8)
+            $errors['password'] = 'Пароль минимум 8 символов';
         
-        if (!empty($errors)) {
-            return ['success' => false, 'errors' => $errors];
-        }
+        
+        if (!empty($errors)) return ['success' => false, 'errors' => $errors];
 
 		$passwordHash = password_hash($password, PASSWORD_ARGON2ID);
+		//$password = null;
+		//unset($password);
 		$userId = $this->userRepo->create($login, $email, $passwordHash, $username);
 
-		if (!$userId) {
-			return ['success' => false, 'errors' => ['general' => 'Ошибка создания']];
-		}
+		if (!$userId) return ['success' => false, 'errors' => ['general' => 'Ошибка создания']];
 		
 		$tokens = $this->generateTokens($userId, $ip, $userAgent);
 		$this->logAuth($userId, 'register', true, $ip, $userAgent);
@@ -101,19 +96,22 @@ class AuthService
 		?string $captchaToken = null
 	): array {
 		
+		$user = $this->userRepo->findForAuth($loginOrEmail);
+		//return [$userAgent, $ip, $loginOrEmail, $password, $user];
 		// Проверка капчи
 		$captchaResult = $this->turnstile->validate($captchaToken, $ip);
 		if (!$captchaResult['success']) {
 			return ['success' => false, 'errors' => ['captcha' => $captchaResult['error']]];
 		}
 
-		$user = $this->userRepo->findForAuth($loginOrEmail);
 
-		if (!$user || !password_verify($password, $user['password_hash'])) {
-			usleep(random_int(500000, 1000000));
-			return ['success' => false, 'errors' => ['general' => 'Неверный логин или пароль']];
-		}
-
+		if (!$user) return ['success' => false, 'errors' => ['general' => 'Неверный логин']];
+		if (!password_verify($password, $user['password_hash'])) return ['success' => false, 'errors' => ['general' => 'Неверный пароль']];
+		
+		
+		$password = null;
+		unset($password);
+		
 		$fullUser = $this->userRepo->findById($user['id']);
 		
 		if (!$fullUser['is_active']) {

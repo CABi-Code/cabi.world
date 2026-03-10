@@ -71,7 +71,7 @@ Router::prefix('/api')->group(function() {
         // Applications
         Router::post('/modpack/apply', [ApplicationController::class, 'create'])->middleware('csrf');
         Router::post('/application/update', [ApplicationController::class, 'update'])->middleware('csrf');
-        Router::post('/application/delete', [ApplicationController::class, 'delete'])->middleware('csrf');
+        Router::delete('/application/delete/:id', [ApplicationController::class, 'delete'])->middleware('csrf');
         Router::post('/application/:id/toggle-hidden', [ApplicationController::class, 'toggleHidden'])->middleware('csrf');
         Router::post('/application/image/:id/delete', [ApplicationController::class, 'deleteImage'])->middleware('csrf');
         

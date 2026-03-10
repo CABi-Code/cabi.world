@@ -1,109 +1,149 @@
 <script>
 window.ServerPinger = {
-    scheduleNext(serverOrPanel, isOnline, pingFn) {
-        const delay = isOnline 
-            ? 7000 + Math.random() * 10000 
-            : 50000 + Math.random() * 10000;
-
-        return setTimeout(() => {
-            pingFn().then(online => {
-                this.scheduleNext(serverOrPanel, online, pingFn);
-            });
-        }, delay);
-    },
-
-    // Общий метод пинга
+    /**
+     * Пинг через наш бэкенд (он сам делает fallback на mcsrvstat)
+     */
     async ping(ip, port) {
         try {
-            const url = `https://api.mcsrvstat.us/2/${encodeURIComponent(ip)}:${port}`;
-            const res = await fetch(url);
-
-            if (!res.ok) throw new Error('Network error');
-
-            const raw = await res.json();
+            const res = await fetch(`/api/server-ping?ip=${encodeURIComponent(ip)}&port=${port}`);
+            if (!res.ok) throw new Error('Backend error');
+            const data = await res.json();
 
             return {
-                online: raw.online === true,
+                online:  data.online === true,
+                source:  data.source || 'unknown',
+                players: {
+                    online: data.players?.online || 0,
+                    max:    data.players?.max || 0,
+                    list:   data.players?.list || data.players?.sample || []
+                },
+                version: data.version || null,
+                motd: {
+                    raw:   data.motd?.raw   || [],
+                    clean: data.motd?.clean || [],
+                    html:  data.motd?.html  || []
+                },
+                favicon:  data.favicon || null,
+                latency:  data.latency || null,
+                hostname: data.hostname || null
+            };
+        } catch (e) {
+            console.warn('Backend ping failed, trying mcsrvstat directly:', e);
+            return this.pingMcsrvstat(ip, port);
+        }
+    },
+
+    /**
+     * Прямой фоллбэк на mcsrvstat (если бэкенд недоступен)
+     */
+    async pingMcsrvstat(ip, port) {
+        try {
+            const address = port !== 25565 ? `${ip}:${port}` : ip;
+            const res = await fetch(`https://api.mcsrvstat.us/3/${encodeURIComponent(address)}`);
+            if (!res.ok) throw new Error('mcsrvstat error');
+            const raw = await res.json();
+
+            if (!raw.online) {
+                return this.offlineResult();
+            }
+
+            return {
+                online:  true,
+                source:  'mcsrvstat-direct',
                 players: {
                     online: raw.players?.online || 0,
                     max:    raw.players?.max || 0,
-                    sample: raw.players?.list || []
+                    list:   (raw.players?.list || []).map(p =>
+                        typeof p === 'string' ? { name: p } : p
+                    )
                 },
-                version: raw.version?.name || raw.version || null,
-                description: {
-                    text: raw.motd?.clean || raw.motd?.raw || raw.motd || ''
-                }
+                version:  raw.version || null,
+                motd: {
+                    raw:   raw.motd?.raw   || [],
+                    clean: raw.motd?.clean || [],
+                    html:  raw.motd?.html  || []
+                },
+                favicon:  raw.icon || null,
+                latency:  null,
+                hostname: raw.hostname || null
             };
         } catch (e) {
-            console.warn('Client ping failed:', e);
-            return {
-                online: false,
-                players: { online: 0, max: 0, sample: [] },
-                version: null,
-                description: { text: '' }
-            };
+            console.warn('mcsrvstat direct ping failed:', e);
+            return this.offlineResult();
         }
     },
-	
+
+    offlineResult() {
+        return {
+            online: false, source: 'none',
+            players: { online: 0, max: 0, list: [] },
+            version: null,
+            motd: { raw: [], clean: [], html: [] },
+            favicon: null, latency: null, hostname: null
+        };
+    },
+
     /**
-     * Общая функция обновления индикатора статуса
-     * @param {HTMLElement} indicatorEl - элемент .status-indicator или .server-status-dot
-     * @param {boolean} online
-     * @param {number} playersOnline
-     * @param {number} playersMax
+     * Планировщик следующего пинга
      */
-	updateServerIndicator(indicatorEl, baseClass, online, playersOnline = 0, playersMax = 0) {
-		if (!indicatorEl || !baseClass) return;
+    scheduleNext(context, isOnline, pingFn) {
+        const delay = isOnline
+            ? 7000  + Math.random() * 10000   // 7-17с если онлайн
+            : 50000 + Math.random() * 10000;  // 50-60с если офлайн
 
-		if (online) {
-			indicatorEl.className = `${baseClass} online pulsing`;
-			indicatorEl.classList.add('pulse');
+        return setTimeout(async () => {
+            try {
+                const online = await pingFn();
+                context.pingInterval = this.scheduleNext(context, online, pingFn);
+            } catch {
+                context.pingInterval = this.scheduleNext(context, false, pingFn);
+            }
+        }, delay);
+    },
 
-			setTimeout(() => {
-				indicatorEl.classList.remove('pulse');
-			}, 1000);
-		} else {
-			indicatorEl.className = `${baseClass} offline`;
-		}
-	},
-	
+    /**
+     * Обновление CSS-индикатора статуса
+     */
+    updateServerIndicator(el, baseClass, online, playersOnline = 0, playersMax = 0) {
+        if (!el || !baseClass) return;
+
+        if (online) {
+            el.className = `${baseClass} online pulsing`;
+            el.classList.add('pulse');
+            setTimeout(() => el.classList.remove('pulse'), 1000);
+        } else {
+            el.className = `${baseClass} offline`;
+        }
+    },
+
+    /* ── Visibility control ── */
     isVisible: true,
     visibilityHandler: null,
 
     initVisibilityControl() {
-        if (this.visibilityHandler) return; // уже инициализировано
+        if (this.visibilityHandler) return;
 
         this.visibilityHandler = () => {
             const wasVisible = this.isVisible;
             this.isVisible = document.visibilityState === 'visible';
 
             if (wasVisible && !this.isVisible) {
-                // Страница стала невидимой → полностью останавливаем все пинги
-                console.log('📴 Страница скрыта → останавливаем все пинги');
                 ServerTreePing.stopAll();
                 PanelServer.stopPinging();
-                PanelServer.cleanup?.();
-            } 
-            else if (!wasVisible && this.isVisible) {
-                // Страница снова видимая → возобновляем пинги
-                console.log('📶 Страница видима → возобновляем пинги');
+            } else if (!wasVisible && this.isVisible) {
                 setTimeout(() => {
-                    if (ServerTreePing.servers && ServerTreePing.servers.length > 0) {
+                    if (ServerTreePing.servers?.length) {
                         ServerTreePing.startPingingAll();
-						PanelServer.resume();
                     }
-                    // Панель возобновится автоматически при afterRender, если она открыта
+                    PanelServer.resume();
                 }, 500);
             }
         };
 
         document.addEventListener('visibilitychange', this.visibilityHandler);
-
-        // Дополнительно: при закрытии вкладки
         window.addEventListener('beforeunload', () => {
             ServerTreePing.stopAll();
             PanelServer.stopPinging();
-            PanelServer.cleanup?.();
         });
     }
 };
