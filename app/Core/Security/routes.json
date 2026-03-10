@@ -24,7 +24,11 @@
         "^/api/user-folder/public/.*",
         "^/api/modpack-selector/.*",
         "^/api/server-ping$",
-        "^/api/server-ping/history$"
+        "^/api/server-ping/history$",
+        "^/@[\\w\\d_-]+/[^/]+-[^/]+$",
+        "^/item/[^/]+-[^/]+$",
+        "^/@[\\w\\d_-]+/my_folder$",
+        "^/item/\\d+$"
     ],
 
     "POST": [
