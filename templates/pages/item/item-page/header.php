@@ -48,17 +48,38 @@ $itemDirectLink = $fullSlug ? '/item/' . $fullSlug : '/item/' . $item['id'];
 <?php
     $prefixMap = \App\Repository\UserFolderRepository::SLUG_PREFIXES;
     $typePrefix = $prefixMap[$item['item_type']] ?? 'string-';
+    $itemsMap = UserFolderRepository::ITEMS_MAP;
+    $iconData = $itemsMap[$item['item_type']] ?? ['color' => '#3b82f6'];
 ?>
 <div class="modal" id="itemSettingsModal" style="display:none;">
-    <div class="modal-backdrop">
-        <div class="modal-content modal-sm">
-            <div class="modal-header">
-                <h3>Настройки элемента</h3>
-                <button class="btn btn-ghost btn-icon btn-sm" data-modal-close>
-                    <svg width="18" height="18"><use href="#icon-x"/></svg>
-                </button>
-            </div>
-            <div class="modal-body">
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">Настройки</h3>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="itemSettingsForm">
+                <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
+
+                <div class="form-group">
+                    <label class="form-label">Название</label>
+                    <input type="text" name="name" class="form-input" id="itemSettingsName"
+                           value="<?= e($item['name'] ?? '') ?>" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea name="description" class="form-input" rows="2"
+                              id="itemSettingsDescription"><?= e($item['description'] ?? '') ?></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Цвет иконки</label>
+                    <input type="color" name="color" class="form-input form-color"
+                           id="itemSettingsColor" value="<?= e($item['color'] ?? $iconData['color']) ?>">
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Ссылка на элемент</label>
                     <div class="slug-input-wrapper">
@@ -73,11 +94,17 @@ $itemDirectLink = $fullSlug ? '/item/' . $fullSlug : '/item/' . $item['id'];
                     </div>
                     <div class="form-error" id="slugError" style="display:none;"></div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-ghost btn-sm" data-modal-close>Отмена</button>
-                <button class="btn btn-primary btn-sm" id="saveSlugBtn">Сохранить</button>
-            </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteItemFromPage()">
+                        <svg width="14" height="14"><use href="#icon-trash"/></svg>
+                        Удалить
+                    </button>
+                    <div style="flex:1"></div>
+                    <button type="button" class="btn btn-ghost" data-modal-close>Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

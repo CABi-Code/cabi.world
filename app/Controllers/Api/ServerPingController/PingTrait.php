@@ -4,17 +4,14 @@ namespace App\Controllers\Api\ServerPingController;
 
 use App\Http\Request;
 use App\Http\Response;
-use App\Repository\ServerPingRepository;
 
 trait PingTrait
 {
-
 	/**
 	 * Нормализация ответа mcsrvstat.us в единый формат
 	 */
 	private function normalizeMcsrvstatResponse(array $data): array
 	{
-		// Формируем список игроков
 		$rawPlayers = [];
 		if (!empty($data['players']['list'])) {
 			foreach ($data['players']['list'] as $p) {
@@ -48,18 +45,27 @@ trait PingTrait
 			'eula_blocked' => $data['eula_blocked'] ?? false,
 		];
 	}
-	
+
 	/**
-	 * Прокси для пинга сервера с клиента
+	 * Пинг одного сервера (или массовый пинг нескольких)
+	 * Одиночный: /api/server-ping?ip=...&port=...
+	 * Массовый:  /api/server-ping?servers=[{"ip":"...","port":25565},...]
 	 */
 	public function ping(Request $request): void
 	{
+		$serversParam = $request->query('servers', '');
+
+		// Массовый пинг
+		if (!empty($serversParam)) {
+			$this->bulkPing($serversParam);
+			return;
+		}
+
+		// Одиночный пинг
 		$ip = trim($request->query('ip', ''));
 		$port = (int)$request->query('port', 25565);
 		$simpl = (bool)$request->query('simpl', true);
-		
-		$result;
-		
+
 		if (empty($ip)) {
 			Response::error('IP required', 400);
 			return;
@@ -69,33 +75,49 @@ trait PingTrait
 			Response::error('Invalid address', 400);
 			return;
 		}
-		
-		// Сначала пробуем свой пинг
-		if ($simpl === true)
-			$result = $this->SimplifiedPingMinecraftServer($ip, $port);
-		else
-			$result = $this->pingMinecraftServer($ip, $port);
-		
-		
 
-		// Если свой пинг не сработал — фоллбэк на mcsrvstat.us
-		if (!$result['online']) {
-			$fallback = $this->pingViaMcsrvstat($ip, $port);
-			if ($fallback['online']) {
-				$fallback['source'] = 'mcsrvstat';
-				Response::json($fallback);
-				return;
-			}
-			// Оба не сработали — отдаём ошибку своего пинга
-			$result['source'] = 'self';
-			Response::json($result);
+		$result = $this->pingAndSave($ip, $port, $simpl);
+		Response::json($result);
+	}
+
+	/**
+	 * Массовый пинг серверов
+	 * Принимает JSON-массив серверов: [{"ip":"...","port":25565}, ...]
+	 */
+	private function bulkPing(string $serversJson): void
+	{
+		$servers = json_decode($serversJson, true);
+
+		if (!is_array($servers) || empty($servers)) {
+			Response::error('Invalid servers parameter', 400);
 			return;
 		}
 
-		$result['source'] = 'self';
-		Response::json($result);
+		// Лимит на количество серверов за раз
+		$servers = array_slice($servers, 0, 20);
+
+		$results = [];
+		foreach ($servers as $server) {
+			$ip = trim($server['ip'] ?? '');
+			$port = (int)($server['port'] ?? 25565);
+
+			if (empty($ip) || !$this->isValidAddress($ip)) {
+				$results[] = [
+					'ip' => $ip,
+					'port' => $port,
+					'online' => false,
+					'error' => 'Invalid address',
+				];
+				continue;
+			}
+
+			$result = $this->pingAndSave($ip, $port, true);
+			$results[] = $result;
+		}
+
+		Response::json(['servers' => $results]);
 	}
-	
+
 	/**
 	 * Фоллбэк-пинг через api.mcsrvstat.us
 	 */
@@ -127,13 +149,12 @@ trait PingTrait
 
 		return $this->normalizeMcsrvstatResponse($data);
 	}
-	
+
 	/**
-	 * Свой пинг — теперь возвращает расширенный формат, аналогичный mcsrvstat
+	 * Свой пинг — расширенный формат
 	 */
 	private function pingMinecraftServer(string $ip, int $port): array
 	{
-		// Резолвим SRV-запись для доменов
 		$resolvedIp = $ip;
 		$resolvedPort = $port;
 		$hostname = null;
@@ -155,7 +176,6 @@ trait PingTrait
 		socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
 		socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
 
-		// Для доменов резолвим IP через gethostbyname
 		$connectIp = filter_var($resolvedIp, FILTER_VALIDATE_IP)
 			? $resolvedIp
 			: gethostbyname($resolvedIp);
@@ -167,26 +187,22 @@ trait PingTrait
 		}
 
 		try {
-			// Замеряем латентность
 			$pingStart = microtime(true);
 
-			// Handshake packet (protocol 767 = 1.21)
 			$protocolVersion = 767;
 			$handshakeHost = $hostname ?? $ip;
 			$handshake = $this->packVarInt(0x00)
 				. $this->packVarInt($protocolVersion)
 				. $this->packVarInt(strlen($handshakeHost)) . $handshakeHost
 				. pack('n', $resolvedPort)
-				. $this->packVarInt(1); // Next state: status
+				. $this->packVarInt(1);
 
 			$packet = $this->packVarInt(strlen($handshake)) . $handshake;
 			socket_write($socket, $packet, strlen($packet));
 
-			// Status request
 			$statusRequest = $this->packVarInt(1) . $this->packVarInt(0x00);
 			socket_write($socket, $statusRequest, strlen($statusRequest));
 
-			// Read response
 			$packetLen = $this->readVarInt($socket);
 			$packetId = $this->readVarInt($socket);
 			$jsonLen = $this->readVarInt($socket);
@@ -201,7 +217,6 @@ trait PingTrait
 			}
 
 			$latency = round((microtime(true) - $pingStart) * 1000);
-
 			socket_close($socket);
 
 			$data = json_decode($response, true);
@@ -209,10 +224,8 @@ trait PingTrait
 				return ['online' => false, 'error' => 'Invalid response'];
 			}
 
-			// Парсим MOTD
 			$motd = $this->parseMotd($data['description'] ?? '');
 
-			// Парсим список игроков
 			$playersList = [];
 			if (!empty($data['players']['sample'])) {
 				foreach ($data['players']['sample'] as $p) {
@@ -222,8 +235,7 @@ trait PingTrait
 					];
 				}
 			}
-		
-			// Резолвим скины игроков
+
 			$playersWithSkins = $this->resolvePlayerSkins($playersList);
 			return [
 				'online'       => true,
@@ -247,10 +259,9 @@ trait PingTrait
 			return ['online' => false, 'error' => $e->getMessage()];
 		}
 	}
-	
+
 	private function SimplifiedPingMinecraftServer(string $ip, int $port): array
 	{
-		// Резолвим SRV-запись для доменов
 		$resolvedIp = $ip;
 		$resolvedPort = $port;
 		$hostname = null;
@@ -272,7 +283,6 @@ trait PingTrait
 		socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 5, 'usec' => 0]);
 		socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 5, 'usec' => 0]);
 
-		// Для доменов резолвим IP через gethostbyname
 		$connectIp = filter_var($resolvedIp, FILTER_VALIDATE_IP)
 			? $resolvedIp
 			: gethostbyname($resolvedIp);
@@ -284,23 +294,20 @@ trait PingTrait
 		}
 
 		try {
-			// Handshake packet (protocol 767 = 1.21)
 			$protocolVersion = 767;
 			$handshakeHost = $hostname ?? $ip;
 			$handshake = $this->packVarInt(0x00)
 				. $this->packVarInt($protocolVersion)
 				. $this->packVarInt(strlen($handshakeHost)) . $handshakeHost
 				. pack('n', $resolvedPort)
-				. $this->packVarInt(1); // Next state: status
+				. $this->packVarInt(1);
 
 			$packet = $this->packVarInt(strlen($handshake)) . $handshake;
 			socket_write($socket, $packet, strlen($packet));
 
-			// Status request
 			$statusRequest = $this->packVarInt(1) . $this->packVarInt(0x00);
 			socket_write($socket, $statusRequest, strlen($statusRequest));
 
-			// Read response
 			$packetLen = $this->readVarInt($socket);
 			$packetId = $this->readVarInt($socket);
 			$jsonLen = $this->readVarInt($socket);
@@ -339,5 +346,4 @@ trait PingTrait
 			return ['online' => false, 'error' => $e->getMessage()];
 		}
 	}
-	
 }

@@ -5,134 +5,139 @@ namespace App\Repository\ServerPingRepository;
 trait StatusTrait
 {
     /**
-     * Сохранить статус сервера
-     * Эффективно: не дублирует данные если они не изменились
+     * Сохранить статус сервера (привязка к global_servers)
      */
-    public function saveStatus(int $itemId, array $data): bool
+    public function saveStatus(int $serverId, array $data, ?int $itemId = null): bool
     {
-        // Получаем последний статус
-        $last = $this->getLastStatus($itemId);
-        
+        // Получаем последний полный статус
+        $last = $this->getLastStatus($serverId);
+
         // Проверяем, изменились ли данные
         $hasChanged = $this->hasStatusChanged($last, $data);
-        
-        // Обновляем текущий статус в user_folder_items
-        $this->updateItemStatus($itemId, $data);
-        
+
+        // Обновляем глобальный сервер
+        $this->updateGlobalServer($serverId, $data);
+
         // Записываем в историю
         if ($hasChanged) {
-            // Полная запись с новыми данными
-            $this->insertHistoryRecord($itemId, $data, false);
+            $this->insertHistoryRecord($serverId, $data, false, $itemId);
         } else {
-            // Только отметка времени (данные те же)
-            $this->insertHistoryRecord($itemId, $data, true);
+            // Оптимизация: при неизменных данных сохраняем только отметку времени
+            $this->insertHistoryRecord($serverId, $data, true, $itemId);
         }
-        
+
         return true;
     }
-    
+
     /**
-     * Получить последний статус сервера
+     * Получить последний полный статус сервера (из history)
      */
-    public function getLastStatus(int $itemId): ?array
+    public function getLastStatus(int $serverId): ?array
     {
         return $this->db->fetchOne(
-            "SELECT * FROM server_ping_history 
-             WHERE item_id = ? AND is_same_as_previous = 0 
+            "SELECT * FROM server_ping_history
+             WHERE server_id = ? AND is_same_as_previous = 0
              ORDER BY checked_at DESC LIMIT 1",
-            [$itemId]
+            [$serverId]
         );
     }
-    
+
     /**
-     * Получить текущий статус сервера из items
+     * Получить текущий статус из global_servers
      */
-    public function getCurrentStatus(int $itemId): ?array
+    public function getCurrentStatus(int $serverId): ?array
     {
-        $item = $this->db->fetchOne(
-            "SELECT settings FROM user_folder_items WHERE id = ?",
-            [$itemId]
+        return $this->db->fetchOne(
+            "SELECT * FROM global_servers WHERE id = ?",
+            [$serverId]
         );
-        
-        if (!$item || !$item['settings']) return null;
-        
-        $settings = json_decode($item['settings'], true);
-        return $settings['status'] ?? null;
     }
-    
+
     /**
      * Проверить, изменился ли статус
      */
     private function hasStatusChanged(?array $last, array $current): bool
     {
         if (!$last) return true;
-        
-        // Сравниваем ключевые поля
+
         if ((bool)$last['is_online'] !== (bool)$current['online']) return true;
-        if ((int)$last['players_online'] !== (int)$current['players_online']) return true;
-        if ((int)$last['players_max'] !== (int)$current['players_max']) return true;
-        
+        if ((int)($last['players_online'] ?? 0) !== (int)$current['players_online']) return true;
+        if ((int)($last['players_max'] ?? 0) !== (int)$current['players_max']) return true;
+
         // Сравниваем список игроков
         $lastPlayers = $last['players_sample'] ? json_decode($last['players_sample'], true) : [];
         $currentPlayers = $current['players_sample'] ?? [];
-        
+
         $lastNames = array_column($lastPlayers, 'name');
         $currentNames = array_column($currentPlayers, 'name');
-        
+
         sort($lastNames);
         sort($currentNames);
-        
+
         if ($lastNames !== $currentNames) return true;
-        
+
         return false;
     }
-    
+
     /**
-     * Обновить статус в настройках элемента
+     * Обновить глобальный сервер
      */
-    private function updateItemStatus(int $itemId, array $data): void
-    {
-        $item = $this->db->fetchOne(
-            "SELECT settings FROM user_folder_items WHERE id = ?",
-            [$itemId]
-        );
-        
-        if (!$item) return;
-        
-        $settings = $item['settings'] ? json_decode($item['settings'], true) : [];
-        $settings['status'] = [
-            'online' => $data['online'],
-            'players_online' => $data['players_online'],
-            'players_max' => $data['players_max'],
-            'version' => $data['version'] ?? null,
-            'last_check' => date('Y-m-d H:i:s')
-        ];
-        
-        $this->db->execute(
-            "UPDATE user_folder_items SET settings = ? WHERE id = ?",
-            [json_encode($settings), $itemId]
-        );
-    }
-    
-    /**
-     * Вставить запись в историю
-     */
-    private function insertHistoryRecord(int $itemId, array $data, bool $isSame): void
+    private function updateGlobalServer(int $serverId, array $data): void
     {
         $this->db->execute(
-            "INSERT INTO server_ping_history 
-             (item_id, is_online, players_online, players_max, players_sample, version, source, is_same_as_previous, checked_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())",
+            "UPDATE global_servers SET
+                is_online = ?, players_online = ?, players_max = ?,
+                players_sample = ?, version = ?,
+                favicon = ?, last_check = NOW()
+             WHERE id = ?",
             [
-                $itemId,
                 $data['online'] ? 1 : 0,
-                $data['players_online'],
-                $data['players_max'],
+                $data['players_online'] ?? 0,
+                $data['players_max'] ?? 0,
                 json_encode($data['players_sample'] ?? []),
                 $data['version'] ?? null,
-                $data['source'] ?? 'unknown',
-                $isSame ? 1 : 0
+                $data['favicon'] ?? null,
+                $serverId
             ]
         );
+    }
+
+    /**
+     * Вставить запись в историю
+     * При is_same_as_previous=1 не сохраняем дублирующие данные (NULL)
+     */
+    private function insertHistoryRecord(int $serverId, array $data, bool $isSame, ?int $itemId = null): void
+    {
+        if ($isSame) {
+            // Оптимизация: только отметка времени и флаг
+            $this->db->execute(
+                "INSERT INTO server_ping_history
+                 (server_id, item_id, is_online, players_online, players_max, players_sample, version, source, is_same_as_previous, checked_at)
+                 VALUES (?, ?, ?, NULL, NULL, NULL, NULL, ?, 1, NOW())",
+                [
+                    $serverId,
+                    $itemId,
+                    $data['online'] ? 1 : 0,
+                    $data['source'] ?? 'server'
+                ]
+            );
+        } else {
+            // Полная запись
+            $this->db->execute(
+                "INSERT INTO server_ping_history
+                 (server_id, item_id, is_online, players_online, players_max, players_sample, version, source, is_same_as_previous, checked_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())",
+                [
+                    $serverId,
+                    $itemId,
+                    $data['online'] ? 1 : 0,
+                    $data['players_online'],
+                    $data['players_max'],
+                    json_encode($data['players_sample'] ?? []),
+                    $data['version'] ?? null,
+                    $data['source'] ?? 'server'
+                ]
+            );
+        }
     }
 }

@@ -33,11 +33,14 @@ class ItemController extends BaseController
             return;
         }
 
-        // Если у элемента есть slug, редиректим на slug URL
+        // Редирект на /@username/:slug
         if (!empty($item['slug'])) {
-            $fullSlug = UserFolderRepository::getFullSlug($item['item_type'], $item['slug']);
-            header('Location: /item/' . $fullSlug, true, 301);
-            exit;
+            $owner = $this->userRepo->findById($item['user_id']);
+            if ($owner) {
+                $fullSlug = UserFolderRepository::getFullSlug($item['item_type'], $item['slug']);
+                header('Location: /@' . $owner['login'] . '/' . $fullSlug, true, 301);
+                exit;
+            }
         }
 
         // Fallback: показываем страницу напрямую
@@ -46,10 +49,10 @@ class ItemController extends BaseController
 
     /**
      * Страница элемента по slug (прямая ссылка /item/:slug)
+     * Перенаправляет на /@username/:slug
      */
     public function showBySlug(Request $request, string $slug): void
     {
-        // slug приходит с префиксом типа: folder-abc123
         $rawSlug = $this->extractSlugFromFull($slug);
 
         if (!$rawSlug) {
@@ -62,6 +65,14 @@ class ItemController extends BaseController
         if (!$item) {
             $this->notFound('Элемент не найден');
             return;
+        }
+
+        // Редирект на /@username/:slug
+        $owner = $this->userRepo->findById($item['user_id']);
+        if ($owner) {
+            $fullSlug = UserFolderRepository::getFullSlug($item['item_type'], $item['slug']);
+            header('Location: /@' . $owner['login'] . '/' . $fullSlug, true, 301);
+            exit;
         }
 
         $this->renderItemPage($request, $item);

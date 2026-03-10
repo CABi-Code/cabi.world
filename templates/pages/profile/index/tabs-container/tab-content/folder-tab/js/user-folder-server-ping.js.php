@@ -2,10 +2,13 @@
 window.ServerTreePing = {
     servers: [],
     intervals: new Map(),
+    bulkInterval: null,
 
     init() {
         this.collectServers();
-        this.startPingingAll();
+        if (this.servers.length > 0) {
+            this.bulkPingAll();
+        }
     },
 
     collectServers() {
@@ -17,17 +20,61 @@ window.ServerTreePing = {
                     id:      item.dataset.id,
                     ip:      dot.dataset.ip,
                     port:    parseInt(dot.dataset.port) || 25565,
-                    element: item
+                    element: item,
+                    online:  false
                 });
             }
         });
     },
 
+    // Массовый пинг всех серверов одним запросом
+    async bulkPingAll() {
+        if (this.servers.length === 0) return;
+
+        try {
+            const serverList = this.servers.map(s => ({ ip: s.ip, port: s.port }));
+            const params = new URLSearchParams();
+            params.set('servers', JSON.stringify(serverList));
+
+            const res = await fetch(`/api/server-ping?${params}`);
+            if (!res.ok) throw new Error('Bulk ping failed');
+            const data = await res.json();
+
+            const results = data.servers || [];
+            results.forEach((result, idx) => {
+                if (idx < this.servers.length) {
+                    this.servers[idx].online = result.online;
+                    this.updateTreeItem(this.servers[idx], result);
+                }
+            });
+        } catch (e) {
+            // Фоллбэк на поштучный пинг
+            this.startPingingAll();
+            return;
+        }
+
+        // Следующий массовый пинг
+        this.scheduleBulkNext();
+    },
+
+    scheduleBulkNext() {
+        if (this.bulkInterval) clearTimeout(this.bulkInterval);
+
+        // Если есть онлайн серверы — чаще, иначе — реже
+        const hasOnline = this.servers.some(s => s.online);
+        const delay = hasOnline
+            ? 15000 + Math.random() * 10000   // 15-25с
+            : 60000 + Math.random() * 20000;  // 60-80с
+
+        this.bulkInterval = setTimeout(() => this.bulkPingAll(), delay);
+    },
+
+    // Фоллбэк: поштучный пинг
     startPingingAll() {
         this.servers.forEach(server => {
             ServerPinger.ping(server.ip, server.port).then(data => {
+                server.online = data.online;
                 this.updateTreeItem(server, data);
-                this.reportToServer(server.id, data);
                 this.scheduleNext(server, data.online);
             }).catch(() => {
                 this.scheduleNext(server, false);
@@ -46,8 +93,8 @@ window.ServerTreePing = {
 
         const timeout = setTimeout(() => {
             ServerPinger.ping(server.ip, server.port).then(data => {
+                server.online = data.online;
                 this.updateTreeItem(server, data);
-                this.reportToServer(server.id, data);
                 this.scheduleNext(server, data.online);
             }).catch(() => {
                 this.updateTreeItem(server, ServerPinger.offlineResult());
@@ -79,30 +126,13 @@ window.ServerTreePing = {
         }
     },
 
-    async reportToServer(itemId, data) {
-        if (!window.csrf) return;
-        try {
-            await fetch('/api/server-ping/report', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': window.csrf
-                },
-                body: JSON.stringify({
-                    item_id:        itemId,
-                    online:         data.online,
-                    players_online: data.players?.online || 0,
-                    players_max:    data.players?.max || 0,
-                    players_sample: data.players?.list || [],
-                    version:        data.version || null
-                })
-            });
-        } catch (e) { /* ignore */ }
-    },
-
     stopAll() {
         this.intervals.forEach(t => clearTimeout(t));
         this.intervals.clear();
+        if (this.bulkInterval) {
+            clearTimeout(this.bulkInterval);
+            this.bulkInterval = null;
+        }
     }
 };
 

@@ -6,6 +6,7 @@
  */
 $ip = $settings['ip'] ?? '';
 $port = $settings['port'] ?? 25565;
+$serverId = $settings['server_id'] ?? 0;
 ?>
 
 <script>
@@ -13,6 +14,7 @@ $port = $settings['port'] ?? 25565;
     const serverIp = '<?= e($ip) ?>';
     const serverPort = <?= (int)$port ?>;
     const serverItemId = <?= (int)($item['id'] ?? 0) ?>;
+    const globalServerId = <?= (int)$serverId ?>;
     let pingInterval = null;
     let chart = null;
 
@@ -30,13 +32,8 @@ $port = $settings['port'] ?? 25565;
         document.head.appendChild(style);
     }
 
-    // ── Пинг (автономный, с фоллбэком на ServerPinger) ──
+    // ── Пинг через серверный эндпоинт (данные сохраняются автоматически) ──
     async function doPing(ip, port) {
-        // Если ServerPinger доступен — используем его
-        if (typeof ServerPinger !== 'undefined') {
-            return ServerPinger.ping(ip, port);
-        }
-        // Иначе — прямой запрос к бэкенду
         try {
             const res = await fetch(`/api/server-ping?ip=${encodeURIComponent(ip)}&port=${port}&simpl=0`);
             if (!res.ok) throw new Error('Backend error');
@@ -59,35 +56,7 @@ $port = $settings['port'] ?? 25565;
                 source:   data.source || 'backend'
             };
         } catch (e) {
-            // Последний фоллбэк — прямой запрос к mcsrvstat
-            try {
-                const addr = port !== 25565 ? `${ip}:${port}` : ip;
-                const res = await fetch(`https://api.mcsrvstat.us/3/${encodeURIComponent(addr)}`);
-                if (!res.ok) throw new Error('mcsrvstat error');
-                const raw = await res.json();
-                if (!raw.online) return offlineResult();
-                return {
-                    online: true,
-                    players: {
-                        online: raw.players?.online || 0,
-                        max:    raw.players?.max || 0,
-                        list:   (raw.players?.list || []).map(p =>
-                            typeof p === 'string' ? { name: p } : p
-                        )
-                    },
-                    version:  raw.version || null,
-                    motd:     {
-                        raw:   raw.motd?.raw || [],
-                        clean: raw.motd?.clean || [],
-                        html:  raw.motd?.html || []
-                    },
-                    favicon:  raw.icon || null,
-                    latency:  null,
-                    source:   'mcsrvstat-direct'
-                };
-            } catch {
-                return offlineResult();
-            }
+            return offlineResult();
         }
     }
 
@@ -101,19 +70,18 @@ $port = $settings['port'] ?? 25565;
         };
     }
 
-    // ── Главный пинг ──
+    // ── Главный пинг (данные сохраняются сервером автоматически) ──
     async function pingServer() {
         try {
             const data = await doPing(serverIp, serverPort);
             updateServerUI(data);
-            reportStatus(data);
             return data.online;
         } catch {
             updateServerUI(offlineResult());
             return false;
         }
     }
-	
+
     // ── Игроки с сортировкой и скинами ──
     function renderPlayersList(players) {
         const section   = document.getElementById('serverPlayersSection');
@@ -173,9 +141,6 @@ $port = $settings['port'] ?? 25565;
         }).join('');
     }
 
-
-
-
 // ── MOTD с масштабированием ──
 function renderMotd(motd) {
     const section = document.getElementById('serverMotdSection');
@@ -200,162 +165,82 @@ function renderMotd(motd) {
 function processLine(line) {
     const temp = document.createElement('div');
     temp.innerHTML = line;
-
-    // Находим все span с font-weight: bold
     const boldSpans = temp.querySelectorAll('span[style*="font-weight: bold"], span[style*="font-weight:bold"]');
-
-    // Обрабатываем все bold-спаны
     boldSpans.forEach(span => {
         span.classList.add('bold-simulated');
-        span.style.fontWeight = ''; // Убираем настоящий bold
+        span.style.fontWeight = '';
     });
-
     return temp.innerHTML;
 }
 
 function processMotdText(el) {
-    // Берём все прямые дочерние span'ы
     const directSpans = Array.from(el.children).filter(child => child.tagName === 'SPAN');
-    
-    // === НАСТРОЙКИ ===
-    const DEBUG_SHOW_SPACES = false;
-    
     const normalLetterSpacing = '0px';
     const normalWordSpacing   = '4px';
-    
     const boldLetterSpacing   = '2px';
     const boldWordSpacing     = '6px';
-    
     const darkenFactor = 0.25;
-    
-    const boldThickenShifts = [
-        {x: 1.90, y: 0},
-        {x: 2.10, y: 0},
-        {x: 2.00, y: 0},
-    ];
-    
-    const boldShadowShifts = [
-        {x: 2, y: 2},
-        {x: 4, y: 2},
-    ];
-    // =================
+    const boldThickenShifts = [{x: 1.90, y: 0}, {x: 2.10, y: 0}, {x: 2.00, y: 0}];
+    const boldShadowShifts = [{x: 2, y: 2}, {x: 4, y: 2}];
 
-    // Базовые стили
     el.style.letterSpacing = normalLetterSpacing;
     el.style.wordSpacing   = normalWordSpacing;
     el.style.textShadow    = 'none';
 
     for (let i = 0; i < directSpans.length; i++) {
         const span = directSpans[i];
-        
-        // Проверяем, является ли сам span жирным
         const isBold = span.classList.contains('bold-simulated');
-        
         const computedStyle = getComputedStyle(span);
         const textColor     = computedStyle.color;
         const shadowColor   = darkenColor(textColor, darkenFactor);
 
         if (isBold) {
             span.style.textShadow = 'none';
-            
             let textContent = span.textContent;
             let trailingSpace = '';
-            
-            // Проверяем, есть ли trailing пробел
             if (textContent.endsWith(' ')) {
                 trailingSpace = ' ';
                 textContent = textContent.trimEnd();
-                span.textContent = textContent; // Удаляем пробел из span
+                span.textContent = textContent;
             }
-            
-            // DEBUG: Визуализация пробелов
-            if (DEBUG_SHOW_SPACES) {
-                span.textContent = span.textContent.replace(/ /g, '·');
-                textContent = textContent.replace(/ /g, '·');
-            }
-            
-            const wrapper = document.createElement('span');
-            wrapper.style.cssText = `
-                display: inline-block;
-                position: relative;
-                white-space: nowrap;
-                transform: translateZ(0);
-                backface-visibility: hidden;
-                -webkit-font-smoothing: antialiased;
-            `;
 
+            const wrapper = document.createElement('span');
+            wrapper.style.cssText = `display:inline-block;position:relative;white-space:nowrap;transform:translateZ(0);backface-visibility:hidden;-webkit-font-smoothing:antialiased;`;
             span.parentNode.insertBefore(wrapper, span);
             wrapper.appendChild(span);
-
             span.style.position = 'relative';
-            span.style.zIndex   = '10';
-            span.style.color    = textColor;
+            span.style.zIndex = '10';
+            span.style.color = textColor;
             span.style.letterSpacing = boldLetterSpacing;
-            span.style.wordSpacing   = boldWordSpacing;
+            span.style.wordSpacing = boldWordSpacing;
 
-            // Утолщение текста
             boldThickenShifts.forEach(shift => {
                 const thickenSpan = document.createElement('span');
                 thickenSpan.textContent = textContent;
-                thickenSpan.style.cssText = `
-                    position: absolute;
-                    left: ${shift.x}px;
-                    top: ${shift.y}px;
-                    color: ${textColor};
-                    z-index: 9;
-                    pointer-events: none;
-                    letter-spacing: ${boldLetterSpacing};
-                    word-spacing: ${boldWordSpacing};
-                    user-select: none;
-                `;
+                thickenSpan.style.cssText = `position:absolute;left:${shift.x}px;top:${shift.y}px;color:${textColor};z-index:9;pointer-events:none;letter-spacing:${boldLetterSpacing};word-spacing:${boldWordSpacing};user-select:none;`;
                 thickenSpan.setAttribute('aria-hidden', 'true');
                 wrapper.appendChild(thickenSpan);
             });
-
-            // Тени
             boldShadowShifts.forEach(shift => {
                 const shadowSpan = document.createElement('span');
                 shadowSpan.textContent = textContent;
-                shadowSpan.style.cssText = `
-                    position: absolute;
-                    left: ${shift.x}px;
-                    top: ${shift.y}px;
-                    color: ${shadowColor};
-                    z-index: 1;
-                    pointer-events: none;
-                    letter-spacing: ${boldLetterSpacing};
-                    word-spacing: ${boldWordSpacing};
-                    user-select: none;
-                `;
+                shadowSpan.style.cssText = `position:absolute;left:${shift.x}px;top:${shift.y}px;color:${shadowColor};z-index:1;pointer-events:none;letter-spacing:${boldLetterSpacing};word-spacing:${boldWordSpacing};user-select:none;`;
                 shadowSpan.setAttribute('aria-hidden', 'true');
                 wrapper.appendChild(shadowSpan);
             });
-
-            // Если был trailing пробел, добавляем его ПОСЛЕ wrapper
             if (trailingSpace) {
                 const spaceNode = document.createTextNode(trailingSpace);
                 wrapper.parentNode.insertBefore(spaceNode, wrapper.nextSibling);
             }
-
         } else {
-            // DEBUG: Визуализация пробелов
-            if (DEBUG_SHOW_SPACES) {
-                span.textContent = span.textContent.replace(/ /g, '·');
-            }
-            
             span.style.textShadow = `2px 2px 0 ${shadowColor}`;
         }
     }
-
-    requestAnimationFrame(() => {
-        el.style.opacity = '1';
-        scaleMotd();
-    });
+    requestAnimationFrame(() => { el.style.opacity = '1'; scaleMotd(); });
 }
 
 function darkenColor(color, factor = 0.25) {
     let r, g, b;
-    
     if (color.startsWith('rgb')) {
         const matches = color.match(/\d+/g);
         [r, g, b] = matches.map(v => parseInt(v));
@@ -363,10 +248,7 @@ function darkenColor(color, factor = 0.25) {
         r = parseInt(color.slice(1, 3), 16);
         g = parseInt(color.slice(3, 5), 16);
         b = parseInt(color.slice(5, 7), 16);
-    } else {
-        return color;
-    }
-    
+    } else { return color; }
     return `rgb(${Math.floor(r * factor)}, ${Math.floor(g * factor)}, ${Math.floor(b * factor)})`;
 }
 
@@ -374,15 +256,12 @@ function scaleMotd() {
     const wrapper = document.getElementById('serverMotdWrapper');
     const motd    = document.getElementById('serverMotd');
     if (!wrapper || !motd) return;
-
     motd.style.transform = 'none';
     wrapper.style.height = 'auto';
-
     requestAnimationFrame(() => {
         const cw = wrapper.clientWidth;
         const actualW = motd.offsetWidth;
         const actualH = motd.offsetHeight;
-
         if (actualW > cw) {
             const scale = cw / actualW;
             motd.style.transform = `scale(${scale})`;
@@ -396,6 +275,7 @@ function scaleMotd() {
 
 window.addEventListener('resize', scaleMotd);
 
+// ── Обновление UI с favicon ──
 function updateServerUI(data) {
     const statusEl = document.getElementById('serverStatus');
     if (!statusEl) return;
@@ -403,22 +283,23 @@ function updateServerUI(data) {
     const dot  = statusEl.querySelector('.status-dot');
     const text = statusEl.querySelector('.status-text');
 
+    // Обновление favicon
+    if (data.favicon) {
+        updateServerFavicon(data.favicon);
+    }
+
     if (data.online) {
         dot.className = 'status-dot online pulsing';
         text.textContent = `Онлайн · ${data.players.online}/${data.players.max}`;
-
         const verEl = document.getElementById('statVersion');
         if (verEl) verEl.textContent = data.version || '-';
-
         const countEl = document.getElementById('statPlayers');
         if (countEl) countEl.textContent = `${data.players.online}/${data.players.max}`;
-
         renderPlayersList(data.players?.list || []);
         renderMotd(data.motd);
     } else {
         dot.className = 'status-dot offline';
         text.textContent = 'Офлайн';
-
         ['serverPlayersSection', 'serverMotdSection'].forEach(id => {
             const section = document.getElementById(id);
             if (section) section.style.display = 'none';
@@ -426,58 +307,32 @@ function updateServerUI(data) {
     }
 }
 
-
-//===================================================================
+function updateServerFavicon(faviconData) {
+    const el = document.getElementById('serverFavicon');
+    if (el && faviconData) {
+        el.src = faviconData;
+        el.closest('.server-favicon-wrapper')?.classList.add('has-favicon');
+    }
+}
 
     // ── Превью скина ──
     window.showSkinPreview = function(el) {
         const skinData = el?.dataset?.skin;
         if (!skinData) return;
-
         document.getElementById('skinPreviewOverlay')?.remove();
-
         const overlay = document.createElement('div');
         overlay.id = 'skinPreviewOverlay';
-        overlay.style.cssText = `
-            position:fixed; inset:0; z-index:9999;
-            background:rgba(0,0,0,0.7);
-            display:flex; align-items:center; justify-content:center;
-            cursor:pointer;
-        `;
+        overlay.style.cssText = `position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;cursor:pointer;`;
         overlay.onclick = () => overlay.remove();
         overlay.innerHTML = `
-            <div style="background:#1a1a1a; border-radius:12px; padding:20px;
-                text-align:center; max-width:300px;" onclick="event.stopPropagation()">
-                <img src="${skinData}"
-                     style="image-rendering:pixelated; width:192px; height:auto; border-radius:4px;">
-                <div style="color:#888; font-size:12px; margin-top:10px;">
-                    Текстура скина · Клик вне окна для закрытия
-                </div>
-            </div>
-        `;
+            <div style="background:#1a1a1a;border-radius:12px;padding:20px;text-align:center;max-width:300px;" onclick="event.stopPropagation()">
+                <img src="${skinData}" style="image-rendering:pixelated;width:192px;height:auto;border-radius:4px;">
+                <div style="color:#888;font-size:12px;margin-top:10px;">Текстура скина · Клик вне окна для закрытия</div>
+            </div>`;
         document.body.appendChild(overlay);
     };
 
-    // ── Отчёт на бэкенд ──
-    async function reportStatus(data) {
-        if (!window.csrf) return;
-        try {
-            await fetch('/api/server-ping/report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrf },
-                body: JSON.stringify({
-                    item_id:        serverItemId,
-                    online:         data.online,
-                    players_online: data.players?.online || 0,
-                    players_max:    data.players?.max || 0,
-                    players_sample: data.players?.list || [],
-                    version:        data.version || null
-                })
-            });
-        } catch { /* ignore */ }
-    }
-
-    // ── Автопинг с адаптивным интервалом ──
+    // ── Автопинг ──
     function startPinging() {
         pingServer().then(online => scheduleNext(online));
     }
@@ -493,33 +348,45 @@ function updateServerUI(data) {
     }
 
     function stopPinging() {
-        if (pingInterval) {
-            clearTimeout(pingInterval);
-            pingInterval = null;
-        }
+        if (pingInterval) { clearTimeout(pingInterval); pingInterval = null; }
     }
 
-    // ── График ──
+    // ── Улучшенный график ──
     async function loadChart(hours) {
         try {
-            const res = await fetch(`/api/server-ping/history?item_id=${serverItemId}&hours=${hours}`);
+            const params = new URLSearchParams();
+            if (globalServerId) params.set('server_id', globalServerId);
+            else params.set('item_id', serverItemId);
+            params.set('hours', hours);
+            const res = await fetch(`/api/server-ping/history?${params}`);
             const data = await res.json();
-            renderChart(data.history || []);
+            renderChart(data.history || [], hours);
         } catch (e) {
             console.error('Failed to load chart:', e);
         }
     }
 
-    function renderChart(history) {
+    function renderChart(history, hours) {
         const ctx = document.getElementById('onlineChart');
         if (!ctx) return;
         if (chart) chart.destroy();
 
-        const labels  = history.map(h => {
+        if (history.length === 0) {
+            const container = ctx.parentElement;
+            container.innerHTML = '<div style="text-align:center;color:#666;padding:40px 0;">Нет данных за этот период</div><canvas id="onlineChart"></canvas>';
+            chart = null;
+            return;
+        }
+
+        const labels = history.map(h => {
             const t = h.time || '';
+            if (hours === 0 || hours > 168) return t.length >= 10 ? t.substring(5, 10) : t;
+            if (hours > 24) return t.length >= 16 ? t.substring(5, 16) : t;
             return t.length >= 16 ? t.substring(11, 16) : t;
         });
-        const players = history.map(h => h.players ?? h.players_online ?? 0);
+        const players = history.map(h => h.players ?? 0);
+        const onlineStatus = history.map(h => h.online);
+        const maxPlayers = Math.max(...players, 1);
 
         chart = new Chart(ctx, {
             type: 'line',
@@ -529,32 +396,80 @@ function updateServerUI(data) {
                     label: 'Игроков онлайн',
                     data: players,
                     borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    backgroundColor: function(context) {
+                        const c = context.chart;
+                        const {ctx: cx, chartArea} = c;
+                        if (!chartArea) return 'rgba(59,130,246,0.1)';
+                        const g = cx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        g.addColorStop(0, 'rgba(59,130,246,0.02)');
+                        g.addColorStop(1, 'rgba(59,130,246,0.2)');
+                        return g;
+                    },
                     fill: true,
-                    tension: 0.3,
-                    pointRadius: 2
+                    tension: 0.4,
+                    pointRadius: history.length > 100 ? 0 : 2,
+                    pointHoverRadius: 4,
+                    pointBackgroundColor: onlineStatus.map(o => o ? '#3b82f6' : '#ef4444'),
+                    borderWidth: 2,
+                    segment: {
+                        borderColor: function(ctx) {
+                            return onlineStatus[ctx.p1DataIndex] ? '#3b82f6' : '#ef4444';
+                        }
+                    }
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#ddd',
+                        borderColor: 'rgba(59,130,246,0.3)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 10,
+                        callbacks: {
+                            label: function(item) {
+                                const status = onlineStatus[item.dataIndex] ? 'Онлайн' : 'Офлайн';
+                                return `${status} · ${item.raw} игроков`;
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                    x: { ticks: { maxTicksLimit: 20 } }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: maxPlayers <= 10 ? 1 : undefined,
+                            color: '#666',
+                            font: { size: 11 }
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: hours > 168 || hours === 0 ? 10 : 20,
+                            color: '#666',
+                            font: { size: 10 },
+                            maxRotation: 45,
+                        },
+                        grid: { display: false }
+                    }
                 }
             }
         });
     }
 
-    // ── Утилиты ──
     function escHtml(str) {
         const d = document.createElement('div');
         d.textContent = str || '';
         return d.innerHTML;
     }
 
-    // Глобальная функция для onclick в HTML
     window.copyServerIp = function() {
         const address = serverPort !== 25565 ? `${serverIp}:${serverPort}` : serverIp;
         navigator.clipboard.writeText(address).then(() => {
@@ -569,19 +484,13 @@ function updateServerUI(data) {
         });
     };
 
-    // ── Visibility control (автономный) ──
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            stopPinging();
-        } else if (document.visibilityState === 'visible' && serverIp) {
-            startPinging();
-        }
+        if (document.visibilityState === 'hidden') stopPinging();
+        else if (document.visibilityState === 'visible' && serverIp) startPinging();
     });
 
-    // Ресайз → пересчёт MOTD
     window.addEventListener('resize', scaleMotd);
 
-    // ── Init ──
     document.addEventListener('DOMContentLoaded', () => {
         if (serverIp) {
             startPinging();

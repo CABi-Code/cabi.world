@@ -15,6 +15,20 @@ window.PanelServer = {
 
         if (settings.ip) {
             const port = settings.port && settings.port !== 25565 ? ':' + settings.port : '';
+
+            // Favicon + мини-иконка
+            html += `<div id="panelFaviconWrapper" style="display:none;margin:8px 0;">
+                <div style="position:relative;width:48px;height:48px;flex-shrink:0;">
+                    <img id="panelServerFavicon" src="" alt="Server icon"
+                         style="width:48px;height:48px;border-radius:8px;image-rendering:pixelated;object-fit:cover;">
+                    <span style="position:absolute;bottom:-4px;left:-4px;width:22px;height:22px;border-radius:6px;
+                                 background:var(--bg-primary,#1a1a2e);display:flex;align-items:center;justify-content:center;
+                                 box-shadow:0 0 0 2px rgba(0,0,0,0.4);z-index:2;color:${item.color || '#f59e0b'};">
+                        <svg width="14" height="14"><use href="#icon-${item.icon || 'server'}"/></svg>
+                    </span>
+                </div>
+            </div>`;
+
             html += `<div class="panel-server-info" id="serverInfoBlock"
                 data-ip="${esc(settings.ip)}"
                 data-port="${settings.port || 25565}"
@@ -131,7 +145,6 @@ window.PanelServer = {
             if (this.currentServerId != itemId) return false;
             const data = await this._ping(ip, port);
             this.updateStatus(data, itemId);
-            this.sendStatusToServer(itemId, data);
             return data.online;
         };
 
@@ -187,6 +200,16 @@ window.PanelServer = {
             indicator.className = data.online
                 ? 'status-indicator online pulsing'
                 : 'status-indicator offline';
+        }
+
+        // Favicon
+        if (data.favicon) {
+            const faviconEl = document.getElementById('panelServerFavicon');
+            const wrapperEl = document.getElementById('panelFaviconWrapper');
+            if (faviconEl && wrapperEl) {
+                faviconEl.src = data.favicon;
+                wrapperEl.style.display = '';
+            }
         }
 
         if (data.online) {
@@ -346,27 +369,7 @@ window.PanelServer = {
         }
     },
 
-    // ── Репорт ──
-    async sendStatusToServer(itemId, data) {
-        if (!window.csrf) return;
-        try {
-            await fetch('/api/server-ping/report', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': window.csrf
-                },
-                body: JSON.stringify({
-                    item_id:        itemId,
-                    online:         data.online,
-                    players_online: data.players?.online || 0,
-                    players_max:    data.players?.max || 0,
-                    players_sample: data.players?.list || [],
-                    version:        data.version || null
-                })
-            });
-        } catch (e) { /* ignore */ }
-    },
+    // Репорт удалён — сервер сохраняет данные автоматически при пинге
 
     cleanup() {
         this.stopPinging();

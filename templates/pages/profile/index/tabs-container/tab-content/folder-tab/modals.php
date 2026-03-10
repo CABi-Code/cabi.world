@@ -67,7 +67,7 @@ $iconMap = $userFolderRepository->getItemsMap();
     </div>
 </div>
 
-<!-- Модалка настроек -->
+<!-- Модалка настроек (единая для профиля и страницы элемента) -->
 <div class="modal" id="folderSettingsModal" style="display:none;">
     <div class="modal-backdrop" data-modal-close></div>
     <div class="modal-content modal-sm">
@@ -78,22 +78,42 @@ $iconMap = $userFolderRepository->getItemsMap();
         <div class="modal-body">
             <form id="folderSettingsForm">
                 <input type="hidden" name="id" id="settingsFormId">
-                
+
                 <div class="form-group">
                     <label class="form-label">Название</label>
                     <input type="text" name="name" class="form-input" id="settingsFormName" maxlength="100">
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">Описание</label>
                     <textarea name="description" class="form-input" rows="2" id="settingsFormDescription"></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">Цвет иконки</label>
                     <input type="color" name="color" class="form-input form-color" id="settingsFormColor" value="#3b82f6">
                 </div>
-                
+
+                <div class="form-group">
+                    <label class="form-label">Ссылка на элемент</label>
+                    <div class="slug-input-wrapper">
+                        <span class="slug-prefix" id="settingsSlugPrefix">server-</span>
+                        <input type="text" class="form-input slug-input" id="settingsSlugInput"
+                               placeholder="уникальная-ссылка" maxlength="80">
+                    </div>
+                    <div class="form-hint">
+                        Полная ссылка: <code id="settingsSlugPreview">/item/...</code>
+                    </div>
+                    <div class="form-error" id="settingsSlugError" style="display:none;"></div>
+                </div>
+
+                <div class="form-group" id="settingsHiddenGroup" style="display:none;">
+                    <label class="form-label" style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="settingsFormHidden" name="is_hidden">
+                        Скрыть элемент
+                    </label>
+                </div>
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-danger btn-sm" onclick="deleteItem()">
                         <svg width="14" height="14"><use href="#icon-trash"/></svg>

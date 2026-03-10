@@ -25,13 +25,9 @@ Router::get('/item/:slug', [ItemController::class, 'showBySlug'])
 Router::get('/item/:id', [ItemController::class, 'show'])
     ->where('id', '[0-9]+');
 
-// Server Ping - публичные
+// Server Ping - публичные (report удалён, пинг сохраняет данные на сервере)
 Router::get('/api/server-ping', [ServerPingController::class, 'ping']);
 Router::get('/api/server-ping/history', [ServerPingController::class, 'history']);
-
-// Server Ping - отправка отчета (с CSRF)
-Router::post('/api/server-ping/report', [ServerPingController::class, 'report'])
-    ->middleware('csrf');
 
 Router::post('/api/captcha/solve', [CaptchaController::class, 'solve'])
     ->middleware('csrf');
