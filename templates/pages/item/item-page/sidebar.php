@@ -39,8 +39,7 @@
             </div>
         <?php endif; ?>
     </div>
-    
-    <!-- Владелец элемента -->
+    <!-- Владелец элемента 
     <div class="sidebar-section">
         <div class="sidebar-title">Владелец</div>
         <a href="/@<?= e($owner['login']) ?>" class="owner-card">
@@ -57,4 +56,5 @@
             </div>
         </a>
     </div>
+	-->
 </aside>
