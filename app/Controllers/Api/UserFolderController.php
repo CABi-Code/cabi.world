@@ -7,14 +7,17 @@ namespace App\Controllers\Api;
 use App\Http\Request;
 use App\Http\Response;
 use App\Repository\UserFolderRepository;
+use App\Repository\GlobalServerRepository;
 
 class UserFolderController
 {
     private UserFolderRepository $repo;
+    private GlobalServerRepository $globalServerRepo;
 
     public function __construct()
     {
         $this->repo = new UserFolderRepository();
+        $this->globalServerRepo = new GlobalServerRepository();
     }
 
     // ========== ПУБЛИЧНЫЕ МЕТОДЫ (без авторизации) ==========
@@ -132,14 +135,22 @@ class UserFolderController
             'reference_type' => $request->get('reference_type'),
         ];
         
-        // Для сервера - дополнительные данные в settings
+        // Для сервера - создаём/ищем глобальный сервер, ссылаемся на него
         if ($type === 'server') {
+            $serverIp = trim($request->get('server_ip', ''));
+            $serverPort = (int)$request->get('server_port', 25565);
+            if (empty($serverIp)) {
+                Response::error('Server IP is required', 400);
+                return;
+            }
+            $globalServer = $this->globalServerRepo->findOrCreate($serverIp, $serverPort);
             $data['settings'] = [
-                'ip' => $request->get('server_ip'),
-                'port' => $request->get('server_port', 25565),
+                'ip' => $serverIp,
+                'port' => $serverPort,
+                'server_id' => $globalServer['id'],
             ];
         }
-        
+
         $id = $this->repo->createItem($user['id'], $type, $name, $parentId, $data);
         Response::json(['id' => $id, 'success' => true]);
     }

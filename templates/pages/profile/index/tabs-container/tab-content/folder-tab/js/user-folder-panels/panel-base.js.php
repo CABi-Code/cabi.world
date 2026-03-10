@@ -61,8 +61,7 @@ window.PanelBase = {
                 <svg width="24" height="24"><use href="#icon-${esc(icon)}"/></svg>
             </span>
             <h3 class="panel-title">${esc(item.name)}</h3>
-            <!-- <button class="panel-link-btn" onclick="PanelBase.copyItemLink(${item.id})" title="Копировать ссылку"> -->
-            <button class="panel-link-btn" onclick="window.open(window.location.origin + '/item/' + ${item.id}, '_blank')" title="Открыть ссылку">
+            <button class="panel-link-btn" onclick="window.location.href='/item/' + ${item.id}" title="Открыть ссылку">
                 <svg width="14" height="14"><use href="#icon-link"/></svg>
             </button>
         </div>`;

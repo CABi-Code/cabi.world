@@ -71,7 +71,6 @@
         "/api/user-folder/unsubscribe",
         "/api/user-folder/show-application",
         "/api/user-folder/hide-application",
-        "/api/server-ping/report",
         "/api/admin/application/status",
         "/api/admin/application/delete",
         "^/api/admin/application/\\d+/modal$",

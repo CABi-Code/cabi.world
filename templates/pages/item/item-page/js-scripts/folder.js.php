@@ -106,7 +106,6 @@ $port = $settings['port'] ?? 25565;
         try {
             const data = await doPing(serverIp, serverPort);
             updateServerUI(data);
-            reportStatus(data);
             return data.online;
         } catch {
             updateServerUI(offlineResult());
@@ -458,24 +457,7 @@ function updateServerUI(data) {
         document.body.appendChild(overlay);
     };
 
-    // ── Отчёт на бэкенд ──
-    async function reportStatus(data) {
-        if (!window.csrf) return;
-        try {
-            await fetch('/api/server-ping/report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrf },
-                body: JSON.stringify({
-                    item_id:        serverItemId,
-                    online:         data.online,
-                    players_online: data.players?.online || 0,
-                    players_max:    data.players?.max || 0,
-                    players_sample: data.players?.list || [],
-                    version:        data.version || null
-                })
-            });
-        } catch { /* ignore */ }
-    }
+    // Репорт удалён — сервер сохраняет данные автоматически при пинге
 
     // ── Автопинг с адаптивным интервалом ──
     function startPinging() {

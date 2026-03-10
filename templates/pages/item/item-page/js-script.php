@@ -41,14 +41,29 @@ async function deleteApp(id) {
     location.reload();
 }
 
+// Удалить элемент со страницы
+async function deleteItemFromPage() {
+    if (!itemId || !confirm('Удалить элемент и всё содержимое?')) return;
+    const res = await fetch('/api/user-folder/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ id: itemId })
+    });
+    if (res.ok) {
+        window.location.href = '/@<?= e($owner['login'] ?? '') ?>';
+    } else {
+        alert((await res.json()).error || 'Ошибка удаления');
+    }
+}
+
 <?php if ($isOwner && ($item['id'] ?? 0) > 0): ?>
-// Настройки элемента: сохранение slug
+// Настройки элемента: единая форма (название, описание, цвет, slug)
 (function() {
     const slugInput = document.getElementById('itemSlugInput');
     const slugPreview = document.getElementById('slugPreview');
     const slugError = document.getElementById('slugError');
-    const saveBtn = document.getElementById('saveSlugBtn');
     const typePrefix = '<?= e($prefixMap[$item['item_type']] ?? 'string-') ?>';
+    const settingsForm = document.getElementById('itemSettingsForm');
 
     if (slugInput) {
         slugInput.addEventListener('input', () => {
@@ -59,36 +74,53 @@ async function deleteApp(id) {
         });
     }
 
-    if (saveBtn) {
-        saveBtn.addEventListener('click', async () => {
-            const slug = slugInput.value.trim();
-            saveBtn.disabled = true;
-            saveBtn.textContent = '...';
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(settingsForm);
+            const name = fd.get('name');
+            const description = fd.get('description');
+            const color = fd.get('color');
+            const slug = (slugInput?.value || '').trim();
 
             try {
-                const res = await fetch('/api/user-folder/update-slug', {
+                // Сохраняем основные данные
+                const updateRes = await fetch('/api/user-folder/update', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': csrf
-                    },
-                    body: JSON.stringify({ id: itemId, slug: slug })
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                    body: JSON.stringify({
+                        id: itemId, name, description, color
+                    })
                 });
-                const result = await res.json();
 
-                if (res.ok && result.success) {
+                if (!updateRes.ok) {
+                    const err = await updateRes.json();
+                    alert(err.error || 'Ошибка сохранения');
+                    return;
+                }
+
+                // Сохраняем slug если он изменился
+                const originalSlug = '<?= e($item['slug'] ?? '') ?>';
+                if (slug && slug !== originalSlug) {
+                    const slugRes = await fetch('/api/user-folder/update-slug', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                        body: JSON.stringify({ id: itemId, slug: slug })
+                    });
+                    const slugResult = await slugRes.json();
+                    if (!slugRes.ok) {
+                        slugError.textContent = slugResult.error || 'Ошибка сохранения ссылки';
+                        slugError.style.display = 'block';
+                        return;
+                    }
                     // Редирект на новый URL
                     window.location.href = '/item/' + typePrefix + slug;
-                } else {
-                    slugError.textContent = result.error || 'Ошибка сохранения';
-                    slugError.style.display = 'block';
+                    return;
                 }
+
+                location.reload();
             } catch (err) {
-                slugError.textContent = 'Ошибка сети';
-                slugError.style.display = 'block';
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Сохранить';
+                alert('Ошибка сети');
             }
         });
     }
@@ -98,17 +130,14 @@ async function deleteApp(id) {
 
 
 <?php if ($item['item_type'] === 'folder'): ?>
-<?php // === ЛОГИКА ДЛЯ ПАПКИ === ?>
 <?php require __DIR__ . '/js-scripts/folder.js.php'; ?>
 <?php endif; ?>
 
 <?php if ($item['item_type'] === 'server'): ?>
-<?php // === ЛОГИКА ДЛЯ СЕРВЕРА === ?>
 <?php require __DIR__ . '/js-scripts/server.js.php'; ?>
 <?php endif; ?>
 
 <?php if ($item['item_type'] === 'chat'): ?>
-<?php // === ЛОГИКА ДЛЯ ЧАТА === ?>
 <?php require __DIR__ . '/js-scripts/chat.js.php'; ?>
 <?php endif; ?>
 
