@@ -24,7 +24,7 @@
         <?php else: ?>
             <div class="sidebar-subscriptions" id="sidebarSubscriptions">
                 <?php foreach ($subscriptions as $sub): ?>
-                    <a href="/@<?= e($sub['login']) ?>?tab=folder" 
+                    <a href="/@<?= e($sub['login']) ?>/my_folder"
                        class="subscription-item <?= $sub['id'] === $owner['id'] ? 'active' : '' ?>">
                         <div class="sub-avatar" style="<?= $sub['avatar'] ? '' : 'background:linear-gradient(135deg,' . ($sub['avatar_bg_value'] ?? '#3b82f6,#8b5cf6') . ')' ?>">
                             <?php if ($sub['avatar']): ?>

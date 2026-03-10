@@ -34,7 +34,16 @@ if ($type === 'server' && $item['settings']) {
 	draggable="<?= $isOwner ? 'true' : 'false' ?>">
     <span class="app-date"><?= date('d.m.Y H:i', strtotime($app['created_at'])) ?></span>
     <span class="app-date">
-			<div onclick="window.open(window.location.origin + '/item/' + <?= $item['id'] ?>, '_blank')" style="padding-left: <?= $depth * 16 ?>px;">				
+<?php
+                $footerItemSlug = $item['slug'] ?? null;
+                if ($footerItemSlug) {
+                    $footerFullSlug = \App\Repository\UserFolderRepository::getFullSlug($type, $footerItemSlug);
+                    $footerItemUrl = '/item/' . $footerFullSlug;
+                } else {
+                    $footerItemUrl = '/item/' . $item['id'];
+                }
+            ?>
+			<div onclick="window.open(window.location.origin + '<?= e($footerItemUrl) ?>', '_blank')" style="padding-left: <?= $depth * 16 ?>px;">				
 				<div class="span-move">
 					<span class="folder-icon" style="color: <?= e($color) ?>;">
 					  <svg width="16" height="16"><use href="#icon-<?= e($icon) ?>"/></svg>

@@ -10,6 +10,7 @@ use App\Controllers\Web\ModpackController;
 use App\Controllers\Web\SettingsController;
 use App\Controllers\Web\ChatController;
 use App\Controllers\Web\AdminController;
+use App\Controllers\Web\ItemController;
 
 // Главная страница
 Router::get('/', [HomeController::class, 'index']);
@@ -27,6 +28,13 @@ Router::get('/logout', [AuthController::class, 'logout']);
 
 // Профиль
 Router::get('/@:username', [ProfileController::class, 'show']);
+
+// Страница "Моя папка" в обёртке item-page
+Router::get('/@:username/my_folder', [ItemController::class, 'myFolder']);
+
+// Страница элемента по slug (/@user/folder-my-slug)
+Router::get('/@:username/:slug', [ItemController::class, 'showByUserSlug'])
+    ->where('slug', '[a-zA-Z]+-[a-zA-Z0-9_-]+');
 
 // Настройки
 Router::get('/settings', [SettingsController::class, 'index'])->middleware('auth');

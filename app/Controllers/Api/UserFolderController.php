@@ -234,4 +234,32 @@ class UserFolderController
         if (!$user) { Response::error('Unauthorized', 401); return; }
         Response::json(['success' => $this->repo->hideApplication((int)$request->get('application_id'), $user['id'])]);
     }
+
+    /**
+     * Обновить slug элемента (настройка ссылки)
+     */
+    public function updateSlug(Request $request): void
+    {
+        $user = $request->user();
+        if (!$user) { Response::error('Unauthorized', 401); return; }
+
+        $id = (int)$request->get('id');
+        $slug = trim($request->get('slug', ''));
+
+        $item = $this->repo->getItemByUser($id, $user['id']);
+        if (!$item) {
+            Response::error('Элемент не найден', 404);
+            return;
+        }
+
+        // Валидация slug
+        $error = $this->repo->validateSlug($slug, $id);
+        if ($error) {
+            Response::error($error, 400);
+            return;
+        }
+
+        $success = $this->repo->updateSlug($id, $user['id'], $slug);
+        Response::json(['success' => $success]);
+    }
 }

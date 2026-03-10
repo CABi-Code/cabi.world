@@ -22,7 +22,43 @@ class StatsRepository
         foreach ($rows as $row) {
             $stats[$row['stat_key']] = (int) $row['stat_value'];
         }
+
+        // Если записей нет или все нули — инициализируем и пересчитываем
+        $expectedKeys = ['users_count', 'modpacks_count', 'applications_count'];
+        $needsInit = empty($stats);
+        if (!$needsInit) {
+            $allZero = true;
+            foreach ($expectedKeys as $key) {
+                if (($stats[$key] ?? 0) > 0) { $allZero = false; break; }
+            }
+            $needsInit = $allZero;
+        }
+
+        if ($needsInit) {
+            $this->ensureStatsRows();
+            $this->recalculate();
+            $rows = $this->db->fetchAll('SELECT stat_key, stat_value FROM site_stats');
+            $stats = [];
+            foreach ($rows as $row) {
+                $stats[$row['stat_key']] = (int) $row['stat_value'];
+            }
+        }
+
         return $stats;
+    }
+
+    /**
+     * Убедиться, что строки stats существуют в таблице
+     */
+    public function ensureStatsRows(): void
+    {
+        $keys = ['users_count', 'modpacks_count', 'applications_count'];
+        foreach ($keys as $key) {
+            $exists = $this->db->fetchOne('SELECT id FROM site_stats WHERE stat_key = ?', [$key]);
+            if (!$exists) {
+                $this->db->execute('INSERT INTO site_stats (stat_key, stat_value) VALUES (?, 0)', [$key]);
+            }
+        }
     }
 
     public function get(string $key): int

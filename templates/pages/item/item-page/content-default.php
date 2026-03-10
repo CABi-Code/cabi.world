@@ -2,8 +2,11 @@
 /**
  * Контент элемента по умолчанию
  * @var array $item
+ * @var array $owner
  * @var array $children
  */
+
+use App\Repository\UserFolderRepository;
 ?>
 <div class="item-content">
     <?php if (!empty($children)): ?>
@@ -14,8 +17,15 @@
                     <?php
                     $childIcon = $child['icon'] ?? ($itemsMap[$child['item_type']]['icon'] ?? 'file');
                     $childColor = $child['color'] ?? ($itemsMap[$child['item_type']]['color'] ?? '#94a3b8');
+                    $childSlug = $child['slug'] ?? null;
+                    if ($childSlug) {
+                        $childFullSlug = UserFolderRepository::getFullSlug($child['item_type'], $childSlug);
+                        $childUrl = '/@' . $owner['login'] . '/' . $childFullSlug;
+                    } else {
+                        $childUrl = '/item/' . $child['id'];
+                    }
                     ?>
-                    <a href="/item/<?= $child['id'] ?>" class="child-card">
+                    <a href="<?= e($childUrl) ?>" class="child-card">
                         <span class="child-icon" style="color: <?= e($childColor) ?>">
                             <svg width="20" height="20"><use href="#icon-<?= e($childIcon) ?>"/></svg>
                         </span>

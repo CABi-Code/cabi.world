@@ -6,8 +6,8 @@
 
 // Toggle application visibility
 async function toggleHidden(id) {
-    await fetch('/api/application/toggle-hidden', {
-        method: 'POST', 
+    await fetch('/api/application/' + id + '/toggle-hidden', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         body: JSON.stringify({ id })
     });
@@ -17,8 +17,8 @@ async function toggleHidden(id) {
 // Delete application
 async function deleteApp(id) {
     if (!confirm('Удалить заявку?')) return;
-    await fetch('/api/application/delete', {
-        method: 'POST', 
+    await fetch('/api/application/delete/' + id, {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         body: JSON.stringify({ id })
     });
