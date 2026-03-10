@@ -17,7 +17,11 @@ use App\Controllers\Api\ModpackSelectorController;
 use App\Controllers\Api\ServerPingController;
 use App\Controllers\Web\ItemController;
 
-// Страница отдельного элемента папки
+// Страница отдельного элемента папки (прямая ссылка по slug)
+Router::get('/item/:slug', [ItemController::class, 'showBySlug'])
+    ->where('slug', '[a-zA-Z]+-[a-zA-Z0-9_-]+');
+
+// Обратная совместимость: /item/:id (числовой) → редирект на slug
 Router::get('/item/:id', [ItemController::class, 'show'])
     ->where('id', '[0-9]+');
 
@@ -101,6 +105,7 @@ Router::prefix('/api')->group(function() {
         Router::post('/user-folder/unsubscribe', [UserFolderController::class, 'unsubscribe'])->middleware('csrf');
         Router::post('/user-folder/show-application', [UserFolderController::class, 'showApplication'])->middleware('csrf');
         Router::post('/user-folder/hide-application', [UserFolderController::class, 'hideApplication'])->middleware('csrf');
+        Router::post('/user-folder/update-slug', [UserFolderController::class, 'updateSlug'])->middleware('csrf');
         
         // Community routes
         Router::post('/community/create', [CommunityController::class, 'create'])->middleware('csrf');

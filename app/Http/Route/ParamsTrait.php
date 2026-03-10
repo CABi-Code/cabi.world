@@ -22,21 +22,28 @@ trait ParamsTrait
     public function extractParams(string $uri): array
     {
         $pattern = $this->buildPattern();
-        
+
         if (preg_match($pattern, $uri, $matches)) {
             array_shift($matches);
             return array_combine($this->params, $matches) ?: [];
         }
-        
+
         return [];
     }
 
     /**
      * Строит регулярное выражение для пути
+     * Учитывает constraints из where()
      */
     private function buildPattern(): string
     {
-        $pattern = preg_replace('/:(\w+)/', '([^/]+)', $this->path);
+        $pattern = $this->path;
+
+        foreach ($this->params as $param) {
+            $constraint = $this->constraints[$param] ?? '[^/]+';
+            $pattern = str_replace(':' . $param, '(' . $constraint . ')', $pattern);
+        }
+
         return '#^' . $pattern . '$#';
     }
 }

@@ -20,6 +20,19 @@ class UserFolderRepository
     public const ELEMENT_TYPES = ['server', 'chat', 'application', 'shortcut'];
     public const CATEGORY_MAIN_APPS = 'main_applications';
     public const CATEGORY_MODPACKS = 'modpacks';
+
+    /**
+     * Маппинг типов элементов → префиксы для slug URL
+     */
+    public const SLUG_PREFIXES = [
+        'folder'      => 'folder-',
+        'server'      => 'server-',
+        'shortcut'    => 'shortcut-',
+        'mod'         => 'mod-',
+        'modpack'     => 'modpack-',
+        'chat'        => 'chat-',
+        'application' => 'string-',
+    ];
     public const ITEMS_MAP = [
 		'folder' => ['icon' => 'folder', 'color' => '#eab308', 
 					'label' => 'Папка', 'descriptions' => 'Группируйте элементы'],

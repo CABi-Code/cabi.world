@@ -20,10 +20,14 @@
     let selectedFiles = [];    // Новые файлы
     let existingImages = [];   // Существующие изображения из БД
     
-    // === Закрытие модального окна ===
+    // === Закрытие модального окна (через единую систему модалок) ===
     modal.querySelectorAll('[data-close]').forEach(el => {
         el.addEventListener('click', () => {
-            modal.style.display = 'none';
+            if (window.closeModal) {
+                window.closeModal(modal);
+            } else {
+                modal.style.display = 'none';
+            }
             resetForm();
         });
     });
@@ -348,6 +352,11 @@
             charCounter.textContent = messageField.value.length;
         }
         
-        modal.style.display = 'flex';
+        // Открытие через единую систему модалок
+        if (window.openModal) {
+            window.openModal(modal);
+        } else {
+            modal.style.display = 'flex';
+        }
     };
 })();

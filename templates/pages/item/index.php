@@ -19,7 +19,9 @@ $itemsMap = UserFolderRepository::ITEMS_MAP;
 $iconData = $itemsMap[$item['item_type']] ?? ['icon' => 'file', 'color' => '#94a3b8'];
 $icon = $item['icon'] ?? $iconData['icon'];
 $color = $item['color'] ?? $iconData['color'];
-$settings = $item['settings'] ? json_decode($item['settings'], true) : [];
+$isMyFolder = $isMyFolder ?? false;
+$settings = !empty($item['settings']) ? json_decode($item['settings'], true) : [];
+$prefixMap = UserFolderRepository::SLUG_PREFIXES;
 ?>
 
 <div class="item-page">

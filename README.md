@@ -269,10 +269,13 @@ cabi.world/
 | `/forgot-password` | `Web\AuthController` | Восстановление пароля |
 | `/logout` | `Web\AuthController` | Выход из аккаунта |
 | `/@:username` | `Web\ProfileController` | Профиль пользователя |
+| `/@:username/my_folder` | `Web\ItemController` | Корневая папка пользователя |
+| `/@:username/:slug` | `Web\ItemController` | Элемент папки по slug в контексте пользователя |
 | `/settings` | `Web\SettingsController` | Настройки профиля (требует авторизации) |
 | `/chat/:chatId` | `Web\ChatController` | Страница чата (требует авторизации) |
 | `/admin` | `Web\AdminController` | Админ-панель (только для админов) |
-| `/item/:id` | `Web\ItemController` | Страница элемента папки |
+| `/item/:slug` | `Web\ItemController` | Страница элемента папки (по slug, прямая ссылка) |
+| `/item/:id` | `Web\ItemController` | Обратная совместимость (редирект на slug) |
 
 ## API-эндпоинты
 
@@ -337,10 +340,86 @@ cabi.world/
 
 ## Архитектурные особенности
 
-- **Роутинг**: собственный роутер (`App\Http\Router`) со статическими методами `get/post/put/delete`, поддержкой групп, префиксов, middleware и параметров (`:id`, `:slug`)
+- **Роутинг**: собственный роутер (`App\Http\Router`) со статическими методами `get/post/put/delete`, поддержкой групп, префиксов, middleware и параметров (`:id`, `:slug`). Метод `where()` маршрута задаёт regex-ограничение на параметр, которое применяется при построении паттерна в `buildPattern()`.
 - **Middleware**: цепочка — `auth`, `guest`, `admin`, `csrf`, `rate_limit:N,T`
 - **Шаблоны**: чистый PHP с `render()` / `view()`, layouts + вложенные компоненты
 - **Repository pattern**: вся работа с БД через репозитории с trait-ами для группировки логики
 - **Пользовательские папки**: иерархическая структура (closure table `folder_paths`), типы элементов: `folder`, `server`, `shortcut`, `modpack`, `mod`, `application`, `chat`
 - **Серверный пинг**: клиентский + серверный (cron) пинг Minecraft-серверов с историей
 - **Безопасность**: CSRF-токены, bcrypt-пароли, JWT с версионированием, rate limiting с капчей, XSS-экранирование через `e()`
+
+## Система модальных окон (конструктор)
+
+Все модальные окна на сайте **должны** работать через единую систему (`public/js/modules/modal.js`). Это обеспечивает единообразное поведение: анимации, закрытие по Escape, клик по backdrop, фокус первого поля, блокировку скролла.
+
+### API единой системы модалок
+
+| Функция | Описание |
+|---------|----------|
+| `openModal(modal)` | Открыть модалку (элемент или ID строкой) |
+| `closeModal(modal)` | Закрыть модалку с анимацией |
+| `loadModal(url, options)` | Загрузить модалку с сервера и открыть |
+| `lockBodyScroll()` | Заблокировать скролл body |
+| `unlockBodyScroll()` | Разблокировать скролл body |
+
+### Data-атрибуты для триггеров
+
+- `data-modal-open="modalId"` — открытие существующей модалки по ID
+- `data-modal-load="url"` — динамическая загрузка модалки с сервера
+- `data-modal-close` или `data-close` — закрытие текущей модалки
+
+### Создание новой модалки
+
+Любая модалка должна следовать структуре:
+```html
+<div class="modal" id="myModal" style="display:none;">
+    <div class="modal-backdrop">
+        <div class="modal-content modal-sm|modal-md|modal-lg">
+            <div class="modal-header">
+                <h3>Заголовок</h3>
+                <button data-modal-close>×</button>
+            </div>
+            <div class="modal-body">...</div>
+            <div class="modal-footer">...</div>
+        </div>
+    </div>
+</div>
+```
+
+Открытие: через `data-modal-open="myModal"` на кнопке или `openModal('myModal')` из JS.
+
+## UUID-hash ссылки на элементы (slug)
+
+Каждый элемент папки (`user_folder_items`) имеет поле `slug` — уникальный короткий идентификатор, генерируемый при создании (хэш из ID + время + тип + имя).
+
+### Формат URL
+
+| URL | Описание |
+|-----|----------|
+| `/@:username/:prefix-:slug` | Страница элемента в контексте пользователя |
+| `/item/:prefix-:slug` | Прямая ссылка (для копирования/шеринга) |
+| `/@:username/my_folder` | Корневая папка пользователя |
+| `/item/:id` | Обратная совместимость (редирект на slug) |
+
+### Префиксы типов (неизменяемые)
+
+| Тип элемента | Префикс |
+|-------------|---------|
+| `folder` | `folder-` |
+| `server` | `server-` |
+| `shortcut` | `shortcut-` |
+| `mod` | `mod-` |
+| `modpack` | `modpack-` |
+| `chat` | `chat-` |
+| `application` | `string-` |
+
+Префикс типа нельзя изменить. Slug (часть после префикса) можно изменить в настройках элемента. Валидация slug: минимум 3 символа, латиница + цифры + дефис + подчёркивание, проверка по `login-reserved.txt`, уникальность.
+
+### Важно для разработки
+
+- Константа `SLUG_PREFIXES` определена в `UserFolderRepository` и `ItemsTrait`
+- Метод `getFullSlug($type, $slug)` возвращает полный slug с префиксом
+- Метод `getChildrenByParent($parentId)` — для публичного получения дочерних элементов (без user_id)
+- Метод `getChildren($userId, $parentId)` — для авторизованных запросов (с проверкой user_id)
+- Счётчики в footer (`site_stats`) автоинициализируются при первом запросе, если таблица пуста
+- API-маршруты для заявок: `/api/application/:id/toggle-hidden` (POST), `/api/application/delete/:id` (DELETE) — ID передаётся в URL, не в теле запроса
