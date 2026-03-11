@@ -16,19 +16,6 @@ window.PanelServer = {
         if (settings.ip) {
             const port = settings.port && settings.port !== 25565 ? ':' + settings.port : '';
 
-            // Favicon + мини-иконка
-            html += `<div id="panelFaviconWrapper" style="display:none;margin:8px 0;">
-                <div style="position:relative;width:48px;height:48px;flex-shrink:0;">
-                    <img id="panelServerFavicon" src="" alt="Server icon"
-                         style="width:48px;height:48px;border-radius:8px;image-rendering:pixelated;object-fit:cover;">
-                    <span style="position:absolute;bottom:-4px;left:-4px;width:22px;height:22px;border-radius:6px;
-                                 background:var(--bg-primary,#1a1a2e);display:flex;align-items:center;justify-content:center;
-                                 box-shadow:0 0 0 2px rgba(0,0,0,0.4);z-index:2;color:${item.color || '#f59e0b'};">
-                        <svg width="14" height="14"><use href="#icon-${item.icon || 'server'}"/></svg>
-                    </span>
-                </div>
-            </div>`;
-
             html += `<div class="panel-server-info" id="serverInfoBlock"
                 data-ip="${esc(settings.ip)}"
                 data-port="${settings.port || 25565}"
@@ -56,30 +43,6 @@ window.PanelServer = {
                 <span class="status-text">Проверка...</span>
             </div>
             <div class="server-version" id="serverVersion"></div>
-        </div>`;
-
-        // MOTD
-        html += `<div id="panelMotdSection" style="display:none; margin:8px 0;">
-            <div id="panelMotdWrapper" style="width:100%; overflow:hidden;">
-                <div id="panelMotd" style="
-                    width:520px;
-                    height:44px;
-                    background:#2b2b2b;
-                    border:2px solid #1a1a1a;
-                    border-radius:4px;
-                    padding:4px 8px;
-                    font-family:'MinecraftFont','Courier New',monospace;
-                    font-size:20px;
-                    line-height:22px;
-                    color:#aaa;
-                    white-space:pre;
-                    overflow:hidden;
-                    text-shadow:2px 2px 0 #3f3f3f;
-                    image-rendering:pixelated;
-                    box-shadow:inset 0 0 8px rgba(0,0,0,0.5);
-                    transform-origin:top left;
-                "></div>
-            </div>
         </div>`;
 
         // Игроки
@@ -182,9 +145,6 @@ window.PanelServer = {
         const statusEl  = document.getElementById('serverStatus');
         const statsEl   = document.getElementById('serverStats');
         const playersEl = document.getElementById('serverPlayersList');
-        const motdEl    = document.getElementById('panelMotd');
-        const motdSec   = document.getElementById('panelMotdSection');
-        const motdWrap  = document.getElementById('panelMotdWrapper');
 
         if (!statusEl) return;
 
@@ -202,14 +162,9 @@ window.PanelServer = {
                 : 'status-indicator offline';
         }
 
-        // Favicon
+        // Обновляем favicon в дереве
         if (data.favicon) {
-            const faviconEl = document.getElementById('panelServerFavicon');
-            const wrapperEl = document.getElementById('panelFaviconWrapper');
-            if (faviconEl && wrapperEl) {
-                faviconEl.src = data.favicon;
-                wrapperEl.style.display = '';
-            }
+            this._updateTreeFavicon(itemId, data.favicon);
         }
 
         if (data.online) {
@@ -219,16 +174,6 @@ window.PanelServer = {
                 statsEl.style.display = 'flex';
                 const verEl = document.getElementById('serverVersion');
                 if (verEl && data.version) verEl.textContent = data.version;
-            }
-
-            // MOTD
-            const motdHtml = data.motd?.html || [];
-            if (motdEl && motdSec && motdHtml.length) {
-                motdEl.innerHTML = motdHtml.join('\n');
-                motdSec.style.display = '';
-                requestAnimationFrame(() => this._scaleMotd(motdWrap, motdEl));
-            } else if (motdSec) {
-                motdSec.style.display = 'none';
             }
 
             // Игроки
@@ -241,7 +186,6 @@ window.PanelServer = {
             text.textContent = 'Офлайн';
             if (statsEl)   statsEl.style.display = 'none';
             if (playersEl) playersEl.style.display = 'none';
-            if (motdSec)   motdSec.style.display = 'none';
         }
 
         this.updateTreeStatus(itemId, data.online, data.players);
@@ -303,17 +247,19 @@ window.PanelServer = {
         }).join('');
     },
 
-    // ── MOTD масштабирование ──
-    _scaleMotd(wrapper, motd) {
-        if (!wrapper || !motd) return;
-        const cw = wrapper.clientWidth;
-        if (cw < 520) {
-            const s = cw / 520;
-            motd.style.transform = `scale(${s})`;
-            wrapper.style.height = Math.ceil(44 * s + 4) + 'px';
+    // ── Обновление favicon в дереве ──
+    _updateTreeFavicon(itemId, faviconData) {
+        const item = document.querySelector(`.folder-item[data-id="${itemId}"]`);
+        if (!item) return;
+        const iconEl = item.querySelector('.folder-icon.server-default-icon, .folder-icon.server-favicon-icon');
+        if (!iconEl) return;
+        const existingImg = iconEl.querySelector('img');
+        if (existingImg) {
+            existingImg.src = faviconData;
         } else {
-            motd.style.transform = 'none';
-            wrapper.style.height = 'auto';
+            iconEl.innerHTML = `<img src="${faviconData}" width="16" height="16" alt="" style="border-radius:3px;image-rendering:pixelated;">`;
+            iconEl.classList.remove('server-default-icon');
+            iconEl.classList.add('server-favicon-icon');
         }
     },
 

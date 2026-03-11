@@ -108,6 +108,8 @@ trait StatusTrait
      */
     private function insertHistoryRecord(int $serverId, array $data, bool $isSame, ?int $itemId = null): void
     {
+        $effectiveItemId = $itemId ?? 0;
+
         if ($isSame) {
             // Оптимизация: только отметка времени и флаг
             $this->db->execute(
@@ -116,7 +118,7 @@ trait StatusTrait
                  VALUES (?, ?, ?, NULL, NULL, NULL, NULL, ?, 1, NOW())",
                 [
                     $serverId,
-                    $itemId,
+                    $effectiveItemId,
                     $data['online'] ? 1 : 0,
                     $data['source'] ?? 'server'
                 ]
@@ -129,7 +131,7 @@ trait StatusTrait
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())",
                 [
                     $serverId,
-                    $itemId,
+                    $effectiveItemId,
                     $data['online'] ? 1 : 0,
                     $data['players_online'],
                     $data['players_max'],

@@ -124,6 +124,21 @@ window.ServerTreePing = {
                 countEl.classList.add('offline-text');
             }
         }
+
+        // Обновляем favicon в дереве
+        if (data.favicon) {
+            const iconEl = server.element.querySelector('.folder-icon.server-default-icon, .folder-icon.server-favicon-icon');
+            if (iconEl) {
+                const existingImg = iconEl.querySelector('img');
+                if (existingImg) {
+                    existingImg.src = data.favicon;
+                } else {
+                    iconEl.innerHTML = `<img src="${data.favicon}" width="16" height="16" alt="" style="border-radius:3px;image-rendering:pixelated;">`;
+                    iconEl.classList.remove('server-default-icon');
+                    iconEl.classList.add('server-favicon-icon');
+                }
+            }
+        }
     },
 
     stopAll() {
