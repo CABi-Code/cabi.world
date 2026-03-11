@@ -308,10 +308,24 @@ function updateServerUI(data) {
 }
 
 function updateServerFavicon(faviconData) {
+    // Обновляем favicon в блоке адреса
     const el = document.getElementById('serverFavicon');
     if (el && faviconData) {
         el.src = faviconData;
+        el.style.display = '';
         el.closest('.server-favicon-wrapper')?.classList.add('has-favicon');
+    }
+    // Обновляем favicon в заголовке страницы
+    const headerIcon = document.getElementById('itemHeaderIcon');
+    if (headerIcon && faviconData) {
+        const existingImg = headerIcon.querySelector('img');
+        if (existingImg) {
+            existingImg.src = faviconData;
+        } else {
+            headerIcon.innerHTML = `<img src="${faviconData}" width="32" height="32" alt="" style="border-radius:6px;image-rendering:pixelated;">`;
+            headerIcon.classList.remove('item-icon-server-default');
+            headerIcon.classList.add('item-icon-favicon');
+        }
     }
 }
 

@@ -15,13 +15,20 @@ function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repositor
 		$iconData = $iconMap[$type] ?? ['icon' => 'file', 'color' => '#94a3b8'];
 		$icon = $item['icon'] ?? $iconData['icon'];
 		$color = $item['color'] ?? $iconData['color'];
-	
+
 		// Данные сервера для статуса
 		$serverData = null;
+		$serverFavicon = null;
 		if ($type === 'server' && $item['settings']) {
-			$serverData = is_string($item['settings']) 
-				? json_decode($item['settings'], true) 
+			$serverData = is_string($item['settings'])
+				? json_decode($item['settings'], true)
 				: $item['settings'];
+			// Получаем favicon из global_servers
+			if (!empty($serverData['server_id'])) {
+				$globalServerRepo = new \App\Repository\GlobalServerRepository();
+				$globalServer = $globalServerRepo->getById((int)$serverData['server_id']);
+				$serverFavicon = $globalServer['favicon'] ?? null;
+			}
 		}
 	
 		// ==================== СОРТИРОВКА ДЕТЕЙ ====================
@@ -60,9 +67,15 @@ function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repositor
 				<?php endif; ?>
 				
 				<div class="span-move">
-					<span class="folder-icon" style="color: <?= e($color) ?>;">
+					<?php if ($type === 'server' && $serverFavicon): ?>
+					<span class="folder-icon server-favicon-icon" data-item-id="<?= $item['id'] ?>">
+					  <img src="<?= e($serverFavicon) ?>" width="16" height="16" alt="" style="border-radius:3px;image-rendering:pixelated;">
+					</span>
+					<?php else: ?>
+					<span class="folder-icon<?= ($type === 'server') ? ' server-default-icon' : '' ?>" style="color: <?= e($color) ?>;"<?= ($type === 'server') ? ' data-item-id="' . $item['id'] . '"' : '' ?>>
 					  <svg width="16" height="16"><use href="#icon-<?= e($icon) ?>"/></svg>
 					</span>
+					<?php endif; ?>
 						
 					<?php if ($type === 'chat'): ?>
 					  <span class="folder-name"><?= e($item['name']) ?></span>

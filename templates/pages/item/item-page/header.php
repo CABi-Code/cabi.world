@@ -17,9 +17,23 @@ if (!empty($item['slug'])) {
 $itemDirectLink = $fullSlug ? '/item/' . $fullSlug : '/item/' . $item['id'];
 ?>
 <div class="item-header">
-    <div class="item-icon" style="color: <?= e($color) ?>">
+    <?php
+    $headerFavicon = null;
+    if ($item['item_type'] === 'server' && !empty($settings['server_id'])) {
+        $headerGsRepo = new \App\Repository\GlobalServerRepository();
+        $headerGs = $headerGsRepo->getById((int)$settings['server_id']);
+        $headerFavicon = $headerGs['favicon'] ?? null;
+    }
+    ?>
+    <?php if ($headerFavicon): ?>
+    <div class="item-icon item-icon-favicon" id="itemHeaderIcon">
+        <img src="<?= e($headerFavicon) ?>" width="32" height="32" alt="" style="border-radius:6px;image-rendering:pixelated;">
+    </div>
+    <?php else: ?>
+    <div class="item-icon<?= ($item['item_type'] === 'server') ? ' item-icon-server-default' : '' ?>" style="color: <?= e($color) ?>" id="itemHeaderIcon">
         <svg width="32" height="32"><use href="#icon-<?= e($icon) ?>"/></svg>
     </div>
+    <?php endif; ?>
 
     <div class="item-title-block">
         <h1 class="item-title"><?= e($item['name']) ?></h1>

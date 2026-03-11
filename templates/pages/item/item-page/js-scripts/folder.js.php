@@ -30,13 +30,8 @@ $port = $settings['port'] ?? 25565;
         document.head.appendChild(style);
     }
 
-    // ── Пинг (автономный, с фоллбэком на ServerPinger) ──
+    // ── Пинг через наш бэкенд (он сам делает fallback на mcsrvstat) ──
     async function doPing(ip, port) {
-        // Если ServerPinger доступен — используем его
-        if (typeof ServerPinger !== 'undefined') {
-            return ServerPinger.ping(ip, port);
-        }
-        // Иначе — прямой запрос к бэкенду
         try {
             const res = await fetch(`/api/server-ping?ip=${encodeURIComponent(ip)}&port=${port}&simpl=0`);
             if (!res.ok) throw new Error('Backend error');
@@ -59,7 +54,7 @@ $port = $settings['port'] ?? 25565;
                 source:   data.source || 'backend'
             };
         } catch (e) {
-            // Последний фоллбэк — прямой запрос к mcsrvstat
+            // Фоллбэк на mcsrvstat только если бэкенд полностью недоступен
             try {
                 const addr = port !== 25565 ? `${ip}:${port}` : ip;
                 const res = await fetch(`https://api.mcsrvstat.us/3/${encodeURIComponent(addr)}`);
@@ -401,6 +396,27 @@ function updateServerUI(data) {
 
     const dot  = statusEl.querySelector('.status-dot');
     const text = statusEl.querySelector('.status-text');
+
+    // Обновляем favicon в заголовке и в блоке адреса
+    if (data.favicon) {
+        const serverFavicon = document.getElementById('serverFavicon');
+        if (serverFavicon) {
+            serverFavicon.src = data.favicon;
+            serverFavicon.style.display = '';
+            serverFavicon.closest('.server-favicon-wrapper')?.classList.add('has-favicon');
+        }
+        const headerIcon = document.getElementById('itemHeaderIcon');
+        if (headerIcon) {
+            const existingImg = headerIcon.querySelector('img');
+            if (existingImg) {
+                existingImg.src = data.favicon;
+            } else {
+                headerIcon.innerHTML = `<img src="${data.favicon}" width="32" height="32" alt="" style="border-radius:6px;image-rendering:pixelated;">`;
+                headerIcon.classList.remove('item-icon-server-default');
+                headerIcon.classList.add('item-icon-favicon');
+            }
+        }
+    }
 
     if (data.online) {
         dot.className = 'status-dot online pulsing';
