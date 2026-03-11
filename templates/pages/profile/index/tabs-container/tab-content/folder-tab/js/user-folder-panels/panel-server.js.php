@@ -162,9 +162,10 @@ window.PanelServer = {
                 : 'status-indicator offline';
         }
 
-        // Обновляем favicon в дереве
+        // Обновляем favicon в дереве и в панели
         if (data.favicon) {
             this._updateTreeFavicon(itemId, data.favicon);
+            this._updatePanelFavicon(itemId, data.favicon);
         }
 
         if (data.online) {
@@ -247,20 +248,45 @@ window.PanelServer = {
         }).join('');
     },
 
-    // ── Обновление favicon в дереве ──
+    // ── Обновление favicon в дереве с мини-иконкой ──
     _updateTreeFavicon(itemId, faviconData) {
         const item = document.querySelector(`.folder-item[data-id="${itemId}"]`);
         if (!item) return;
         const iconEl = item.querySelector('.folder-icon.server-default-icon, .folder-icon.server-favicon-icon');
         if (!iconEl) return;
-        const existingImg = iconEl.querySelector('img');
+        const existingImg = iconEl.querySelector('img:first-child');
         if (existingImg) {
             existingImg.src = faviconData;
         } else {
-            iconEl.innerHTML = `<img src="${faviconData}" width="16" height="16" alt="" style="border-radius:3px;image-rendering:pixelated;">`;
+            const color = iconEl.style.color || '#f59e0b';
+            const useEl = iconEl.querySelector('svg use');
+            const iconName = useEl ? useEl.getAttribute('href').replace('#icon-', '') : 'server';
+            iconEl.style.cssText = 'position:relative;width:20px;height:20px;flex-shrink:0;';
+            iconEl.innerHTML = `<img src="${faviconData}" width="20" height="20" alt="" style="border-radius:3px;image-rendering:pixelated;">
+                <span class="tree-favicon-mini" style="color:${color};">
+                    <svg width="9" height="9"><use href="#icon-${iconName}"/></svg>
+                </span>`;
             iconEl.classList.remove('server-default-icon');
             iconEl.classList.add('server-favicon-icon');
         }
+    },
+
+    // ── Обновление favicon в заголовке панели ──
+    _updatePanelFavicon(itemId, faviconData) {
+        const panelIcon = document.getElementById(`panelHeaderIcon-${itemId}`);
+        if (!panelIcon) return;
+        const currentItem = window.currentPanelItem;
+        const iconData = (typeof iconMap !== 'undefined' ? iconMap[currentItem?.item_type] : null) || { icon: 'server', color: '#f59e0b' };
+        const icon = currentItem?.icon || iconData.icon;
+        const color = currentItem?.color || iconData.color;
+
+        panelIcon.innerHTML = `
+            <img src="${faviconData}" alt="" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;object-fit:cover;">
+            <span style="position:absolute;bottom:-3px;left:-3px;width:18px;height:18px;border-radius:5px;
+                         background:var(--bg-primary,#1a1a2e);display:flex;align-items:center;justify-content:center;
+                         box-shadow:0 0 0 2px rgba(0,0,0,0.4);z-index:2;color:${color};">
+                <svg width="11" height="11"><use href="#icon-${icon}"/></svg>
+            </span>`;
     },
 
     // ── Превью скина ──

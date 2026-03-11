@@ -68,8 +68,11 @@ function renderFolderItem(array $node, bool $isOwner, int $depth, \App\Repositor
 				
 				<div class="span-move">
 					<?php if ($type === 'server' && $serverFavicon): ?>
-					<span class="folder-icon server-favicon-icon" data-item-id="<?= $item['id'] ?>">
-					  <img src="<?= e($serverFavicon) ?>" width="16" height="16" alt="" style="border-radius:3px;image-rendering:pixelated;">
+					<span class="folder-icon server-favicon-icon" data-item-id="<?= $item['id'] ?>" style="position:relative;width:20px;height:20px;flex-shrink:0;">
+					  <img src="<?= e($serverFavicon) ?>" width="20" height="20" alt="" style="border-radius:3px;image-rendering:pixelated;">
+					  <span class="tree-favicon-mini" style="color: <?= e($color) ?>;">
+					    <svg width="9" height="9"><use href="#icon-<?= e($icon) ?>"/></svg>
+					  </span>
 					</span>
 					<?php else: ?>
 					<span class="folder-icon<?= ($type === 'server') ? ' server-default-icon' : '' ?>" style="color: <?= e($color) ?>;"<?= ($type === 'server') ? ' data-item-id="' . $item['id'] . '"' : '' ?>>

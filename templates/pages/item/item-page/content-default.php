@@ -58,11 +58,15 @@ if (!empty($children)) {
                        data-server-port="<?= e($childServerSettings['port'] ?? 25565) ?>"
                        <?php endif; ?>>
                         <?php if ($isServer && $childServerFavicon): ?>
-                        <span class="child-icon child-server-favicon">
+                        <span class="child-icon child-server-favicon" style="position:relative;">
                             <img src="<?= e($childServerFavicon) ?>" width="20" height="20" alt="" style="border-radius:3px;image-rendering:pixelated;">
+                            <span class="child-favicon-mini" style="color: <?= e($childColor) ?>;">
+                                <svg width="9" height="9"><use href="#icon-<?= e($childIcon) ?>"/></svg>
+                            </span>
                         </span>
                         <?php else: ?>
-                        <span class="child-icon<?= $isServer ? ' child-server-default-icon' : '' ?>" style="color: <?= e($childColor) ?>">
+                        <span class="child-icon<?= $isServer ? ' child-server-default-icon' : '' ?>" style="color: <?= e($childColor) ?>"
+                              <?php if ($isServer): ?>data-icon="<?= e($childIcon) ?>"<?php endif; ?>>
                             <svg width="20" height="20"><use href="#icon-<?= e($childIcon) ?>"/></svg>
                         </span>
                         <?php endif; ?>
@@ -89,6 +93,21 @@ if (!empty($children)) {
 <style>
 .child-card-server {
     position: relative;
+}
+.child-server-favicon { overflow: visible; }
+.child-favicon-mini {
+    position: absolute;
+    bottom: -2px;
+    left: -2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    background: var(--bg-primary, #1a1a2e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    z-index: 2;
 }
 .child-server-status {
     display: flex;
@@ -196,15 +215,21 @@ if (!empty($children)) {
             }
         }
 
-        // Обновляем favicon
+        // Обновляем favicon с мини-иконкой
         if (data.favicon) {
             const iconEl = server.element.querySelector('.child-icon.child-server-default-icon, .child-icon.child-server-favicon');
             if (iconEl) {
-                const existingImg = iconEl.querySelector('img');
+                const existingImg = iconEl.querySelector('img:first-child');
                 if (existingImg) {
                     existingImg.src = data.favicon;
                 } else {
-                    iconEl.innerHTML = `<img src="${data.favicon}" width="20" height="20" alt="" style="border-radius:3px;image-rendering:pixelated;">`;
+                    const color = iconEl.style.color || '#f59e0b';
+                    const iconName = iconEl.dataset.icon || 'server';
+                    iconEl.style.cssText = 'position:relative;';
+                    iconEl.innerHTML = `<img src="${data.favicon}" width="20" height="20" alt="" style="border-radius:3px;image-rendering:pixelated;">
+                        <span class="child-favicon-mini" style="color:${color};">
+                            <svg width="9" height="9"><use href="#icon-${iconName}"/></svg>
+                        </span>`;
                     iconEl.classList.remove('child-server-default-icon');
                     iconEl.classList.add('child-server-favicon');
                 }

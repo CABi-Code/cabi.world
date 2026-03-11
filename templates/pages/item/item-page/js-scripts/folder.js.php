@@ -407,11 +407,17 @@ function updateServerUI(data) {
         }
         const headerIcon = document.getElementById('itemHeaderIcon');
         if (headerIcon) {
-            const existingImg = headerIcon.querySelector('img');
+            const existingImg = headerIcon.querySelector('img:first-child');
             if (existingImg) {
                 existingImg.src = data.favicon;
             } else {
-                headerIcon.innerHTML = `<img src="${data.favicon}" width="32" height="32" alt="" style="border-radius:6px;image-rendering:pixelated;">`;
+                const color = headerIcon.style.color || '#f59e0b';
+                const iconName = headerIcon.dataset.icon || 'server';
+                headerIcon.style.cssText = 'position:relative;overflow:visible;';
+                headerIcon.innerHTML = `<img src="${data.favicon}" width="32" height="32" alt="" style="border-radius:6px;image-rendering:pixelated;">
+                    <span class="header-favicon-mini" style="color:${color};">
+                        <svg width="12" height="12"><use href="#icon-${iconName}"/></svg>
+                    </span>`;
                 headerIcon.classList.remove('item-icon-server-default');
                 headerIcon.classList.add('item-icon-favicon');
             }

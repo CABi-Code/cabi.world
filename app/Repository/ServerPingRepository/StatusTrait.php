@@ -18,12 +18,13 @@ trait StatusTrait
         // Обновляем глобальный сервер
         $this->updateGlobalServer($serverId, $data);
 
-        // Записываем в историю
-        if ($hasChanged) {
-            $this->insertHistoryRecord($serverId, $data, false, $itemId);
-        } else {
-            // Оптимизация: при неизменных данных сохраняем только отметку времени
-            $this->insertHistoryRecord($serverId, $data, true, $itemId);
+        // Записываем в историю только если есть привязка к элементу папки
+        if ($itemId !== null && $itemId > 0) {
+            if ($hasChanged) {
+                $this->insertHistoryRecord($serverId, $data, false, $itemId);
+            } else {
+                $this->insertHistoryRecord($serverId, $data, true, $itemId);
+            }
         }
 
         return true;
@@ -106,10 +107,8 @@ trait StatusTrait
      * Вставить запись в историю
      * При is_same_as_previous=1 не сохраняем дублирующие данные (NULL)
      */
-    private function insertHistoryRecord(int $serverId, array $data, bool $isSame, ?int $itemId = null): void
+    private function insertHistoryRecord(int $serverId, array $data, bool $isSame, int $itemId): void
     {
-        $effectiveItemId = $itemId ?? 0;
-
         if ($isSame) {
             // Оптимизация: только отметка времени и флаг
             $this->db->execute(
@@ -118,7 +117,7 @@ trait StatusTrait
                  VALUES (?, ?, ?, NULL, NULL, NULL, NULL, ?, 1, NOW())",
                 [
                     $serverId,
-                    $effectiveItemId,
+                    $itemId,
                     $data['online'] ? 1 : 0,
                     $data['source'] ?? 'server'
                 ]
@@ -131,7 +130,7 @@ trait StatusTrait
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())",
                 [
                     $serverId,
-                    $effectiveItemId,
+                    $itemId,
                     $data['online'] ? 1 : 0,
                     $data['players_online'],
                     $data['players_max'],
