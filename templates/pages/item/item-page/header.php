@@ -26,11 +26,14 @@ $itemDirectLink = $fullSlug ? '/item/' . $fullSlug : '/item/' . $item['id'];
     }
     ?>
     <?php if ($headerFavicon): ?>
-    <div class="item-icon item-icon-favicon" id="itemHeaderIcon">
+    <div class="item-icon item-icon-favicon" id="itemHeaderIcon" style="position:relative;overflow:visible;">
         <img src="<?= e($headerFavicon) ?>" width="32" height="32" alt="" style="border-radius:6px;image-rendering:pixelated;">
+        <span class="header-favicon-mini" style="color: <?= e($color) ?>;">
+            <svg width="12" height="12"><use href="#icon-<?= e($icon) ?>"/></svg>
+        </span>
     </div>
     <?php else: ?>
-    <div class="item-icon<?= ($item['item_type'] === 'server') ? ' item-icon-server-default' : '' ?>" style="color: <?= e($color) ?>" id="itemHeaderIcon">
+    <div class="item-icon<?= ($item['item_type'] === 'server') ? ' item-icon-server-default' : '' ?>" style="color: <?= e($color) ?>" id="itemHeaderIcon" data-icon="<?= e($icon) ?>">
         <svg width="32" height="32"><use href="#icon-<?= e($icon) ?>"/></svg>
     </div>
     <?php endif; ?>

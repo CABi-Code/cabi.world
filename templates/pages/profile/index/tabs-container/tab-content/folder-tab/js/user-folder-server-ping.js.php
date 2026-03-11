@@ -125,15 +125,23 @@ window.ServerTreePing = {
             }
         }
 
-        // Обновляем favicon в дереве
+        // Обновляем favicon в дереве с мини-иконкой
         if (data.favicon) {
             const iconEl = server.element.querySelector('.folder-icon.server-default-icon, .folder-icon.server-favicon-icon');
             if (iconEl) {
-                const existingImg = iconEl.querySelector('img');
+                const existingImg = iconEl.querySelector('img:not(.tree-favicon-mini img)');
                 if (existingImg) {
                     existingImg.src = data.favicon;
                 } else {
-                    iconEl.innerHTML = `<img src="${data.favicon}" width="16" height="16" alt="" style="border-radius:3px;image-rendering:pixelated;">`;
+                    // Получаем цвет и иконку из текущего элемента
+                    const color = iconEl.style.color || '#f59e0b';
+                    const useEl = iconEl.querySelector('svg use');
+                    const iconName = useEl ? useEl.getAttribute('href').replace('#icon-', '') : 'server';
+                    iconEl.style.cssText = 'position:relative;width:20px;height:20px;flex-shrink:0;';
+                    iconEl.innerHTML = `<img src="${data.favicon}" width="20" height="20" alt="" style="border-radius:3px;image-rendering:pixelated;">
+                        <span class="tree-favicon-mini" style="color:${color};">
+                            <svg width="9" height="9"><use href="#icon-${iconName}"/></svg>
+                        </span>`;
                     iconEl.classList.remove('server-default-icon');
                     iconEl.classList.add('server-favicon-icon');
                 }

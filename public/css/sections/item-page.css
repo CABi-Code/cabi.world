@@ -44,6 +44,8 @@
 /* Header */
 .item-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
 .item-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: var(--bg); border-radius: 12px; flex-shrink: 0; }
+.item-icon.item-icon-favicon { overflow: visible; }
+.header-favicon-mini { position: absolute; bottom: -3px; left: -3px; width: 20px; height: 20px; border-radius: 5px; background: var(--bg-primary, #1a1a2e); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px rgba(0,0,0,0.4); z-index: 2; }
 .item-title-block { flex: 1; min-width: 0; }
 .item-title { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.25rem; }
 .item-description { font-size: 0.9375rem; color: var(--text-secondary); margin: 0; }

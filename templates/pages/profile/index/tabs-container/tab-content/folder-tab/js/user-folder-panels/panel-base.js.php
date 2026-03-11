@@ -55,11 +55,23 @@ window.PanelBase = {
         const iconData = iconMap[item.item_type] || { icon: 'file', color: '#94a3b8' };
         const icon = item.icon || iconData.icon;
         const color = item.color || iconData.color;
-        
-        return `<div class="panel-item-header">
-            <span class="panel-icon" style="color:${esc(color)}">
+
+        // Для серверов — favicon с мини-иконкой, обновляемый при пинге
+        let iconHtml;
+        if (item.item_type === 'server') {
+            iconHtml = `<span class="panel-icon panel-server-icon" id="panelHeaderIcon-${item.id}" style="position:relative;width:40px;height:40px;flex-shrink:0;">
+                <span class="panel-server-favicon-placeholder" style="color:${esc(color)};display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
+                    <svg width="24" height="24"><use href="#icon-${esc(icon)}"/></svg>
+                </span>
+            </span>`;
+        } else {
+            iconHtml = `<span class="panel-icon" style="color:${esc(color)}">
                 <svg width="24" height="24"><use href="#icon-${esc(icon)}"/></svg>
-            </span>
+            </span>`;
+        }
+
+        return `<div class="panel-item-header">
+            ${iconHtml}
             <h3 class="panel-title">${esc(item.name)}</h3>
             <button class="panel-link-btn" onclick="window.location.href='/item/' + ${item.id}" title="Открыть ссылку">
                 <svg width="14" height="14"><use href="#icon-link"/></svg>
