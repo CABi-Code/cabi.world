@@ -18,14 +18,8 @@ trait StatusTrait
         // Обновляем глобальный сервер
         $this->updateGlobalServer($serverId, $data);
 
-        // Записываем в историю только если есть привязка к элементу папки
-        if ($itemId !== null && $itemId > 0) {
-            if ($hasChanged) {
-                $this->insertHistoryRecord($serverId, $data, false, $itemId);
-            } else {
-                $this->insertHistoryRecord($serverId, $data, true, $itemId);
-            }
-        }
+        // История ведётся по global_servers.id; item_id — опциональный тег
+        $this->insertHistoryRecord($serverId, $data, !$hasChanged, $itemId);
 
         return true;
     }
@@ -107,8 +101,10 @@ trait StatusTrait
      * Вставить запись в историю
      * При is_same_as_previous=1 не сохраняем дублирующие данные (NULL)
      */
-    private function insertHistoryRecord(int $serverId, array $data, bool $isSame, int $itemId): void
+    private function insertHistoryRecord(int $serverId, array $data, bool $isSame, ?int $itemId = null): void
     {
+        $itemIdValue = ($itemId !== null && $itemId > 0) ? $itemId : null;
+
         if ($isSame) {
             // Оптимизация: только отметка времени и флаг
             $this->db->execute(
@@ -117,7 +113,7 @@ trait StatusTrait
                  VALUES (?, ?, ?, NULL, NULL, NULL, NULL, ?, 1, NOW())",
                 [
                     $serverId,
-                    $itemId,
+                    $itemIdValue,
                     $data['online'] ? 1 : 0,
                     $data['source'] ?? 'server'
                 ]
@@ -130,7 +126,7 @@ trait StatusTrait
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())",
                 [
                     $serverId,
-                    $itemId,
+                    $itemIdValue,
                     $data['online'] ? 1 : 0,
                     $data['players_online'],
                     $data['players_max'],

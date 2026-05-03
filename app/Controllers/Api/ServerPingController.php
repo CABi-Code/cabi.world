@@ -137,7 +137,7 @@ class ServerPingController
     /**
      * Пинг одного сервера и сохранение в global_servers + историю
      */
-    private function pingAndSave(string $ip, int $port, bool $simpl = true): array
+    private function pingAndSave(string $ip, int $port, bool $simpl = true, ?int $itemId = null): array
     {
         // Выполняем пинг
         if ($simpl) {
@@ -169,7 +169,7 @@ class ServerPingController
             'version' => $result['version'] ?? null,
             'favicon' => $result['favicon'] ?? null,
             'source' => $result['source'] ?? 'server',
-        ]);
+        ], $itemId);
 
         // Обновляем MOTD и favicon в global_servers если есть
         if ($result['online']) {

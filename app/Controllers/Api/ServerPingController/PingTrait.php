@@ -65,6 +65,7 @@ trait PingTrait
 		$ip = trim($request->query('ip', ''));
 		$port = (int)$request->query('port', 25565);
 		$simpl = (bool)$request->query('simpl', true);
+		$itemId = (int)$request->query('item_id', 0);
 
 		if (empty($ip)) {
 			Response::error('IP required', 400);
@@ -76,7 +77,7 @@ trait PingTrait
 			return;
 		}
 
-		$result = $this->pingAndSave($ip, $port, $simpl);
+		$result = $this->pingAndSave($ip, $port, $simpl, $itemId ?: null);
 		Response::json($result);
 	}
 
