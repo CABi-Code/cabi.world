@@ -17,6 +17,7 @@ $serverId = $settings['server_id'] ?? 0;
     const globalServerId = <?= (int)$serverId ?>;
     let pingInterval = null;
     let chart = null;
+    let chartLoadToken = 0;
 
     // ── Загрузка Minecraft-шрифта ──
     if (!document.getElementById('mcFontStyle')) {
@@ -35,7 +36,8 @@ $serverId = $settings['server_id'] ?? 0;
     // ── Пинг через серверный эндпоинт (данные сохраняются автоматически) ──
     async function doPing(ip, port) {
         try {
-            const res = await fetch(`/api/server-ping?ip=${encodeURIComponent(ip)}&port=${port}&simpl=0`);
+            const itemParam = serverItemId ? `&item_id=${serverItemId}` : '';
+            const res = await fetch(`/api/server-ping?ip=${encodeURIComponent(ip)}&port=${port}&simpl=0${itemParam}`);
             if (!res.ok) throw new Error('Backend error');
             const data = await res.json();
             return {
@@ -373,6 +375,7 @@ function updateServerFavicon(faviconData) {
 
     // ── Улучшенный график ──
     async function loadChart(hours) {
+        const token = ++chartLoadToken;
         try {
             const params = new URLSearchParams();
             if (globalServerId) params.set('server_id', globalServerId);
@@ -380,23 +383,30 @@ function updateServerFavicon(faviconData) {
             params.set('hours', hours);
             const res = await fetch(`/api/server-ping/history?${params}`);
             const data = await res.json();
+            // Игнорируем устаревшие ответы при быстром переключении периода
+            if (token !== chartLoadToken) return;
             renderChart(data.history || [], hours);
         } catch (e) {
+            if (token !== chartLoadToken) return;
             console.error('Failed to load chart:', e);
+            renderChart([], hours);
         }
     }
 
     function renderChart(history, hours) {
-        const ctx = document.getElementById('onlineChart');
-        if (!ctx) return;
-        if (chart) chart.destroy();
+        const container = document.getElementById('chartContainer');
+        if (!container) return;
+        if (chart) { chart.destroy(); chart = null; }
 
         if (history.length === 0) {
-            const container = ctx.parentElement;
-            container.innerHTML = '<div style="text-align:center;color:#666;padding:40px 0;">Нет данных за этот период</div><canvas id="onlineChart"></canvas>';
-            chart = null;
+            container.innerHTML = '<div class="chart-no-data" style="text-align:center;color:#666;padding:40px 0;">Нет данных за этот период</div>';
             return;
         }
+
+        // Полная пересборка контейнера: убирает возможный «Нет данных» и старый canvas
+        container.innerHTML = '<canvas id="onlineChart"></canvas>';
+        const ctx = document.getElementById('onlineChart');
+        if (!ctx) return;
 
         const labels = history.map(h => {
             const t = h.time || '';
