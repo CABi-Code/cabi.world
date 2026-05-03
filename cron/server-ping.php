@@ -2,59 +2,63 @@
 /**
  * Крон-скрипт для пинга серверов
  * Запускать каждую минуту: * * * * * php /path/to/cron/server-ping.php
+ *
+ * Пингует все global_servers, на которые ссылается хотя бы один folder item.
+ * Результаты пишутся в server_ping_history по global_servers.id и
+ * обновляют витринные поля в global_servers.
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';
 require_once ROOT_PATH . '/vendor/autoload.php';
 require_once ROOT_PATH . '/app/Core/Database.php';
 
-use App\Core\Database;
 use App\Repository\ServerPingRepository;
-use App\Repository\UserFolderRepository;
+use App\Repository\GlobalServerRepository;
 
-$db = Database::getInstance();
 $pingRepo = new ServerPingRepository();
-$folderRepo = new UserFolderRepository();
+$globalRepo = new GlobalServerRepository();
 
-// Получаем все серверы
-$servers = $db->fetchAll(
-    "SELECT id, settings FROM user_folder_items WHERE item_type = 'server' AND settings IS NOT NULL"
-);
+$servers = $globalRepo->getServersForPing();
 
-echo "Found " . count($servers) . " servers to ping\n";
+echo "[" . date('Y-m-d H:i:s') . "] Found " . count($servers) . " global servers to ping\n";
 
 foreach ($servers as $server) {
-    $settings = json_decode($server['settings'], true);
-    
-    if (empty($settings['ip'])) {
-        continue;
-    }
-    
-    $ip = $settings['ip'];
-    $port = $settings['port'] ?? 25565;
-    
-    echo "Pinging {$ip}:{$port}... ";
-    
+    $serverId = (int)$server['id'];
+    $ip = $server['address'];
+    $port = (int)$server['port'];
+
+    echo "Pinging #{$serverId} {$ip}:{$port}... ";
+
     $result = pingMinecraftServer($ip, $port);
-    
+
     if ($result['online']) {
         echo "ONLINE ({$result['players']['online']}/{$result['players']['max']})\n";
     } else {
         echo "OFFLINE\n";
     }
-    
-    // Сохраняем результат
-    $pingRepo->saveStatus($server['id'], [
+
+    $pingRepo->saveStatus($serverId, [
         'online' => $result['online'],
         'players_online' => $result['players']['online'] ?? 0,
         'players_max' => $result['players']['max'] ?? 0,
         'players_sample' => $result['players']['sample'] ?? [],
         'version' => $result['version'] ?? null,
-        'source' => 'server'
+        'favicon' => $result['favicon'] ?? null,
+        'source' => 'cron',
     ]);
-    
-    // Небольшая пауза между пингами
-    usleep(100000); // 100ms
+
+    if ($result['online']) {
+        $globalRepo->updateStatus($serverId, [
+            'online' => true,
+            'players_online' => $result['players']['online'] ?? 0,
+            'players_max' => $result['players']['max'] ?? 0,
+            'players_sample' => $result['players']['sample'] ?? [],
+            'version' => $result['version'] ?? null,
+            'favicon' => $result['favicon'] ?? null,
+        ]);
+    }
+
+    usleep(100000); // 100ms между пингами
 }
 
 // Очистка старых записей (раз в сутки)
@@ -124,6 +128,7 @@ function pingMinecraftServer(string $ip, int $port): array
         return [
             'online' => true,
             'version' => $data['version']['name'] ?? null,
+            'favicon' => $data['favicon'] ?? null,
             'players' => [
                 'online' => $data['players']['online'] ?? 0,
                 'max' => $data['players']['max'] ?? 0,
